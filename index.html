@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subnet Architect – Aloittelijasta Ammattilaiseen</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <!-- Pelin tyylit -->
+    <link rel="stylesheet" href="css/style.css?v=20260911_v7">
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UI Kerros (HTML Overlay) -->
+    <div id="ui-layer">
+
+        <!-- ===================== PÄÄVALIKKO ===================== -->
+        <div id="main-menu" class="absolute inset-0 flex flex-col items-center justify-start bg-slate-950/95 backdrop-blur-2xl pointer-events-auto overflow-y-auto lg:overflow-hidden p-2 sm:p-4">
+            
+            <!-- Päälaatikko: Täyden leveyden ja korkeuden Kaksipalstainen Mission Hub -->
+            <div class="glass-panel p-3 sm:p-5 rounded-2xl w-full max-w-[1700px] shadow-2xl border border-slate-700/60 flex flex-col gap-3 flex-1 min-h-0">
+                
+                <!-- Yläpalkki: Brändi + Edistyminen + Toiminnot (Kompakti yksi rivi) -->
+                <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 pb-3 border-b border-slate-700/60 flex-shrink-0">
+                    
+                    <!-- Brändi & Logo -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-400 flex items-center justify-center text-xl shadow-lg shadow-blue-500/20 flex-shrink-0">
+                            🌐
+                        </div>
+                        <div>
+                            <h1 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400 tracking-tight leading-none">
+                                Subnet Architect
+                            </h1>
+                            <span class="text-[11px] sm:text-xs text-blue-300/80 font-semibold tracking-wide">
+                                Verkkosuunnittelu- & Aliverkotussimulaattori
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Edistymispalkki -->
+                    <div class="flex-1 max-w-md mx-0 lg:mx-4">
+                        <div class="flex justify-between items-center text-xs font-bold mb-1">
+                            <span class="text-slate-200 flex items-center gap-1.5">
+                                <span class="text-sm">🏆</span> Kokonaisedistyminen:
+                                <span id="progress-text" class="text-emerald-400 font-extrabold">0 / 61</span>
+                            </span>
+                            <span id="progress-percent" class="text-cyan-400 font-extrabold">0%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 shadow-inner">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Toimintopainikkeet -->
+                    <div class="flex items-center gap-2.5 flex-wrap flex-shrink-0">
+                        <button id="btn-continue-game" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-blue-500/20 transition flex items-center gap-1.5 cursor-pointer transform hover:-translate-y-0.5">
+                            ▶️ Jatka peliä
+                        </button>
+                        <button id="btn-unlock-all" class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
+                            🔓 Avaa kaikki
+                        </button>
+                        <button id="btn-reset-progress" class="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
+                            🔄 Nollaa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Vaihenavigaattori (Ylärivissä suuremmat selkeät painikkeet) -->
+                <div class="flex items-center justify-between gap-3 pb-1 border-b border-slate-800 flex-shrink-0">
+                    <div id="phase-tabs" class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar text-xs sm:text-sm font-bold w-full">
+                        <!-- Generoidaan dynaamisesti JS:llä -->
+                    </div>
+                </div>
+
+                <!-- Kaksipalstainen sisältöalue (Mission List & Mission Preview) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
+                    
+                    <!-- VASEN PALSTA: Tehtävälista ja Haku (5 saraketta laajalla ruudulla) -->
+                    <div class="lg:col-span-5 flex flex-col gap-2.5 min-h-0">
+                        
+                        <!-- Hakupalkki & Tulosten määrä -->
+                        <div class="flex items-center justify-between gap-2.5 flex-shrink-0">
+                            <div class="relative flex-1">
+                                <input type="text" id="level-search-input" placeholder="🔍 Etsi tehtävää, aihetta (esim. VLAN, sairaala, VLSM)..." 
+                                       class="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition shadow-inner">
+                            </div>
+                            <span id="level-count-badge" class="text-xs font-bold text-slate-300 px-3 py-2 bg-slate-800 rounded-xl border border-slate-700 whitespace-nowrap">10 tehtävää</span>
+                        </div>
+
+                        <!-- Tehtävärivi-lista (Mission Rows, joustava korkeus ilman leikkausta) -->
+                        <div id="level-container" class="mission-list-container flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pr-1.5 custom-scrollbar">
+                            <!-- Generoidaan JS:llä -->
+                        </div>
+                    </div>
+
+                    <!-- OIKEA PALSTA: Valitun tehtävän komentokeskus & 3D/Kartta-esikatselu (7 saraketta) -->
+                    <div id="level-preview-panel" class="lg:col-span-7 bg-slate-900/95 border border-slate-700/80 rounded-2xl flex flex-col h-full min-h-0 shadow-2xl overflow-hidden">
+                        <!-- Generoidaan dynaamisesti valitun tason mukaan: Header, Scrollable Content, Fixed Bottom Button -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== PELIN AIKAINEN UI ===================== -->
+        <div id="game-ui" class="hidden w-full h-full flex flex-col justify-between">
+
+            <!-- Yläpalkki -->
+            <div class="flex justify-between items-start p-3 gap-3">
+
+                <!-- Vasemmalla: Tason tiedot (Iso koko näytön korkuinen sivupalkki, suuret ja selkeät fontit) -->
+                <div id="level-info-panel" class="glass-panel p-6 rounded-2xl shadow-2xl flex flex-col pointer-events-auto border border-slate-700/70 custom-scrollbar overflow-y-auto" 
+                     style="width: 440px; max-width: 92vw; height: calc(100vh - 140px); max-height: calc(100vh - 140px); overscroll-behavior: contain;">
+                    
+                    <!-- Yläotsikko & Valikko-nappi -->
+                    <div class="flex justify-between items-start mb-4 pb-4 border-b border-slate-700/80">
+                        <div>
+                            <h2 id="level-title" class="text-xl font-black text-white leading-snug">Taso 1</h2>
+                            <div class="flex items-center gap-3 mt-1.5">
+                                <span id="level-difficulty" class="text-base text-green-400 font-bold">⭐☆☆☆☆</span>
+                                <span id="level-phase" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-600">🟢 Perusteet</span>
+                            </div>
+                        </div>
+                        <button id="btn-back-menu" class="text-sm bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white font-extrabold px-4 py-2.5 rounded-xl transition shadow-lg flex-shrink-0">
+                            ← Valikko
+                        </button>
+                    </div>
+
+                    <!-- Tehtävänanto -->
+                    <div class="mb-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                        <div class="text-xs font-extrabold text-sky-400 uppercase tracking-wider mb-1.5">📋 Tehtävänanto</div>
+                        <p id="level-scenario" class="text-sm text-slate-100 font-medium leading-relaxed">Yhdistä toimisto pääverkkoon.</p>
+                    </div>
+
+                    <!-- Verkon tiedot -->
+                    <div class="mb-4 bg-blue-950/60 p-4 rounded-xl border border-blue-700/60 flex justify-between items-center">
+                        <span class="text-sm font-bold text-blue-200">Pääverkko:</span>
+                        <span id="level-network" class="font-mono text-cyan-300 font-black text-base tracking-wide">192.168.1.0/24</span>
+                    </div>
+
+                    <!-- Vihjeosio (Aina näkyvillä) -->
+                    <div class="mb-4 p-4 bg-amber-950/50 border border-amber-500/60 rounded-xl space-y-1.5">
+                        <div class="text-xs font-black text-amber-300 flex items-center gap-2 uppercase tracking-wide">
+                            <span class="text-base">💡</span> Vihje
+                        </div>
+                        <p id="hint-text" class="text-sm text-amber-100 font-medium leading-relaxed">Vihje ladataan...</p>
+                    </div>
+
+                    <!-- Ohjeet ja Verkkosäännöt (Aina näkyvillä, suuret fontit) -->
+                    <div class="bg-slate-900/90 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 space-y-4">
+                        <div>
+                            <h3 class="font-black text-sky-300 uppercase text-xs tracking-wider mb-2 flex items-center gap-2">
+                                <span class="text-base">🔌</span> Kaapelointi & Portit
+                            </h3>
+                            <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-200 leading-normal">
+                                <li><strong class="text-rose-400 font-bold">Ei PC → PC</strong>: Työasemat vaativat kytkimen väliin.</li>
+                                <li><strong>Default Gateway:</strong> Yhdistää verkon Internetiin. Kytketään LAN-kytkimeen tai palomuuriin.</li>
+                                <li><strong>LAN-kytkin:</strong> 24 porttia päätelaitteille ja WiFi-tukiasemille.</li>
+                                <li><strong>Ydinlinkki:</strong> 48 porttia hierarkkiseen runkoon.</li>
+                                <li><strong>WiFi AP:</strong> Kytketään LAN-kytkimeen (PoE). Ei suoraan toiseen WiFi-tukiasemaan.</li>
+                                <li><strong>Palomuuri:</strong> Vaaditaan suojaamaan palvelimia tai DMZ-aluetta.</li>
+                            </ul>
+                        </div>
+
+                        <div class="border-t border-slate-800 pt-3">
+                            <h3 class="font-black text-emerald-300 uppercase text-xs tracking-wider mb-2 flex items-center gap-2">
+                                <span class="text-base">🎯</span> IP-osoitealueet (Tasot 11+)
+                            </h3>
+                            <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-200 leading-normal">
+                                <li><strong class="text-white font-semibold">Palvelimet:</strong> <span class="text-emerald-400 font-mono font-bold">.1 – .19</span> (kiinteä)</li>
+                                <li><strong class="text-white font-semibold">Käyttäjät (PC/Läppäri):</strong> <span class="text-emerald-400 font-mono font-bold">.20 – .199</span> (DHCP)</li>
+                                <li><strong class="text-white font-semibold">VoIP-puhelimet:</strong> <span class="text-emerald-400 font-mono font-bold">.100 – .199</span> (Voice VLAN)</li>
+                                <li><strong class="text-white font-semibold">Tulostimet:</strong> <span class="text-emerald-400 font-mono font-bold">.200 – .250</span> (Oheislaitteet)</li>
+                            </ul>
+                        </div>
+
+                        <div class="border-t border-slate-800 pt-3">
+                            <h3 class="font-black text-purple-300 uppercase text-xs tracking-wider mb-1.5 flex items-center gap-2">
+                                <span class="text-base">🗺️</span> Topologia
+                            </h3>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                DMZ-vyöhykkeessä kytkentäjärjestys: <strong>Gateway → Palomuuri → Kytkin → Palvelin</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Oikealla: Tavoite -->
+                <div class="glass-panel p-5 rounded-2xl shadow-xl flex flex-col items-end pointer-events-auto border border-slate-700/70">
+                    <div class="text-slate-300 text-xs font-black uppercase tracking-wider mb-1">Valmiit Laitteet</div>
+                    <div class="text-4xl font-black text-white">
+                        <span id="goal-current">0</span>
+                        <span class="text-slate-500 text-3xl font-light"> / </span>
+                        <span id="goal-total" class="text-slate-400">0</span>
+                    </div>
+                    <div class="text-xs text-slate-400 font-semibold mt-2.5 text-right leading-relaxed bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60">
+                        WASD / Oikea hiiri = liiku<br>
+                        Rullaa = zoom
+                    </div>
+                </div>
+            </div>
+
+            <!-- Työkalupalkki alhaalla (nostettu reilusti ylemmäs) -->
+            <div class="flex justify-center pb-12 mb-3 pointer-events-none">
+                <div class="glass-panel px-5 py-3 rounded-2xl flex items-center pointer-events-auto gap-2 shadow-2xl border border-slate-700/70 max-w-full overflow-x-auto">
+
+                    <!-- Valitse / Tarkastele -->
+                    <button class="tool-btn relative active flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="select">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">1</span>
+                        <span class="text-xl mb-1">🖱️</span>
+                        <span class="text-xs font-bold text-white">Valitse</span>
+                    </button>
+
+                    <div id="toolbar-comp-divider" class="w-px bg-slate-600 mx-1"></div>
+
+                    <!-- LAN-kytkin -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="switch">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">2</span>
+                        <img src="assets/icons/juniper-9204.png" alt="LAN-kytkin" class="w-7 h-7 object-contain mb-1 filter drop-shadow">
+                        <span class="text-xs font-bold text-white">LAN-kytkin</span>
+                    </button>
+
+                    <!-- Ydinlinkki (Core Switch) -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="core_switch">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">3</span>
+                        <img src="assets/icons/juniper-9204.png" alt="Ydinlinkki" class="w-8 h-8 object-contain mb-0.5 filter drop-shadow scale-110">
+                        <span class="text-xs font-bold text-white">Ydinlinkki</span>
+                    </button>
+
+                    <!-- Palvelin (Server) -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="server">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">4</span>
+                        <img src="assets/icons/server-4002.png" alt="Palvelin" class="w-7 h-7 object-contain mb-1 filter drop-shadow">
+                        <span class="text-xs font-bold text-white">Palvelin</span>
+                    </button>
+
+                    <!-- WiFi AP -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="wifi">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">5</span>
+                        <span class="text-xl mb-1">📡</span>
+                        <span class="text-xs font-bold text-white">WiFi AP</span>
+                    </button>
+
+                    <!-- Palomuuri -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="firewall">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">6</span>
+                        <span class="text-xl mb-1">🔥</span>
+                        <span class="text-xs font-bold text-white">Palomuuri</span>
+                    </button>
+
+                    <div id="toolbar-cable-divider" class="w-px bg-slate-600 mx-1"></div>
+
+                    <!-- Kaapeli -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="cable">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">7</span>
+                        <span class="text-xl mb-1">🔌</span>
+                        <span class="text-xs font-bold text-white">Kaapeli</span>
+                    </button>
+
+                    <div id="toolbar-delete-divider" class="w-px bg-slate-600 mx-1"></div>
+
+                    <!-- Poista -->
+                    <button class="tool-btn relative flex flex-col items-center p-2.5 rounded-xl border border-transparent min-w-[70px]" data-tool="delete">
+                        <span class="tool-badge absolute top-1 right-1 bg-slate-800/80 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-slate-600/50">8</span>
+                        <span class="text-xl mb-1">🗑️</span>
+                        <span class="text-xs font-bold text-red-400">Poista</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== IP SYÖTTÖ MODAL (3 SARAKETTA: LISTA | LASKIN + IP-SYÖTTÖ | OHJEISTUS) ===================== -->
+        <div id="ip-modal" class="hidden absolute inset-0 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm pointer-events-auto z-50 p-2 sm:p-4">
+            <div class="bg-slate-800 rounded-3xl border-2 border-slate-600 shadow-2xl w-full max-w-[1850px] w-[98vw] transform transition-all scale-95 opacity-0 flex flex-col md:flex-row overflow-hidden max-h-[96vh] h-[95vh]" id="ip-modal-content">
+
+                <!-- Sarake 1: Yhdistetyt laitteet -lista (~22%, min 280px) VASEN (Scrollable) -->
+                <div class="w-full md:w-[22%] min-w-[280px] bg-slate-900/95 p-4 sm:p-5 flex flex-col border-b md:border-b-0 md:border-r border-slate-700 overflow-hidden min-h-0">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3 flex-shrink-0">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl">📋</span>
+                            <div>
+                                <h4 class="text-base font-black text-cyan-300 uppercase tracking-wider">Verkon Laitteet</h4>
+                                <p class="text-xs text-slate-400">Tilan katsaus & valinta</p>
+                            </div>
+                        </div>
+                        <span id="ip-modal-device-count" class="px-2.5 py-1 rounded-full text-xs font-mono font-black bg-cyan-900/50 text-cyan-300 border border-cyan-700/60">0 kpl</span>
+                    </div>
+
+                    <!-- Tilastoyhteenveto -->
+                    <div class="grid grid-cols-2 gap-2.5 mb-3 text-xs font-bold flex-shrink-0">
+                        <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-400">Kaapelit:</span>
+                            <span id="ip-modal-cables-summary" class="font-mono text-cyan-400 text-sm font-black">0/0</span>
+                        </div>
+                        <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-400">IP:t:</span>
+                            <span id="ip-modal-ips-summary" class="font-mono text-emerald-400 text-sm font-black">0/0</span>
+                        </div>
+                    </div>
+
+                    <!-- Scrollattava laitelista (Rullaa vapaasti alas kaikilla laitemäärillä) -->
+                    <div id="ip-modal-device-list" class="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1.5">
+                        <!-- Täytetään dynaamisesti JS:llä -->
+                    </div>
+                </div>
+
+                <!-- Sarake 2: Keskisarake (~36%) [YLHÄÄLLÄ: LASKIN, ALHAALLA: IP-SYÖTTÖ, SCROLLABLE] -->
+                <div class="w-full md:w-[36%] bg-slate-850 p-4 sm:p-5 flex flex-col gap-4 sm:gap-5 border-b md:border-b-0 md:border-r border-slate-700 overflow-y-auto min-h-0">
+                    
+                    <!-- YLÄOSA: LASKIN (TASAPAINOINEN KOKO & HYVÄ ASPECT RATIO) -->
+                    <div class="bg-slate-900/95 p-3.5 sm:p-4 rounded-2xl border border-slate-700 shadow-lg flex-shrink-0">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-sm font-black text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="text-base">🧮</span> Apulaskin
+                            </h4>
+                            <span class="text-[11px] text-slate-400 font-mono font-bold bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">2ˣ & 256</span>
+                        </div>
+
+                        <!-- Laskimen näyttö (Kompaktimpi ja selkeä) -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-2.5 text-right min-h-[62px] flex flex-col justify-end shadow-inner">
+                            <div id="basic-calc-history" class="text-[11px] sm:text-xs text-slate-400 font-mono h-4 overflow-hidden"></div>
+                            <div id="basic-calc-screen" class="text-3xl sm:text-4xl font-black text-white font-mono tracking-wider overflow-x-auto whitespace-nowrap">0</div>
+                        </div>
+
+                        <!-- Laskimen näppäimistö (Tasapainoinen korkeus & aspect ratio) -->
+                        <div class="grid grid-cols-4 gap-1.5 font-mono font-bold text-base sm:text-lg">
+                            <button onclick="calcClear()" class="py-2.5 sm:py-3 bg-rose-900/50 hover:bg-rose-800/70 text-rose-200 rounded-xl border border-rose-800/60 transition shadow-sm">C</button>
+                            <button onclick="calcBackspace()" class="py-2.5 sm:py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition shadow-sm">⌫</button>
+                            <button onclick="calcOp('^')" class="py-2.5 sm:py-3 bg-indigo-900/50 hover:bg-indigo-800/70 text-indigo-200 rounded-xl border border-indigo-700/60 transition shadow-sm" title="Yleinen potenssiin (xʸ)">xʸ</button>
+                            <button onclick="calcPower2()" class="py-2.5 sm:py-3 bg-purple-900/50 hover:bg-purple-800/70 text-purple-200 rounded-xl border border-purple-700/60 transition shadow-sm" title="Laske 2 potenssiin syötetty luku">2ˣ</button>
+
+                            <button onclick="calcNum('7')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">7</button>
+                            <button onclick="calcNum('8')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">8</button>
+                            <button onclick="calcNum('9')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">9</button>
+                            <button onclick="calcOp('/')" class="py-2.5 sm:py-3 bg-blue-900/50 hover:bg-blue-800/70 text-blue-200 rounded-xl border border-blue-800/60 transition shadow-sm text-xl">÷</button>
+
+                            <button onclick="calcNum('4')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">4</button>
+                            <button onclick="calcNum('5')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">5</button>
+                            <button onclick="calcNum('6')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">6</button>
+                            <button onclick="calcOp('*')" class="py-2.5 sm:py-3 bg-blue-900/50 hover:bg-blue-800/70 text-blue-200 rounded-xl border border-blue-800/60 transition shadow-sm text-xl">×</button>
+
+                            <button onclick="calcNum('1')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">1</button>
+                            <button onclick="calcNum('2')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">2</button>
+                            <button onclick="calcNum('3')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">3</button>
+                            <button onclick="calcOp('-')" class="py-2.5 sm:py-3 bg-blue-900/50 hover:bg-blue-800/70 text-blue-200 rounded-xl border border-blue-800/60 transition shadow-sm text-xl">−</button>
+
+                            <button onclick="calcNum('0')" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">0</button>
+                            <button onclick="calcDot()" class="py-2.5 sm:py-3 bg-slate-800/95 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition shadow-sm">.</button>
+                            <button onclick="calcInputQuick(256)" class="py-2.5 sm:py-3 bg-cyan-900/50 hover:bg-cyan-800/70 text-cyan-200 rounded-xl border border-cyan-800/60 transition text-sm font-black shadow-sm" title="Taikanumerovakio 256">256</button>
+                            <button onclick="calcOp('+')" class="py-2.5 sm:py-3 bg-blue-900/50 hover:bg-blue-800/70 text-blue-200 rounded-xl border border-blue-800/60 transition shadow-sm text-xl">+</button>
+
+                            <button onclick="calcEquals()" class="col-span-4 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-lg sm:text-xl shadow-md shadow-emerald-600/30 transition">=</button>
+                        </div>
+                    </div>
+
+                    <!-- ALAOSA: IP-SYÖTTÖ -->
+                    <div class="bg-slate-900/80 p-5 rounded-3xl border border-slate-700 flex-shrink-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-black text-white flex items-center gap-2">
+                                <span class="text-xl">💻</span> Määritä IP-osoite
+                            </h3>
+                        </div>
+                        <p id="ip-modal-node-info" class="text-sm text-blue-300 font-bold mb-1.5"></p>
+                        <div id="ip-modal-used-ips" class="text-xs text-amber-300 font-mono mb-3.5 bg-amber-950/30 p-2.5 rounded-xl border border-amber-800/40 empty:hidden"></div>
+
+                        <!-- IP-osoite -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-black text-slate-200 uppercase tracking-wider mb-2">IP-osoite (IPv4)</label>
+                            <div class="flex items-center gap-1.5 bg-slate-900 border-2 border-slate-600 rounded-2xl p-2.5 focus-within:border-cyan-400 transition-colors">
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                                <span class="text-slate-500 font-black text-2xl">.</span>
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                                <span class="text-slate-500 font-black text-2xl">.</span>
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                                <span class="text-slate-500 font-black text-2xl">.</span>
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                            </div>
+                        </div>
+
+                        <!-- Aliverkon peite -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-black text-slate-200 uppercase tracking-wider mb-2">Aliverkon peite (Subnet Mask)</label>
+                            <div class="flex items-center gap-1.5 bg-slate-900 border-2 border-slate-600 rounded-2xl p-2.5 focus-within:border-cyan-400 transition-colors">
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                                <span class="text-slate-500 font-black text-2xl">.</span>
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                                <span class="text-slate-500 font-black text-2xl">.</span>
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                                <span class="text-slate-500 font-black text-2xl">.</span>
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-2xl font-black focus:outline-none" maxlength="3">
+                            </div>
+                        </div>
+
+                        <!-- Verkon rajat (Network ID & Broadcast) -->
+                        <div id="network-bounds-section" class="hidden pt-3.5 border-t border-slate-700/80 mb-3">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                    <span>🎯</span> Verkon rajat (Network ID & Broadcast)
+                                </label>
+                                <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-black border border-amber-500/40">Vaaditaan</span>
+                            </div>
+                            <p class="text-xs text-slate-300 mb-2.5 leading-snug">
+                                Laske ja syötä tämän aliverkon alin osoite (<strong class="text-white">Verkko-ID</strong>) ja ylin osoite (<strong class="text-white">Broadcast</strong>).
+                            </p>
+
+                            <!-- Verkko-osoite (Network ID) -->
+                            <div class="mb-3">
+                                <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1 flex justify-between">
+                                    <span>Verkko-osoite (Network ID)</span>
+                                    <span class="text-slate-400 font-normal">Alin osoite</span>
+                                </label>
+                                <div class="flex items-center gap-1.5 bg-slate-900 border-2 border-slate-700 rounded-xl p-2 focus-within:border-amber-400 transition-colors">
+                                    <input type="text" class="net-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                    <span class="text-slate-500 font-black text-xl">.</span>
+                                    <input type="text" class="net-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                    <span class="text-slate-500 font-black text-xl">.</span>
+                                    <input type="text" class="net-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                    <span class="text-slate-500 font-black text-xl">.</span>
+                                    <input type="text" class="net-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                </div>
+                            </div>
+
+                            <!-- Broadcast-osoite -->
+                            <div class="mb-2">
+                                <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1 flex justify-between">
+                                    <span>Broadcast-osoite (Yleislähetys)</span>
+                                    <span class="text-slate-400 font-normal">Ylin osoite</span>
+                                </label>
+                                <div class="flex items-center gap-1.5 bg-slate-900 border-2 border-slate-700 rounded-xl p-2 focus-within:border-amber-400 transition-colors">
+                                    <input type="text" class="bcast-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                    <span class="text-slate-500 font-black text-xl">.</span>
+                                    <input type="text" class="bcast-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                    <span class="text-slate-500 font-black text-xl">.</span>
+                                    <input type="text" class="bcast-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                    <span class="text-slate-500 font-black text-xl">.</span>
+                                    <input type="text" class="bcast-octet w-full bg-transparent text-white font-mono text-center text-xl font-black focus:outline-none" maxlength="3">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Painikkeet -->
+                        <div class="flex gap-3 mt-4 pt-2">
+                            <button onclick="closeIpModal()" class="flex-1 px-5 py-3.5 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl font-black transition text-base">Peruuta (Esc)</button>
+                            <button onclick="submitIp()" class="flex-1 px-5 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-black shadow-lg shadow-cyan-500/30 transition text-base">✅ Aseta IP</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sarake 3: Ohjeistukset ja Teoria (~42%) OIKEA -->
+                <div class="w-full md:w-[42%] bg-slate-900/60 p-5 sm:p-6 flex flex-col overflow-hidden">
+                    <!-- Välilehtien otsikkopalkki (Selkeä jako pikaohjeeseen ja syventävään teoriaan) -->
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4 gap-2">
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-950 rounded-2xl border border-slate-800">
+                            <button id="tab-btn-steps" onclick="switchHelpTab('steps')" class="px-4 py-2 rounded-xl text-sm font-black transition-all bg-cyan-600 text-white shadow-md">
+                                🎯 Vaiheittainen Pikaohje
+                            </button>
+                            <button id="tab-btn-theory" onclick="switchHelpTab('theory')" class="px-4 py-2 rounded-xl text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                                📖 Syventävä Teoria & CCNA
+                            </button>
+                        </div>
+                        <span id="ip-help-badge" class="hidden sm:inline-block text-xs font-mono font-black text-cyan-300 bg-cyan-950/70 px-3 py-1.5 rounded-xl border border-cyan-700/50">/24</span>
+                    </div>
+
+                    <!-- Scrollattava sisältöalue -->
+                    <div id="ip-help-container" class="flex-1 overflow-y-auto pr-1">
+                        <div id="ip-help-steps-view" class="space-y-4">
+                            <!-- Täytetään vaihe vaiheelta -korteilla -->
+                        </div>
+                        <div id="ip-help-theory-view" class="space-y-4 hidden">
+                            <!-- Täytetään syventävällä teoriamateriaalilla -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===================== VOITTORUUTU ===================== -->
+        <div id="win-modal" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-md pointer-events-auto z-50">
+            <div class="bg-slate-800 p-10 rounded-3xl border border-slate-600 shadow-2xl text-center max-w-md w-full mx-4">
+                <div class="text-6xl mb-4">🎉</div>
+                <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-300 mb-2">Taso Läpäisty!</h2>
+                <p class="text-slate-300 mb-2">Verkko on toimintakunnossa!</p>
+                <p id="win-next-phase" class="text-sm text-slate-500 mb-8"></p>
+                <div class="flex flex-col gap-4">
+                    <div class="flex gap-4 justify-center">
+                        <button onclick="goToMenu()" class="px-5 py-3 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 text-white transition text-sm">← Valikko</button>
+                        <button onclick="nextLevel()" class="px-7 py-3 rounded-xl font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/30 transition">Seuraava Taso ➔</button>
+                    </div>
+                    <button onclick="document.getElementById('win-modal').classList.add('hidden')" class="text-xs text-slate-500 hover:text-slate-400 font-bold transition">
+                        Piilota (Tutki verkkoa)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- ===================== SKRIPTIT (oikeassa järjestyksessä) ===================== -->
+    <script src="assets/models/juniper-9204.glb.js"></script>
+    <script src="assets/models/server-4002.glb.js"></script>
+    <script src="assets/models/toimisto.glb.js"></script>
+    <script src="assets/models/kannettava.glb.js"></script>
+    <script src="assets/models/pc.glb.js"></script>
+    <script src="assets/models/tulostin.glb.js"></script>
+    <script src="assets/models/router.glb.js"></script>
+    <script src="assets/models/ap-ceiling.glb.js"></script>
+    <script src="js/state.js?v=20260911_v10"></script>
+    <script src="js/network.js?v=20260911_v10"></script>
+    <script src="js/levels.js?v=20260911_v10"></script>
+    <script src="js/scene.js?v=20260911_v10"></script>
+    <script src="js/nodes.js?v=20260911_v10"></script>
+    <script src="js/cables.js?v=20260911_v10"></script>
+    <script src="js/teaching.js?v=20260911_v10"></script>
+    <script src="js/ui.js?v=20260911_v10"></script>
+    <script src="js/game.js?v=20260911_v10"></script>
+</body>
+</html>

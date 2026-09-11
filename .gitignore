@@ -1,0 +1,14 @@
+# Dependencies and scratch
+node_modules/
+scratch/
+
+# Graphify cache
+graphify-out/cache/
+graphify-out/.*
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

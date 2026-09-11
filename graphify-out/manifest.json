@@ -1,0 +1,87 @@
+{
+  "assets/models/ap-ceiling.glb.js": {
+    "mtime": 1789071020.774926,
+    "ast_hash": "dc3543269933985fc4df71b36522ad72",
+    "semantic_hash": "dc3543269933985fc4df71b36522ad72"
+  },
+  "assets/models/juniper-9204.glb.js": {
+    "mtime": 1788968555.6612191,
+    "ast_hash": "12f3e45d0e97d21c1a57dcfbe25eaaa2",
+    "semantic_hash": "12f3e45d0e97d21c1a57dcfbe25eaaa2"
+  },
+  "assets/models/kannettava.glb.js": {
+    "mtime": 1788987439.3753476,
+    "ast_hash": "ae34a122a4d9c0112906ea27fe4de9c2",
+    "semantic_hash": "ae34a122a4d9c0112906ea27fe4de9c2"
+  },
+  "assets/models/pc.glb.js": {
+    "mtime": 1788988834.241551,
+    "ast_hash": "18811767b87b5d5f3a2eb97bc5c518a2",
+    "semantic_hash": "18811767b87b5d5f3a2eb97bc5c518a2"
+  },
+  "assets/models/router.glb.js": {
+    "mtime": 1789056673.6335926,
+    "ast_hash": "818197d47923b4697a61647bde90d58d",
+    "semantic_hash": "818197d47923b4697a61647bde90d58d"
+  },
+  "assets/models/server-4002.glb.js": {
+    "mtime": 1788982709.9661605,
+    "ast_hash": "d93a550706abdebeccbac68f3a185c5a",
+    "semantic_hash": "d93a550706abdebeccbac68f3a185c5a"
+  },
+  "assets/models/toimisto.glb.js": {
+    "mtime": 1788986025.0263102,
+    "ast_hash": "41d2bb123b7a0bf40a283448e502d562",
+    "semantic_hash": "41d2bb123b7a0bf40a283448e502d562"
+  },
+  "assets/models/tulostin.glb.js": {
+    "mtime": 1788989639.649749,
+    "ast_hash": "e9df5333be50d48eead5ab57f1d47006",
+    "semantic_hash": "e9df5333be50d48eead5ab57f1d47006"
+  },
+  "js/cables.js": {
+    "mtime": 1788964398.469593,
+    "ast_hash": "a52a3b26113197ecb6fb87be3239b914",
+    "semantic_hash": "a52a3b26113197ecb6fb87be3239b914"
+  },
+  "js/game.js": {
+    "mtime": 1789075103.1434245,
+    "ast_hash": "6a98501f88105935956d6a59c4d2d730",
+    "semantic_hash": "6a98501f88105935956d6a59c4d2d730"
+  },
+  "js/levels.js": {
+    "mtime": 1789139214.8491209,
+    "ast_hash": "f1c35ceb5be90e6c993fc48dbdee3889",
+    "semantic_hash": "f1c35ceb5be90e6c993fc48dbdee3889"
+  },
+  "js/network.js": {
+    "mtime": 1788884577.4140854,
+    "ast_hash": "2726677c499a165dd28bdcc618cdadb5",
+    "semantic_hash": "2726677c499a165dd28bdcc618cdadb5"
+  },
+  "js/nodes.js": {
+    "mtime": 1789075096.9417863,
+    "ast_hash": "a743164c3a17b5a7ca6e6850099a2f6a",
+    "semantic_hash": "a743164c3a17b5a7ca6e6850099a2f6a"
+  },
+  "js/scene.js": {
+    "mtime": 1789078280.5683753,
+    "ast_hash": "89665e8c7d5db8b12bf89b944c64c97d",
+    "semantic_hash": "89665e8c7d5db8b12bf89b944c64c97d"
+  },
+  "js/state.js": {
+    "mtime": 1789143540.0235424,
+    "ast_hash": "318626ceb94e46cd77adeaa375b00877",
+    "semantic_hash": "318626ceb94e46cd77adeaa375b00877"
+  },
+  "js/teaching.js": {
+    "mtime": 1789147041.0369132,
+    "ast_hash": "f312bff50fde9b3ee8c06246f0474acb",
+    "semantic_hash": "f312bff50fde9b3ee8c06246f0474acb"
+  },
+  "js/ui.js": {
+    "mtime": 1789147482.654738,
+    "ast_hash": "5c4ab30ae139781119a2c00adaa916fc",
+    "semantic_hash": "5c4ab30ae139781119a2c00adaa916fc"
+  }
+}

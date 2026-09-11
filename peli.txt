@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subnet Architect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body { margin: 0; overflow: hidden; background-color: #0f172a; font-family: 'Inter', sans-serif; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1; }
+        
+        #ui-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; display: flex; flex-direction: column; }
+        .pointer-events-auto { pointer-events: auto; }
+        
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        .tool-btn { transition: all 0.2s; }
+        .tool-btn.active { background: #3b82f6; border-color: #60a5fa; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5); }
+        .tool-btn:hover:not(.active) { background: rgba(255, 255, 255, 0.1); }
+
+        /* Tasonvalintaruudukko */
+        .level-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+        .level-btn {
+            width: 75px; height: 75px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; flex-shrink: 0;
+        }
+        .level-btn:hover:not(:disabled) { transform: scale(1.05); }
+        .level-locked { background: #334155; color: #64748b; cursor: not-allowed; border: 2px dashed #475569; }
+        .level-unlocked { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
+        .level-completed { background: linear-gradient(135deg, #16a34a, #22c55e); color: white; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4); }
+
+        /* Toast ilmoitukset */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 100; pointer-events: none;}
+        .toast { padding: 12px 24px; border-radius: 8px; color: white; font-weight: 600; animation: slideDown 0.3s ease-out forwards; opacity: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* Piilotus luokka */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UI Kerros (HTML Overlay) -->
+    <div id="ui-layer">
+        
+        <!-- Päävalikko (Tasonvalinta) -->
+        <div id="main-menu" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-md pointer-events-auto">
+            <h1 class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">Subnet Architect</h1>
+            <p class="text-slate-300 mb-8 text-lg">Yhdistä laitteet, määritä IP-osoitteet ja rakenna toimiva verkko.</p>
+            
+            <div class="glass-panel p-8 rounded-2xl w-full max-w-4xl shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Valitse Taso</h2>
+                    <button id="btn-reset-progress" class="px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/40 rounded-lg text-sm font-semibold transition">
+                        Nollaa Edistyminen
+                    </button>
+                </div>
+                <div id="level-container" class="level-grid overflow-y-auto max-h-[50vh] p-2">
+                    <!-- Tasot generoidaan JS:llä -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Pelin aikainen UI -->
+        <div id="game-ui" class="hidden w-full h-full flex flex-col justify-between">
+            
+            <!-- Yläpalkki (Tiedot) -->
+            <div class="flex justify-between items-start p-4 pointer-events-auto">
+                <div class="glass-panel p-4 rounded-xl shadow-lg w-80">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 id="level-title" class="text-xl font-bold text-white">Taso 1</h2>
+                        <button id="btn-back-menu" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded transition">Valikkoon</button>
+                    </div>
+                    <p id="level-scenario" class="text-sm text-slate-300 mb-3 border-b border-slate-600 pb-2">Yhdistä toimisto pääverkkoon.</p>
+                    <div class="space-y-1">
+                        <div class="flex justify-between"><span class="text-slate-400">Verkko:</span> <span id="level-network" class="font-mono text-blue-400 font-bold">192.168.1.0/24</span></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl shadow-lg flex flex-col items-end">
+                    <div class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-1">Tavoite: Valmiit Laitteet</div>
+                    <div class="text-3xl font-extrabold text-white">
+                        <span id="goal-current">0</span> / <span id="goal-total" class="text-slate-500">2</span>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-2 text-right">Navigointi: WASD / Oikea hiiri / Rulla</div>
+                </div>
+            </div>
+
+            <!-- Työkalupakki (Alhaalla) -->
+            <div class="flex justify-center p-6 pointer-events-auto">
+                <div class="glass-panel px-6 py-4 rounded-2xl shadow-2xl flex gap-4">
+                    <button class="tool-btn active flex flex-col items-center p-3 rounded-xl border border-transparent min-w-[80px]" data-tool="select">
+                        <span class="text-2xl mb-1">🖱️</span><span class="text-xs font-bold text-white">Valitse / IP</span>
+                    </button>
+                    <div class="w-px bg-slate-600 mx-2"></div>
+                    <button class="tool-btn flex flex-col items-center p-3 rounded-xl border border-transparent min-w-[80px]" data-tool="switch">
+                        <span class="text-2xl mb-1">🖧</span><span class="text-xs font-bold text-white">Kytkin</span>
+                    </button>
+                    <button class="tool-btn flex flex-col items-center p-3 rounded-xl border border-transparent min-w-[80px]" data-tool="wifi">
+                        <span class="text-2xl mb-1">📡</span><span class="text-xs font-bold text-white">WiFi AP</span>
+                    </button>
+                    <button class="tool-btn flex flex-col items-center p-3 rounded-xl border border-transparent min-w-[80px]" data-tool="cable">
+                        <span class="text-2xl mb-1">🔌</span><span class="text-xs font-bold text-white">Kaapeli</span>
+                    </button>
+                    <div class="w-px bg-slate-600 mx-2"></div>
+                    <button class="tool-btn flex flex-col items-center p-3 rounded-xl border border-transparent min-w-[80px] hover:bg-red-500/20 hover:border-red-500" data-tool="delete">
+                        <span class="text-2xl mb-1">🗑️</span><span class="text-xs font-bold text-red-400">Poista</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- IP Syöttö Modal (Kaksisarakkeinen) -->
+        <div id="ip-modal" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm pointer-events-auto z-50">
+            <div class="bg-slate-800 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl transform transition-all scale-95 opacity-0 flex overflow-hidden" id="ip-modal-content">
+                
+                <!-- Vasen palsta: Syötteet -->
+                <div class="w-1/2 p-8 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                            <span>💻</span> Määritä IP-osoite
+                        </h3>
+                        <p class="text-sm text-slate-400 mb-6" id="ip-modal-desc">Laite odottaa konfiguraatiota.</p>
+                        
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">IP-osoite (IPv4)</label>
+                            <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2 focus-within:border-blue-500 transition-colors">
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="192">
+                                <span class="text-slate-500 font-bold text-2xl mb-2">.</span>
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="168">
+                                <span class="text-slate-500 font-bold text-2xl mb-2">.</span>
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="1">
+                                <span class="text-slate-500 font-bold text-2xl mb-2">.</span>
+                                <input type="text" class="ip-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="10">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Aliverkon peite (Subnet Mask)</label>
+                            <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2 focus-within:border-blue-500 transition-colors">
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="255">
+                                <span class="text-slate-500 font-bold text-2xl mb-2">.</span>
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="255">
+                                <span class="text-slate-500 font-bold text-2xl mb-2">.</span>
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="255">
+                                <span class="text-slate-500 font-bold text-2xl mb-2">.</span>
+                                <input type="text" class="mask-octet w-full bg-transparent text-white font-mono text-center text-xl focus:outline-none" maxlength="3" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4 mt-8">
+                        <button onclick="closeIpModal()" class="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition">Peruuta (Esc)</button>
+                        <button onclick="submitIp()" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition">Aseta IP</button>
+                    </div>
+                </div>
+
+                <!-- Oikea palsta: Opetusmateriaali -->
+                <div class="w-1/2 bg-slate-700/40 p-8 border-l border-slate-600 flex flex-col">
+                    <h4 class="text-xl font-bold text-blue-400 mb-6 flex items-center gap-2">
+                        <span>🎓</span> Miten tämä lasketaan?
+                    </h4>
+                    <div id="ip-help-content" class="text-sm text-slate-300 space-y-6 overflow-y-auto pr-2">
+                        <!-- Täytetään JS:llä dynaamisesti -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Voittoruutu -->
+        <div id="win-modal" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-md pointer-events-auto z-50">
+            <div class="bg-slate-800 p-10 rounded-3xl border border-slate-600 shadow-2xl text-center transform transition-all">
+                <h2 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-300 mb-4">Taso Läpäisty!</h2>
+                <p class="text-xl text-slate-300 mb-8">Verkko on täysin toimintakunnossa.</p>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="goToMenu()" class="px-6 py-3 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 text-white transition">Palaa Valikkoon</button>
+                    <button onclick="nextLevel()" class="px-8 py-3 rounded-xl font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/30 transition">Seuraava Taso ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <script>
+        // --- Pelin globaalit muuttujat ---
+        const TOTAL_LEVELS = 30;
+        let unlockedLevels = parseInt(localStorage.getItem('subnetArchitect_unlocked')) || 1;
+        let currentLevel = 1;
+        let levels = [];
+        
+        // Verkkojen tyypit (Oikean maailman skenaarioita)
+        const nodeTypes = {
+            ROUTER: 'router',
+            SWITCH: 'switch',
+            WIFI: 'wifi',
+            OFFICE: 'office', // Vaatii IP
+            PC: 'pc',         // Vaatii IP
+            SERVER: 'server'  // Vaatii IP
+        };
+
+        // Three.js muuttujat
+        let scene, camera, renderer, raycaster, mouse;
+        let nodes = []; // Kaikki laitteet
+        let cables = []; // Kaapelit (lines)
+        let particles = []; // Visuaaliset partikkelit
+        let zoneMeshes = []; // Lattian VLAN-alueet
+        
+        let currentTool = 'select';
+        let cableActionState = { active: false, startNode: null, lineTemp: null };
+        let selectedNodeForIp = null;
+        let currentLevelConfig = null;
+
+        // Navigointi
+        let cameraTarget = new THREE.Vector3(0, 0, 0);
+        let cameraZoom = 1;
+        let isPanning = false;
+        let panStart = { x: 0, y: 0 };
+        const keys = { w: false, a: false, s: false, d: false, up: false, down: false, left: false, right: false };
+
+        // IP lokeroiden tapahtumat
+        function setupOctetInputs() {
+            const handleInput = (e) => {
+                let target = e.target;
+                // Vain numeroita
+                target.value = target.value.replace(/[^0-9]/g, '');
+                
+                // Rajoita arvo 255
+                if (target.value !== '' && parseInt(target.value) > 255) {
+                    target.value = '255';
+                }
+
+                // Automaattinen siirtyminen seuraavaan kun 3 numeroa täynnä
+                if (target.value.length === 3) {
+                    const next = target.nextElementSibling?.nextElementSibling;
+                    if (next && next.tagName === 'INPUT') next.focus();
+                }
+            };
+
+            const handleKeyDown = (e) => {
+                const target = e.target;
+                // Siirry seuraavaan pisteellä tai välilyönnillä
+                if ((e.key === '.' || e.key === ' ' || e.key === 'ArrowRight') && target.value !== '') {
+                    e.preventDefault();
+                    const next = target.nextElementSibling?.nextElementSibling;
+                    if (next && next.tagName === 'INPUT') next.focus();
+                } 
+                // Peruuta edelliseen jos ruutu on tyhjä ja painetaan backspace
+                else if ((e.key === 'Backspace' || e.key === 'ArrowLeft') && target.value === '') {
+                    e.preventDefault();
+                    const prev = target.previousElementSibling?.previousElementSibling;
+                    if (prev && prev.tagName === 'INPUT') {
+                        prev.focus();
+                        // Vie kursori edellisen syötteen perään
+                        setTimeout(() => prev.setSelectionRange(prev.value.length, prev.value.length), 0);
+                    }
+                }
+            };
+
+            document.querySelectorAll('.ip-octet, .mask-octet').forEach(input => {
+                input.addEventListener('input', handleInput);
+                input.addEventListener('keydown', handleKeyDown);
+            });
+        }
+
+        // IP Matematiikka apufunktiot
+        function ip2long(ip) {
+            return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+        }
+        function long2ip(long) {
+            return [ (long >>> 24), (long >> 16 & 255), (long >> 8 & 255), (long & 255) ].join('.');
+        }
+        function calculateSubnetDetails(networkIp, cidr) {
+            const netLong = ip2long(networkIp);
+            const mask = ~((1 << (32 - cidr)) - 1) >>> 0;
+            const networkAddress = netLong & mask;
+            const broadcastAddress = networkAddress | (~mask >>> 0);
+            return {
+                network: long2ip(networkAddress),
+                broadcast: long2ip(broadcastAddress),
+                firstHost: long2ip(networkAddress + 1),
+                lastHost: long2ip(broadcastAddress - 1),
+                mask: long2ip(mask)
+            };
+        }
+
+        // Generoidaan tasot
+        function generateLevels() {
+            levels = [];
+            let currentBase = ip2long("192.168.1.0");
+            
+            for (let i = 1; i <= TOTAL_LEVELS; i++) {
+                let cidr = 24;
+                let zones = [];
+                let scenario = "Yhdistä toimisto pääverkkoon.";
+                let requiredNodes = [{ type: nodeTypes.OFFICE, pos: {x: 10, z: 10} }];
+
+                // Kustomoidaan tasot kuvan (VLAN-logiikan) innoittamana
+                if (i === 1) {
+                    scenario = "Tervetuloa! Yhdistä ensimmäinen toimisto.";
+                } else if (i === 2) {
+                    scenario = "Opi jakamaan verkko kahdelle alueelle (VLAN 10 ja VLAN 20).";
+                    zones = [
+                        { x: -10, z: 0, w: 16, d: 20, color: 0x3b82f6, name: "VLAN 10 (Sininen)" }, // Sininen
+                        { x: 10, z: 0, w: 16, d: 20, color: 0x22c55e, name: "VLAN 20 (Vihreä)" }    // Vihreä
+                    ];
+                    requiredNodes = [
+                        { type: nodeTypes.PC, pos: {x: -12, z: -5} },
+                        { type: nodeTypes.PC, pos: {x: -8, z: 5} },
+                        { type: nodeTypes.PC, pos: {x: 8, z: -5} },
+                        { type: nodeTypes.SERVER, pos: {x: 12, z: 5} }
+                    ];
+                } else if (i === 3) {
+                    scenario = "Koulun verkko: Rakenna Opettajien (Sininen), ATK (Vihreä) ja Vieraiden (Punainen) verkot.";
+                    zones = [
+                        { x: -15, z: 0, w: 12, d: 20, color: 0x3b82f6, name: "Opettajat" },
+                        { x: 0, z: 0, w: 12, d: 20, color: 0x22c55e, name: "ATK-Luokka" },
+                        { x: 15, z: 0, w: 12, d: 20, color: 0xef4444, name: "Oppilaat (Guest)" }
+                    ];
+                    requiredNodes = [
+                        { type: nodeTypes.PC, pos: {x: -15, z: 0} },
+                        { type: nodeTypes.OFFICE, pos: {x: 0, z: 5} },
+                        { type: nodeTypes.WIFI, pos: {x: 15, z: -5} }
+                    ];
+                } else if (i > 3) {
+                    // Generoidaan satunnaisia isompia skenaarioita
+                    cidr = 24 + Math.floor((i-3) / 5); // Vaikeutuu (pienemmät verkot)
+                    scenario = "Monimutkainen yritysverkko. Säästä kaapelia ja käytä kytkimiä.";
+                    zones = [
+                        { x: -10, z: -10, w: 15, d: 15, color: 0x3b82f6, name: "Osasto A" },
+                        { x: 10, z: 10, w: 15, d: 15, color: 0xa855f7, name: "Laitteet" }
+                    ];
+                    requiredNodes = [
+                        { type: nodeTypes.OFFICE, pos: {x: -10, z: -10} },
+                        { type: nodeTypes.SERVER, pos: {x: 10, z: 10} }
+                    ];
+                }
+
+                const details = calculateSubnetDetails(long2ip(currentBase), cidr);
+
+                levels.push({
+                    id: i,
+                    network: details.network,
+                    cidr: cidr,
+                    subnetDetails: details,
+                    scenario: scenario,
+                    requiredNodes: requiredNodes,
+                    zones: zones
+                });
+                
+                // Siirrytään seuraavaan verkkoalueeseen
+                currentBase = ip2long(details.broadcast) + 1;
+            }
+        }
+
+        function initThreeJS() {
+            const canvas = document.getElementById('game-canvas');
+            scene = new THREE.Scene();
+            
+            // Isometrinen kamera
+            const aspect = window.innerWidth / window.innerHeight;
+            const d = 20;
+            camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+            camera.position.set(20, 20, 20);
+            camera.lookAt(scene.position);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Valot
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(20, 40, 20);
+            scene.add(dirLight);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(100, 50, 0x334155, 0x1e293b);
+            gridHelper.position.y = -0.5;
+            scene.add(gridHelper);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Event listenerit
+            renderer.domElement.addEventListener('pointermove', onPointerMove);
+            renderer.domElement.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointerup', () => { isPanning = false; });
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+            
+            renderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                cameraZoom += e.deltaY * -0.001;
+                cameraZoom = Math.max(0.3, Math.min(cameraZoom, 3));
+                camera.zoom = cameraZoom;
+                camera.updateProjectionMatrix();
+            }, { passive: false });
+
+            // Näppäimistö navigointi
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (cableActionState.active && cableActionState.lineTemp) {
+                        scene.remove(cableActionState.lineTemp);
+                        cableActionState = { active: false, startNode: null, lineTemp: null };
+                        showToast("Toiminto peruttu", "info");
+                    }
+                    if (!document.getElementById('ip-modal').classList.contains('hidden')) closeIpModal();
+                }
+                const key = e.key.toLowerCase();
+                if (keys.hasOwnProperty(key)) keys[key] = true;
+                if (e.key === 'ArrowUp') keys.up = true;
+                if (e.key === 'ArrowDown') keys.down = true;
+                if (e.key === 'ArrowLeft') keys.left = true;
+                if (e.key === 'ArrowRight') keys.right = true;
+            });
+            window.addEventListener('keyup', (e) => {
+                const key = e.key.toLowerCase();
+                if (keys.hasOwnProperty(key)) keys[key] = false;
+                if (e.key === 'ArrowUp') keys.up = false;
+                if (e.key === 'ArrowDown') keys.down = false;
+                if (e.key === 'ArrowLeft') keys.left = false;
+                if (e.key === 'ArrowRight') keys.right = false;
+            });
+
+            animate();
+        }
+
+        function onWindowResize() {
+            const aspect = window.innerWidth / window.innerHeight;
+            const d = 20;
+            camera.left = -d * aspect;
+            camera.right = d * aspect;
+            camera.top = d;
+            camera.bottom = -d;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onPointerMove(event) {
+            if (isPanning) {
+                const dx = event.clientX - panStart.x;
+                const dy = event.clientY - panStart.y;
+                const panSpeed = 0.05 / cameraZoom;
+                cameraTarget.x -= (dx + dy) * panSpeed;
+                cameraTarget.z -= (dy - dx) * panSpeed;
+                panStart.x = event.clientX;
+                panStart.y = event.clientY;
+                return;
+            }
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            if (cableActionState.active && cableActionState.lineTemp) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(scene.children.find(c => c.type === 'GridHelper'));
+                if (intersects.length > 0) {
+                    const pos = intersects[0].point;
+                    const positions = cableActionState.lineTemp.geometry.attributes.position.array;
+                    positions[3] = pos.x; positions[4] = 0; positions[5] = pos.z;
+                    cableActionState.lineTemp.geometry.attributes.position.needsUpdate = true;
+                }
+            }
+        }
+
+        function onPointerDown(event) {
+            if(event.target.closest('.pointer-events-auto')) return;
+
+            if (event.button === 2 || event.button === 1) {
+                isPanning = true;
+                panStart.x = event.clientX;
+                panStart.y = event.clientY;
+                return;
+            }
+
+            raycaster.setFromCamera(mouse, camera);
+            
+            // Tarkista osuttiinko nodeen
+            const interactableObjects = nodes.map(n => n.mesh);
+            const intersects = raycaster.intersectObjects(interactableObjects);
+
+            if (intersects.length > 0) {
+                const clickedMesh = intersects[0].object;
+                const clickedNode = nodes.find(n => n.mesh === clickedMesh);
+
+                if (currentTool === 'select') {
+                    if ([nodeTypes.OFFICE, nodeTypes.PC, nodeTypes.SERVER].includes(clickedNode.userData.type)) {
+                        if (clickedNode.userData.isConnected) {
+                            openIpModal(clickedNode);
+                        } else {
+                            showToast("Laitteella ei ole verkkoyhteyttä reitittimeen!", "error");
+                        }
+                    } else {
+                        showToast(`Tyyppi: ${clickedNode.userData.type.toUpperCase()}`, "info");
+                    }
+                } else if (currentTool === 'cable') {
+                    handleCableTool(clickedNode);
+                } else if (currentTool === 'delete') {
+                    if (clickedNode.userData.isPredefined) {
+                        showToast("Et voi poistaa tason kiinteitä kohteita!", "error");
+                    } else {
+                        deleteNode(clickedNode);
+                    }
+                }
+            } else {
+                // Klikattiin tyhjää - rakennetaan uusi laite jos työkalu sallii
+                if (currentTool === 'switch' || currentTool === 'wifi') {
+                    const gridIntersects = raycaster.intersectObject(scene.children.find(c => c.type === 'GridHelper'));
+                    if (gridIntersects.length > 0) {
+                        const point = gridIntersects[0].point;
+                        // Snap to grid
+                        const x = Math.round(point.x / 2) * 2;
+                        const z = Math.round(point.z / 2) * 2;
+                        
+                        // Estä päällekkäisyys
+                        if (!nodes.find(n => Math.abs(n.mesh.position.x - x) < 1 && Math.abs(n.mesh.position.z - z) < 1)) {
+                            createNode(currentTool, x, z, false);
+                        }
+                    }
+                }
+            }
+        }
+
+        function setupTools() {
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    const targetBtn = e.target.closest('.tool-btn');
+                    targetBtn.classList.add('active');
+                    currentTool = targetBtn.dataset.tool;
+                    
+                    if (currentTool !== 'cable' && cableActionState.active) {
+                        if (cableActionState.lineTemp) scene.remove(cableActionState.lineTemp);
+                        cableActionState = { active: false, startNode: null, lineTemp: null };
+                    }
+                });
+            });
+        }
+
+        function createNode(type, x, z, isPredefined = false) {
+            let geometry, material, color;
+
+            switch(type) {
+                case nodeTypes.ROUTER:
+                    geometry = new THREE.CylinderGeometry(1, 1, 1.5, 16);
+                    color = 0x3b82f6; // Blue
+                    break;
+                case nodeTypes.SWITCH:
+                    geometry = new THREE.BoxGeometry(1.5, 0.5, 1.5);
+                    color = 0xf97316; // Orange
+                    break;
+                case nodeTypes.WIFI:
+                    geometry = new THREE.SphereGeometry(0.8, 16, 16);
+                    color = 0xa855f7; // Purple
+                    break;
+                case nodeTypes.OFFICE:
+                    geometry = new THREE.BoxGeometry(2, 2, 2);
+                    color = 0x64748b; // Gray
+                    break;
+                case nodeTypes.PC:
+                    geometry = new THREE.BoxGeometry(1, 1, 1);
+                    color = 0x94a3b8; // Light Gray
+                    break;
+                case nodeTypes.SERVER:
+                    geometry = new THREE.BoxGeometry(1.2, 3, 1.2);
+                    color = 0x1e293b; // Dark Gray
+                    break;
+            }
+
+            material = new THREE.MeshPhongMaterial({ color: color });
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Asetetaan pohja nollaan
+            mesh.geometry.computeBoundingBox();
+            const height = mesh.geometry.boundingBox.max.y - mesh.geometry.boundingBox.min.y;
+            mesh.position.set(x, height/2, z);
+
+            scene.add(mesh);
+            
+            const node = { 
+                id: Math.random().toString(36).substr(2, 9), 
+                mesh: mesh, 
+                userData: { 
+                    type: type, 
+                    isPredefined: isPredefined,
+                    isConnected: false,
+                    correctIp: false,
+                    ip: null
+                }
+            };
+
+            // Jos WiFi, piirretään kantama-alue
+            if (type === nodeTypes.WIFI) {
+                const ringGeo = new THREE.RingGeometry(14.5, 15, 32);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xa855f7, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                ring.position.y = 0.1;
+                mesh.add(ring);
+                node.userData.wifiRange = 15;
+            }
+
+            nodes.push(node);
+            checkConnections();
+            return node;
+        }
+
+        function deleteNode(node) {
+            // Poista ensin kaikki nodeen liittyvät kaapelit
+            cables = cables.filter(cable => {
+                if (cable.nodeA === node || cable.nodeB === node) {
+                    scene.remove(cable.line);
+                    return false;
+                }
+                return true;
+            });
+            scene.remove(node.mesh);
+            nodes = nodes.filter(n => n !== node);
+            checkConnections();
+        }
+
+        function handleCableTool(node) {
+            if (!cableActionState.active) {
+                cableActionState.active = true;
+                cableActionState.startNode = node;
+                
+                const material = new THREE.LineBasicMaterial({ color: 0xe2e8f0, linewidth: 2, dashed: true, dashSize: 0.5, gapSize: 0.5 });
+                const geometry = new THREE.BufferGeometry().setFromPoints([node.mesh.position.clone(), node.mesh.position.clone()]);
+                const line = new THREE.Line(geometry, material);
+                line.computeLineDistances();
+                scene.add(line);
+                cableActionState.lineTemp = line;
+            } else {
+                if (cableActionState.startNode !== node) {
+                    const dist = cableActionState.startNode.mesh.position.distanceTo(node.mesh.position);
+                    // Pituusrajoitus (100 metriä = n. 15 yksikköä pelissä)
+                    if (dist > 15) {
+                        showToast("Kaapeli on liian pitkä! (Yli 100m). Signaali heikkenee. Käytä kytkintä välissä.", "error");
+                        scene.remove(cableActionState.lineTemp);
+                    } else {
+                        // Varmista ettei kaapelia ole jo
+                        const exists = cables.find(c => 
+                            (c.nodeA === cableActionState.startNode && c.nodeB === node) || 
+                            (c.nodeB === cableActionState.startNode && c.nodeA === node)
+                        );
+                        if (!exists) {
+                            const material = new THREE.LineBasicMaterial({ color: 0x94a3b8, linewidth: 3 });
+                            const geometry = new THREE.BufferGeometry().setFromPoints([cableActionState.startNode.mesh.position.clone(), node.mesh.position.clone()]);
+                            const line = new THREE.Line(geometry, material);
+                            scene.add(line);
+                            cables.push({ nodeA: cableActionState.startNode, nodeB: node, line: line });
+                            
+                            createSparks(node.mesh.position.clone());
+                        }
+                    }
+                } else {
+                    scene.remove(cableActionState.lineTemp);
+                }
+                if(cableActionState.lineTemp) scene.remove(cableActionState.lineTemp);
+                cableActionState = { active: false, startNode: null, lineTemp: null };
+                checkConnections();
+            }
+        }
+
+        function checkConnections() {
+            // Nollaa tila
+            nodes.forEach(n => {
+                if (n.userData.type !== nodeTypes.ROUTER) {
+                    n.userData.isConnected = false;
+                    // Palauta väri jos ei oikeaa IP:tä
+                    if (!n.userData.correctIp && n.userData.type !== nodeTypes.SWITCH && n.userData.type !== nodeTypes.WIFI) {
+                        n.mesh.material.color.setHex(n.userData.type === nodeTypes.PC ? 0x94a3b8 : (n.userData.type === nodeTypes.SERVER ? 0x1e293b : 0x64748b));
+                    }
+                }
+            });
+
+            const router = nodes.find(n => n.userData.type === nodeTypes.ROUTER);
+            if (!router) return;
+
+            router.userData.isConnected = true;
+
+            // 1. BFS Kaapeleita pitkin
+            let queue = [router];
+            let visited = new Set();
+            visited.add(router);
+
+            // Rakenna vieruslista
+            let adj = new Map();
+            nodes.forEach(n => adj.set(n, []));
+            cables.forEach(c => {
+                adj.get(c.nodeA).push(c.nodeB);
+                adj.get(c.nodeB).push(c.nodeA);
+            });
+
+            while (queue.length > 0) {
+                const curr = queue.shift();
+                curr.userData.isConnected = true;
+
+                for (let neighbor of adj.get(curr)) {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        queue.push(neighbor);
+                    }
+                }
+            }
+
+            // 2. WiFi yhteydet
+            const activeWifis = nodes.filter(n => n.userData.type === nodeTypes.WIFI && n.userData.isConnected);
+            nodes.forEach(node => {
+                if ([nodeTypes.OFFICE, nodeTypes.PC, nodeTypes.SERVER].includes(node.userData.type) && !node.userData.isConnected) {
+                    for (let wifi of activeWifis) {
+                        if (node.mesh.position.distanceTo(wifi.mesh.position) <= wifi.userData.wifiRange) {
+                            node.userData.isConnected = true;
+                            // Visuaalinen indikaattori wifi yhteydestä voisi olla kiva, esim viiva
+                            break;
+                        }
+                    }
+                }
+            });
+
+            updateGoalUI();
+        }
+
+        function showToast(msg, type="info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function renderLevelMenu() {
+            const container = document.getElementById('level-container');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= TOTAL_LEVELS; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                btn.className = 'level-btn ' + (i < unlockedLevels ? 'level-completed' : (i === unlockedLevels ? 'level-unlocked' : 'level-locked'));
+                
+                if (i <= unlockedLevels) {
+                    btn.onclick = () => loadLevel(i);
+                } else {
+                    btn.disabled = true;
+                }
+                container.appendChild(btn);
+            }
+        }
+
+        function loadLevel(levelId) {
+            currentLevel = levelId;
+            currentLevelConfig = levels[levelId - 1];
+            
+            // Piilota valikko, näytä UI
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            
+            // Tyhjennä maailma
+            cables.forEach(c => scene.remove(c.line));
+            nodes.forEach(n => scene.remove(n.mesh));
+            zoneMeshes.forEach(z => scene.remove(z));
+            cables = [];
+            nodes = [];
+            zoneMeshes = [];
+
+            // Aseta UI
+            document.getElementById('level-title').innerText = `Taso ${levelId}`;
+            document.getElementById('level-scenario').innerText = currentLevelConfig.scenario;
+            document.getElementById('level-network').innerText = `${currentLevelConfig.network}/${currentLevelConfig.cidr}`;
+            document.getElementById('goal-total').innerText = currentLevelConfig.requiredNodes.filter(rn => rn.type !== nodeTypes.ROUTER && rn.type !== nodeTypes.WIFI).length;
+
+            // Nollaa kamera
+            cameraTarget.set(0, 0, 0);
+            
+            // Renderöi VLAN alueet (Zones)
+            if (currentLevelConfig.zones) {
+                currentLevelConfig.zones.forEach(zone => {
+                    createZone(zone.x, zone.z, zone.w, zone.d, zone.color);
+                });
+            }
+
+            // Luo Reititin keskelle
+            createNode(nodeTypes.ROUTER, 0, 0, true);
+
+            // Luo tehtävän laitteet
+            currentLevelConfig.requiredNodes.forEach(rn => {
+                createNode(rn.type, rn.pos.x, rn.pos.z, true);
+            });
+
+            document.querySelector('[data-tool="select"]').click();
+            checkConnections();
+        }
+
+        // Uusi funktio VLAN-alueiden piirtämiseen
+        function createZone(x, z, w, d, colorHex) {
+            const geometry = new THREE.PlaneGeometry(w, d);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: colorHex, 
+                transparent: true, 
+                opacity: 0.15, 
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.position.set(x, 0.05, z); // Nostetaan aavistus gridin yläpuolelle
+            
+            // Lisätään reunus alueelle
+            const edges = new THREE.EdgesGeometry(geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: colorHex, opacity: 0.5, transparent: true, linewidth: 2 }));
+            mesh.add(line);
+
+            scene.add(mesh);
+            zoneMeshes.push(mesh);
+        }
+
+        function openIpModal(node) {
+            selectedNodeForIp = node;
+            document.getElementById('ip-modal').classList.remove('hidden');
+            
+            // Näytä pieni animaatio modalissa
+            setTimeout(() => {
+                const content = document.getElementById('ip-modal-content');
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+
+            // Täytä lokerot jos laitteella on jo IP
+            const ipParts = (node.userData.ip || '').split('.');
+            document.querySelectorAll('.ip-octet').forEach((el, i) => {
+                el.value = ipParts[i] || '';
+            });
+            
+            const maskParts = (node.userData.mask || '').split('.');
+            document.querySelectorAll('.mask-octet').forEach((el, i) => {
+                el.value = maskParts[i] || '';
+            });
+            
+            // --- Opetusmateriaalin dynaaminen luonti ---
+            const cidr = currentLevelConfig.cidr;
+            const details = currentLevelConfig.subnetDetails;
+            const hostBits = 32 - cidr;
+            const totalIps = Math.pow(2, hostBits);
+            
+            document.getElementById('ip-help-content').innerHTML = `
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-600 shadow-inner">
+                    <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Tämän tason verkko</span>
+                    <span class="font-mono text-2xl font-bold text-white">${details.network} <span class="text-blue-400">/${cidr}</span></span>
+                </div>
+                
+                <div>
+                    <h5 class="font-bold text-white mb-2 text-base">1. Aliverkon peite (Subnet Mask)</h5>
+                    <p class="leading-relaxed text-slate-300">
+                        CIDR <strong class="text-white">/${cidr}</strong> tarkoittaa, että IP:n 32:sta bitistä <strong>${cidr}</strong> on varattu verkon tunnukselle ja loput <strong>${hostBits}</strong> bitit jäävät laitteille (Host).
+                    </p>
+                    <p class="mt-2 text-slate-300">Tämä tekee peitteeksi <span class="font-mono bg-blue-900/50 text-blue-300 px-2 py-1 rounded font-bold">${details.mask}</span>.</p>
+                </div>
+
+                <div>
+                    <h5 class="font-bold text-white mb-2 text-base">2. Mitä IP-osoitteita voin käyttää?</h5>
+                    <p class="leading-relaxed text-slate-300 mb-3">
+                        Verkossa on yhteensä <strong>${totalIps}</strong> osoitetta, joista kaksi on aina varattu reititykselle ja hallinnalle:
+                    </p>
+                    <ul class="space-y-2 mb-4">
+                        <li class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <span class="text-slate-400 w-24">Verkko-IP:</span> 
+                            <span class="font-mono text-red-300">${details.network}</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <span class="text-slate-400 w-24">Broadcast:</span> 
+                            <span class="font-mono text-red-300">${details.broadcast}</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="bg-emerald-900/30 border border-emerald-700/50 p-4 rounded-xl relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                        <p class="font-bold text-emerald-400 mb-1">✅ Sallitut (Host) IP:t ovat näiden välissä:</p>
+                        <div class="font-mono text-lg text-white mt-2">
+                            ${details.firstHost} <br>
+                            <span class="text-slate-500 text-sm">...asti...</span><br>
+                            ${details.lastHost}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Kohdista ensimmäiseen laatikkoon
+            document.querySelector('.ip-octet').focus();
+        }
+
+        function closeIpModal() {
+            const content = document.getElementById('ip-modal-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('ip-modal').classList.add('hidden');
+                selectedNodeForIp = null;
+            }, 200);
+        }
+
+        function submitIp() {
+            // Kerää osat lokeroista
+            const ipParts = Array.from(document.querySelectorAll('.ip-octet')).map(el => el.value.trim());
+            const maskParts = Array.from(document.querySelectorAll('.mask-octet')).map(el => el.value.trim());
+
+            if (ipParts.some(p => p === '') || maskParts.some(p => p === '')) {
+                showToast("Täytä IP-osoitteen kaikki neljä osaa!", "error");
+                return;
+            }
+
+            const ip = ipParts.join('.');
+            const mask = maskParts.join('.');
+
+            // Validoi IPv4 muoto (Tämä on osin turha koska lokerot sallivat vain numeroita 0-255, mutta varmuuden vuoksi)
+            const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipRegex.test(ip) || !ipRegex.test(mask)) {
+                showToast("Virheellinen IP- tai peitemuoto!", "error");
+                return;
+            }
+
+            const numIpParts = ip.split('.').map(Number);
+            const numMaskParts = mask.split('.').map(Number);
+            if (numIpParts.some(p => p > 255) || numMaskParts.some(p => p > 255)) {
+                showToast("Oktetti ei voi olla yli 255!", "error");
+                return;
+            }
+
+            const details = currentLevelConfig.subnetDetails;
+
+            // Opetuksellinen osuus: Tarkista ensin Subnet Mask
+            if (mask !== details.mask) {
+                showToast(`Väärä aliverkon peite! /${currentLevelConfig.cidr} verkossa peite on ${details.mask}`, "error");
+                return;
+            }
+
+            // Tarkista verkon logiikka IP:lle
+            if (ip === details.network) {
+                showToast(`Virhe: ${ip} on verkon osoite! Laitteelle pitää antaa isäntäosoite.`, "error");
+            } else if (ip === details.broadcast) {
+                showToast(`Virhe: ${ip} on Broadcast-osoite! Sitä ei voi antaa laitteelle.`, "error");
+            } else {
+                const ipL = ip2long(ip);
+                const firstL = ip2long(details.firstHost);
+                const lastL = ip2long(details.lastHost);
+
+                if (ipL >= firstL && ipL <= lastL) {
+                    // Oikein!
+                    selectedNodeForIp.userData.ip = ip;
+                    selectedNodeForIp.userData.mask = mask;
+                    selectedNodeForIp.userData.correctIp = true;
+                    selectedNodeForIp.mesh.material.color.setHex(0x10b981); // Vihreä
+                    
+                    showToast("IP hyväksytty! Laite on verkossa.", "success");
+                    
+                    // Juhla-animaatio
+                    selectedNodeForIp.userData.animating = true;
+                    selectedNodeForIp.userData.animStart = Date.now();
+                    createDataConfetti(selectedNodeForIp.mesh.position.clone());
+
+                    closeIpModal();
+                    updateGoalUI();
+                } else {
+                    showToast(`IP ei kuulu verkkoon ${details.network}/${currentLevelConfig.cidr}`, "error");
+                }
+            }
+        }
+
+        function updateGoalUI() {
+            const required = currentLevelConfig ? currentLevelConfig.requiredNodes.length : 0;
+            let current = 0;
+
+            // Tarkista kaikki tehtäväksi annetut (predefined) laitteet, jotka EIVÄT ole reitittimiä
+            nodes.forEach(n => {
+                if (n.userData.isPredefined && n.userData.type !== nodeTypes.ROUTER) {
+                    if (n.userData.isConnected && n.userData.correctIp) {
+                        current++;
+                    }
+                }
+            });
+
+            document.getElementById('goal-current').innerText = current;
+            
+            const goalCurrentEl = document.getElementById('goal-current');
+            if (current === required && required > 0) {
+                goalCurrentEl.classList.remove('text-white');
+                goalCurrentEl.classList.add('text-green-400');
+                
+                // Viive voittoruutuun, jotta pelaaja näkee animaation
+                setTimeout(() => {
+                    document.getElementById('win-modal').classList.remove('hidden');
+                    if (currentLevel === unlockedLevels && currentLevel < TOTAL_LEVELS) {
+                        unlockedLevels++;
+                        localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
+                    }
+                }, 1500);
+            } else {
+                goalCurrentEl.classList.add('text-white');
+                goalCurrentEl.classList.remove('text-green-400');
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('win-modal').classList.add('hidden');
+            if (currentLevel < TOTAL_LEVELS) {
+                loadLevel(currentLevel + 1);
+            } else {
+                goToMenu();
+                showToast("Olet läpäissyt kaikki tasot! Onneksi olkoon!", "success");
+            }
+        }
+
+        function goToMenu() {
+            document.getElementById('game-ui').classList.add('hidden');
+            document.getElementById('win-modal').classList.add('hidden');
+            document.getElementById('ip-modal').classList.add('hidden');
+            renderLevelMenu();
+            document.getElementById('main-menu').classList.remove('hidden');
+            
+            // Tyhjennä tausta
+            cables.forEach(c => scene.remove(c.line));
+            nodes.forEach(n => scene.remove(n.mesh));
+            cables = [];
+            nodes = [];
+            cameraTarget.set(0, 0, 0);
+        }
+
+        function createSparks(position) {
+            for (let i = 0; i < 15; i++) {
+                const geo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(position);
+                mesh.position.y += 1;
+                scene.add(mesh);
+                particles.push({
+                    mesh: mesh,
+                    velocity: new THREE.Vector3((Math.random()-0.5)*0.5, Math.random()*0.5, (Math.random()-0.5)*0.5),
+                    life: 1.0
+                });
+            }
+        }
+
+        function createDataConfetti(position) {
+            for (let i = 0; i < 30; i++) {
+                const geo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(position);
+                mesh.position.y += 2;
+                scene.add(mesh);
+                particles.push({
+                    mesh: mesh,
+                    velocity: new THREE.Vector3((Math.random()-0.5)*0.8, Math.random()*0.8 + 0.2, (Math.random()-0.5)*0.8),
+                    life: 1.5,
+                    isConfetti: true
+                });
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Kameran ohjaus näppäimistöllä
+            if (!document.getElementById('game-ui').classList.contains('hidden')) {
+                const speed = 0.5;
+                if (keys.w || keys.up) { cameraTarget.x -= speed; cameraTarget.z -= speed; }
+                if (keys.s || keys.down) { cameraTarget.x += speed; cameraTarget.z += speed; }
+                if (keys.a || keys.left) { cameraTarget.x -= speed; cameraTarget.z += speed; }
+                if (keys.d || keys.right) { cameraTarget.x += speed; cameraTarget.z -= speed; }
+            }
+
+            // Lerp kamera kohteeseen
+            if (document.getElementById('main-menu').classList.contains('hidden')) {
+                camera.position.x = THREE.MathUtils.lerp(camera.position.x, cameraTarget.x + 20, 0.1);
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, cameraTarget.z + 20, 0.1);
+                camera.lookAt(cameraTarget.x, 0, cameraTarget.z);
+            } else {
+                // Valikossa pyöritään
+                const time = Date.now() * 0.0001;
+                camera.position.x = Math.cos(time) * 30;
+                camera.position.z = Math.sin(time) * 30;
+                camera.lookAt(0,0,0);
+            }
+
+            // Partikkelit
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.mesh.position.add(p.velocity);
+                p.velocity.y -= 0.02; // Painovoima
+                p.life -= 0.02;
+                
+                if (p.isConfetti) p.mesh.rotation.x += 0.1; p.mesh.rotation.y += 0.1;
+
+                if (p.life <= 0) {
+                    scene.remove(p.mesh);
+                    particles.splice(i, 1);
+                } else {
+                    p.mesh.scale.setScalar(p.life);
+                }
+            }
+
+            // Pomppivat laitteet (Onnistuminen)
+            nodes.forEach(n => {
+                if (n.userData.animating) {
+                    const elapsed = Date.now() - n.userData.animStart;
+                    if (elapsed < 500) {
+                        // Hyppy (Siniaalto)
+                        n.mesh.position.y = (n.mesh.geometry.boundingBox.max.y - n.mesh.geometry.boundingBox.min.y)/2 + Math.sin(elapsed / 500 * Math.PI) * 2;
+                    } else {
+                        n.mesh.position.y = (n.mesh.geometry.boundingBox.max.y - n.mesh.geometry.boundingBox.min.y)/2;
+                        n.userData.animating = false;
+                    }
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = () => {
+            generateLevels();
+            renderLevelMenu();
+            setupTools();
+            setupOctetInputs(); // Uusi IP lokeroiden alustus
+            initThreeJS();
+
+            document.getElementById('btn-back-menu').addEventListener('click', goToMenu);
+            document.getElementById('btn-reset-progress').addEventListener('click', () => {
+                if(confirm("Haluatko varmasti nollata edistymisesi?")) {
+                    localStorage.removeItem('subnetArchitect_unlocked');
+                    unlockedLevels = 1;
+                    renderLevelMenu();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
