@@ -115,6 +115,9 @@ function setupOctetInputs() {
             if (next && next.tagName === 'INPUT') next.focus();
         }
         if (typeof saveIpInputsToMemory === 'function') saveIpInputsToMemory();
+        if (typeof currentHelpTab !== 'undefined' && currentHelpTab === 'binary' && typeof renderBinaryVisualizer === 'function') {
+            renderBinaryVisualizer();
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -910,28 +913,325 @@ function updateModalDeviceList(selectedNode) {
     if (ipsSummaryEl) ipsSummaryEl.innerText = `${configuredIpsCount}/${ipRequiredCount}`;
 }
 
+let currentHelpTab = 'steps';
+
 /**
- * Vaihtaa ohjepalstan välilehteä (Vaiheittainen pikaohje vs. Syventävä teoria)
+ * Vaihtaa ohjepalstan välilehteä:
+ * - 'steps': Vaiheittainen pikaohje
+ * - 'theory': Syventävä teoria & CCNA
+ * - 'binary': Reaaliaikainen 32-bittinen visualisoija & Bitwise AND
+ * - 'matrix': Aliverkkomatriisi / Cheat Sheet (/8 – /32)
  */
 function switchHelpTab(tab) {
+    currentHelpTab = tab || 'steps';
     const stepsBtn = document.getElementById('tab-btn-steps');
     const theoryBtn = document.getElementById('tab-btn-theory');
+    const binaryBtn = document.getElementById('tab-btn-binary');
+    const matrixBtn = document.getElementById('tab-btn-matrix');
+
     const stepsView = document.getElementById('ip-help-steps-view');
     const theoryView = document.getElementById('ip-help-theory-view');
+    const binaryView = document.getElementById('ip-help-binary-view');
+    const matrixView = document.getElementById('ip-help-matrix-view');
 
-    if (!stepsBtn || !theoryBtn || !stepsView || !theoryView) return;
+    const activeClass = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
+    const inactiveClass = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800';
 
-    if (tab === 'steps') {
-        stepsBtn.className = 'px-4 py-2 rounded-xl text-sm font-black transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
-        theoryBtn.className = 'px-4 py-2 rounded-xl text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800';
-        stepsView.classList.remove('hidden');
-        theoryView.classList.add('hidden');
-    } else {
-        theoryBtn.className = 'px-4 py-2 rounded-xl text-sm font-black transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
-        stepsBtn.className = 'px-4 py-2 rounded-xl text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800';
-        theoryView.classList.remove('hidden');
-        stepsView.classList.add('hidden');
+    if (stepsBtn) stepsBtn.className = currentHelpTab === 'steps' ? activeClass : inactiveClass;
+    if (theoryBtn) theoryBtn.className = currentHelpTab === 'theory' ? activeClass : inactiveClass;
+    if (binaryBtn) binaryBtn.className = currentHelpTab === 'binary' ? activeClass : inactiveClass;
+    if (matrixBtn) matrixBtn.className = currentHelpTab === 'matrix' ? activeClass : inactiveClass;
+
+    if (stepsView) stepsView.classList.toggle('hidden', currentHelpTab !== 'steps');
+    if (theoryView) theoryView.classList.toggle('hidden', currentHelpTab !== 'theory');
+    if (binaryView) binaryView.classList.toggle('hidden', currentHelpTab !== 'binary');
+    if (matrixView) matrixView.classList.toggle('hidden', currentHelpTab !== 'matrix');
+
+    if (currentHelpTab === 'binary') {
+        renderBinaryVisualizer();
+    } else if (currentHelpTab === 'matrix') {
+        renderSubnetMatrix();
     }
+}
+
+/**
+ * Renderöi reaaliaikaisen 32-bittisen Bitwise AND -visualisoijan.
+ */
+function renderBinaryVisualizer() {
+    const container = document.getElementById('ip-help-binary-view');
+    if (!container) return;
+
+    const ipInputs = Array.from(document.querySelectorAll('.ip-octet')).map(el => el.value.trim());
+    const maskInputs = Array.from(document.querySelectorAll('.mask-octet')).map(el => el.value.trim());
+
+    const scope = (selectedNodeForIp && typeof getNodeSubnetScope === 'function')
+        ? getNodeSubnetScope(selectedNodeForIp)
+        : null;
+    const fallbackCidr = (scope && scope.cidr) ? scope.cidr : 24;
+
+    const ip = (ipInputs.length === 4 && ipInputs.every(p => p !== ''))
+        ? ipInputs.join('.')
+        : (scope && scope.details ? scope.details.firstHost : '192.168.1.10');
+
+    const mask = (maskInputs.length === 4 && maskInputs.every(p => p !== ''))
+        ? maskInputs.join('.')
+        : (scope && scope.details ? scope.details.mask : '255.255.255.0');
+
+    const cidr = (typeof maskToCidr === 'function') ? maskToCidr(mask) : fallbackCidr;
+    const breakdown = (typeof getBitwiseAndBreakdown === 'function')
+        ? getBitwiseAndBreakdown(ip, cidr)
+        : null;
+
+    if (!breakdown) {
+        container.innerHTML = '<div class="text-slate-400 text-xs p-4">Laskentafunktioita ladataan...</div>';
+        return;
+    }
+
+    const ipClass = (typeof getIpClass === 'function') ? getIpClass(ip) : { classType: 'C', description: 'Luokka C' };
+    const special = (typeof getSpecialIpType === 'function') ? getSpecialIpType(ip) : { isSpecial: false, type: 'Public IPv4' };
+    const magic = (typeof getMagicNumber === 'function') ? getMagicNumber(cidr) : { formula: '256 − maski', blockSize: 256 };
+    const wildcard = (typeof getWildcardMask === 'function') ? getWildcardMask(mask) : '0.0.0.255';
+
+    function formatBitRow(binStr, isMask = false) {
+        const raw = binStr.replace(/\./g, '');
+        let html = '<div class="flex items-center gap-0.5 sm:gap-1 font-mono text-[10px] sm:text-xs select-none overflow-x-auto py-1">';
+        for (let i = 0; i < 32; i++) {
+            const bit = raw[i] || '0';
+            const isNetBit = i < cidr;
+            const isCutBit = i === cidr - 1;
+            const isOctetBorder = (i + 1) % 8 === 0 && i < 31;
+
+            let colorBg = isNetBit
+                ? (isMask ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/70' : 'bg-cyan-950/90 text-cyan-300 border-cyan-500/70')
+                : (isMask ? 'bg-slate-900 text-slate-500 border-slate-700' : 'bg-amber-950/90 text-amber-300 border-amber-500/70');
+
+            let extraBorder = isCutBit ? 'border-r-2 border-r-rose-400 ring-1 ring-rose-500/60' : '';
+            html += `<span class="inline-flex items-center justify-center w-4 sm:w-5 h-5 sm:h-6 rounded border ${colorBg} ${extraBorder} font-bold text-center">${bit}</span>`;
+            if (isOctetBorder) {
+                html += '<span class="text-slate-500 font-bold px-0.5">.</span>';
+            }
+        }
+        html += '</div>';
+        return html;
+    }
+
+    let statusBadge = '';
+    if (breakdown.isNetworkAddress && cidr < 31) {
+        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">⚠️ Network ID – Ei voida antaa laitteelle!</span>';
+    } else if (breakdown.isBroadcastAddress && cidr < 31) {
+        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ Broadcast – Ei voida antaa laitteelle!</span>';
+    } else if (breakdown.isUsableHost) {
+        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✅ Sallittu Isäntäosoite</span>';
+    } else {
+        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">ℹ️ Aliverkon ulkopuolella</span>';
+    }
+
+    container.innerHTML = `
+        <div class="space-y-4 text-slate-100">
+            <!-- Yhteenvetokortti ja tilamerkki -->
+            <div class="bg-slate-800/95 p-4 rounded-2xl border border-slate-600 shadow-xl space-y-3">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                            ⚙️ 32-BIT VISUALISOIJA
+                        </span>
+                        <span class="text-xs font-mono text-slate-400">Prefiksi: /${cidr}</span>
+                    </div>
+                    ${statusBadge}
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">IP-Luokka:</span>
+                        <span class="font-bold text-white text-sm">${ipClass.classType}</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Tyyppi:</span>
+                        <span class="font-bold text-cyan-300 text-xs truncate block" title="${special.type}">${special.type}</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Magic Number:</span>
+                        <span class="font-mono font-bold text-amber-300 text-sm">${magic.blockSize}</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Wildcard:</span>
+                        <span class="font-mono font-bold text-purple-300 text-xs">${wildcard}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reaaliaikainen 32-bittinen totuustaulu -->
+            <div class="bg-slate-800/95 p-4 rounded-2xl border border-slate-600 shadow-xl space-y-3.5">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-700 text-xs flex-wrap gap-2">
+                    <span class="font-bold text-white flex items-center gap-1.5">
+                        <span>🔍</span> Bitwise AND -hajotelma (Rautatason laskenta)
+                    </span>
+                    <div class="flex items-center gap-3 text-[11px]">
+                        <span class="flex items-center gap-1 text-cyan-300 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span> Verkko (${cidr}b)</span>
+                        <span class="flex items-center gap-1 text-amber-300 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Isäntä (${32 - cidr}b)</span>
+                    </div>
+                </div>
+
+                <!-- IP Binaari -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-300 font-bold">Syötetty IP:</span>
+                        <span class="font-mono text-cyan-300 font-bold">${ip}</span>
+                    </div>
+                    <div class="overflow-x-auto pb-1">
+                        ${formatBitRow(breakdown.ipBinary, false)}
+                    </div>
+                </div>
+
+                <!-- Mask Binaari -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-300 font-bold">Aliverkon Peite (AND-maski):</span>
+                        <span class="font-mono text-emerald-300 font-bold">${mask}</span>
+                    </div>
+                    <div class="overflow-x-auto pb-1">
+                        ${formatBitRow(breakdown.maskBinary, true)}
+                    </div>
+                </div>
+
+                <div class="border-t border-dashed border-slate-600 my-2"></div>
+
+                <!-- Tulos (Network ID) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-white font-bold flex items-center gap-1">
+                            <span>➔</span> Bitwise AND -tulos (Network ID):
+                        </span>
+                        <span class="font-mono text-white font-black text-sm bg-slate-900 px-2 py-0.5 rounded">${breakdown.network}</span>
+                    </div>
+                    <div class="overflow-x-auto pb-1">
+                        ${formatBitRow(breakdown.networkBinary, false)}
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700/80 text-xs text-slate-300 space-y-1 leading-relaxed">
+                    <p>
+                        Punainen pystyviiva osoittaa <strong class="text-white">CIDR-leikkauskohdan (/${cidr})</strong>.
+                        Maskin ykkösbitit kopioivat IP:n verkko-osan suoraan tulokseen. Maskin nollabitit pakottavat tuloksen isäntäosan nolliksi, jolloin saadaan aliverkon <strong class="text-cyan-300">Network ID (${breakdown.network})</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Aliverkon sallitut rajat -->
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-700 text-xs space-y-2">
+                <div class="font-bold text-white text-xs uppercase tracking-wider">Tämän Aliverkkolohkon Rajat:</div>
+                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Alin (Verkko-IP):</span>
+                        <span class="text-rose-300 font-bold">${breakdown.details.network}</span>
+                    </div>
+                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Ylin (Broadcast):</span>
+                        <span class="text-amber-300 font-bold">${breakdown.details.broadcast}</span>
+                    </div>
+                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">1. Sallittu isäntä:</span>
+                        <span class="text-emerald-300 font-bold">${breakdown.details.firstHost}</span>
+                    </div>
+                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Viim. sallittu isäntä:</span>
+                        <span class="text-emerald-300 font-bold">${breakdown.details.lastHost}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Renderöi CCNA / Network+ Subnetting Cheat Sheet -matriisin (/8 – /32).
+ */
+function renderSubnetMatrix() {
+    const container = document.getElementById('ip-help-matrix-view');
+    if (!container) return;
+
+    const scope = (selectedNodeForIp && typeof getNodeSubnetScope === 'function')
+        ? getNodeSubnetScope(selectedNodeForIp)
+        : null;
+    const currentCidr = (scope && scope.cidr) ? scope.cidr : 24;
+
+    const matrixRows = [
+        { cidr: 8, mask: '255.0.0.0', wildcard: '0.255.255.255', magic: 256, hosts: '16 777 214', note: 'Luokka A / Suuret organisaatiot' },
+        { cidr: 12, mask: '255.240.0.0', wildcard: '0.15.255.255', magic: 16, hosts: '1 048 574', note: 'RFC 1918 Yksityinen B-alue' },
+        { cidr: 16, mask: '255.255.0.0', wildcard: '0.0.255.255', magic: 256, hosts: '65 534', note: 'Luokka B / Kampusverkot' },
+        { cidr: 18, mask: '255.255.192.0', wildcard: '0.0.63.255', magic: 64, hosts: '16 382', note: 'Alueelliset toimipisteet' },
+        { cidr: 20, mask: '255.255.240.0', wildcard: '0.0.15.255', magic: 16, hosts: '4 094', note: 'Keskisuuret toimistot' },
+        { cidr: 21, mask: '255.255.248.0', wildcard: '0.0.7.255', magic: 8, hosts: '2 046', note: 'Tehdasalueet' },
+        { cidr: 22, mask: '255.255.252.0', wildcard: '0.0.3.255', magic: 4, hosts: '1 022', note: 'Korkeakoulukampukset' },
+        { cidr: 23, mask: '255.255.254.0', wildcard: '0.0.1.255', magic: 2, hosts: '510', note: 'Suuret konttorit / Sairaalat' },
+        { cidr: 24, mask: '255.255.255.0', wildcard: '0.0.0.255', magic: 256, hosts: '254', note: 'Luokka C / SOHO & Pk-yritykset' },
+        { cidr: 25, mask: '255.255.255.128', wildcard: '0.0.0.127', magic: 128, hosts: '126', note: 'Osastosegmentointi (2 lohkoa)' },
+        { cidr: 26, mask: '255.255.255.192', wildcard: '0.0.0.63', magic: 64, hosts: '62', note: 'Neljännesaliverkko (4 lohkoa)' },
+        { cidr: 27, mask: '255.255.255.224', wildcard: '0.0.0.31', magic: 32, hosts: '30', note: 'Projektitiimit / WiFi-alueet' },
+        { cidr: 28, mask: '255.255.255.240', wildcard: '0.0.0.15', magic: 16, hosts: '14', note: 'Palvelinräkit & DMZ' },
+        { cidr: 29, mask: '255.255.255.248', wildcard: '0.0.0.7', magic: 8, hosts: '6', note: 'Palomuuriklustereiden HA' },
+        { cidr: 30, mask: '255.255.255.252', wildcard: '0.0.0.3', magic: 4, hosts: '2', note: 'Perinteinen reititinlinkki' },
+        { cidr: 31, mask: '255.255.255.254', wildcard: '0.0.0.1', magic: 2, hosts: '2', note: '⚡ RFC 3021 Point-to-Point (Konesalit)' },
+        { cidr: 32, mask: '255.255.255.255', wildcard: '0.0.0.0', magic: 1, hosts: '1', note: '📍 RFC 4632 Host Route / Loopback' }
+    ];
+
+    let rowsHtml = '';
+    matrixRows.forEach(r => {
+        const isCurrent = r.cidr === currentCidr;
+        const rowClass = isCurrent
+            ? 'bg-cyan-950/80 border-2 border-cyan-400 font-bold text-white shadow-md shadow-cyan-950'
+            : 'border-b border-slate-800/80 hover:bg-slate-800/50 text-slate-300';
+
+        rowsHtml += `
+            <tr class="${rowClass} transition-colors">
+                <td class="p-2.5 font-mono text-cyan-300 font-black whitespace-nowrap">
+                    /${r.cidr} ${isCurrent ? '<span class="text-amber-400 text-xs">★ Nykyinen</span>' : ''}
+                </td>
+                <td class="p-2.5 font-mono text-white text-xs whitespace-nowrap">${r.mask}</td>
+                <td class="p-2.5 font-mono text-amber-300 text-xs text-center">${r.magic}</td>
+                <td class="p-2.5 font-mono text-emerald-300 text-xs font-bold text-right">${r.hosts}</td>
+                <td class="p-2.5 font-mono text-purple-300 text-xs hidden sm:table-cell">${r.wildcard}</td>
+                <td class="p-2.5 text-xs text-slate-300 hidden md:table-cell">${r.note}</td>
+            </tr>
+        `;
+    });
+
+    container.innerHTML = `
+        <div class="space-y-4 text-slate-100">
+            <div class="bg-slate-800/95 p-4 rounded-2xl border border-slate-600 shadow-xl space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                        📊 CCNA & NETWORK+ CHEAT SHEET
+                    </span>
+                    <span class="text-xs text-slate-400">Prefiksit /8 – /32</span>
+                </div>
+                <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    Aliverkkotaulukko (Subnetting Matrix)
+                </h4>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Ammattilaisen pikaopas: etsi vasemmalta tarvittava isäntämäärä tai prefiksi, josta näet välittömästi maskin, Magic Number -lohkokoon ja tyypillisen käyttötarkoituksen.
+                </p>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/95 shadow-xl">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-950 border-b border-slate-700 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                            <th class="p-2.5">CIDR</th>
+                            <th class="p-2.5">Aliverkon Peite</th>
+                            <th class="p-2.5 text-center">Lohko</th>
+                            <th class="p-2.5 text-right">Isännät</th>
+                            <th class="p-2.5 hidden sm:table-cell">Wildcard</th>
+                            <th class="p-2.5 hidden md:table-cell">Käyttökohde</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -1464,12 +1764,12 @@ function submitIp() {
         return;
     }
 
-    if (ip === details.network) {
-        showToast(`Virhe: ${ip} on verkko-osoite, ei käy laitteelle!`, "error");
+    if (cidr < 31 && ip === details.network) {
+        showToast(`Virhe: ${ip} on aliverkon verkko-osoite (Network ID)! Kaikki ${32 - cidr} isäntäbittiä ovat 0.`, "error");
         return;
     }
-    if (ip === details.broadcast) {
-        showToast(`Virhe: ${ip} on Broadcast-osoite, ei käy laitteelle!`, "error");
+    if (cidr < 31 && ip === details.broadcast) {
+        showToast(`Virhe: ${ip} on aliverkon yleislähetysosoite (Broadcast)! Kaikki ${32 - cidr} isäntäbittiä ovat 1.`, "error");
         return;
     }
 
@@ -1539,8 +1839,13 @@ function submitIp() {
         checkConnections();
         updateGoalUI();
     } else {
+        const breakdown = (typeof getBitwiseAndBreakdown === 'function') ? getBitwiseAndBreakdown(ip, cidr) : null;
         const zoneMsg = scope.zoneName ? ` osaston ${scope.zoneName} aliverkkoon` : '';
-        showToast(`IP ${ip} ei kuulu${zoneMsg} (${details.network}/${cidr})! Sallittu: ${details.firstHost}–${details.lastHost}`, "error");
+        if (breakdown && breakdown.network !== details.network) {
+            showToast(`Virhe: IP ${ip} kuuluu aliverkkoon ${breakdown.network}/${cidr}, ei tason kohdeverkkoon ${details.network}/${cidr}!`, "error");
+        } else {
+            showToast(`IP ${ip} ei kuulu${zoneMsg} (${details.network}/${cidr})! Sallittu: ${details.firstHost}–${details.lastHost}`, "error");
+        }
     }
 }
 

@@ -457,14 +457,20 @@
 
                 <!-- Sarake 3: Ohjeistukset ja Teoria (~42%) OIKEA -->
                 <div class="w-full md:w-[42%] bg-slate-900/60 p-5 sm:p-6 flex flex-col overflow-hidden">
-                    <!-- Välilehtien otsikkopalkki (Selkeä jako pikaohjeeseen ja syventävään teoriaan) -->
+                    <!-- Välilehtien otsikkopalkki (Selkeä jako pikaohjeeseen, teoriaan, bittivisualisoijaan ja Cheat Sheetiin) -->
                     <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4 gap-2">
-                        <div class="flex items-center gap-1.5 p-1 bg-slate-950 rounded-2xl border border-slate-800">
-                            <button id="tab-btn-steps" onclick="switchHelpTab('steps')" class="px-4 py-2 rounded-xl text-sm font-black transition-all bg-cyan-600 text-white shadow-md">
-                                🎯 Vaiheittainen Pikaohje
+                        <div class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-950 rounded-2xl border border-slate-800">
+                            <button id="tab-btn-steps" onclick="switchHelpTab('steps')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-cyan-600 text-white shadow-md">
+                                🎯 Pikaohje
                             </button>
-                            <button id="tab-btn-theory" onclick="switchHelpTab('theory')" class="px-4 py-2 rounded-xl text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                                📖 Syventävä Teoria & CCNA
+                            <button id="tab-btn-theory" onclick="switchHelpTab('theory')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                                📖 Teoria & CCNA
+                            </button>
+                            <button id="tab-btn-binary" onclick="switchHelpTab('binary')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                                ⚙️ 32-bit Binaari & AND
+                            </button>
+                            <button id="tab-btn-matrix" onclick="switchHelpTab('matrix')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                                📊 Cheat Sheet
                             </button>
                         </div>
                         <span id="ip-help-badge" class="hidden sm:inline-block text-xs font-mono font-black text-cyan-300 bg-cyan-950/70 px-3 py-1.5 rounded-xl border border-cyan-700/50">/24</span>
@@ -477,6 +483,12 @@
                         </div>
                         <div id="ip-help-theory-view" class="space-y-4 hidden">
                             <!-- Täytetään syventävällä teoriamateriaalilla -->
+                        </div>
+                        <div id="ip-help-binary-view" class="space-y-4 hidden">
+                            <!-- Täytetään reaaliaikaisella 32-bittisellä visualisoijalla -->
+                        </div>
+                        <div id="ip-help-matrix-view" class="space-y-4 hidden">
+                            <!-- Täytetään /8 - /32 aliverkkotaulukolla -->
                         </div>
                     </div>
                 </div>

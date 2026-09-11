@@ -2081,11 +2081,341 @@ const TEACHING_PART_3 = {
         ${subnetBlock(details, cidr)}`
 };
 
+/**
+ * TEACHING_PART_EXTENDED - Täydentävät pedagogiset moduulit:
+ * - magic_number: Päässälaskutekniikka (256 - maski = lohkokoko)
+ * - bitwise_and: Reitittimen bittitason AND-operaatio
+ * - classful_networking: Luokat A, B, C, D, E vs. CIDR (RFC 1519)
+ * - special_ips: RFC 1918 Yksityiset verkot, APIPA 169.254.x.x ja Loopback
+ * - point_to_point_31: RFC 3021 /31 ja /32 konesaleissa ja reititinlinkeissä
+ * - wildcard_masks: Käänteinen peite palomuureille (ACL) ja OSPF:lle
+ */
+const TEACHING_PART_EXTENDED = {
+    // -------------------------------------------------------------------------
+    // 25. MAGIC_NUMBER (Päässälaskukaava)
+    // -------------------------------------------------------------------------
+    magic_number: (details, cidr) => `
+        <div class="space-y-3">
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-600 shadow-md">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        ⚡ CCNA PRO -PÄÄSSÄLASKU
+                    </span>
+                    <span class="text-xs font-mono text-slate-400">Magic Number = 256 − Maski</span>
+                </div>
+                <h4 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                    🎩 Magic Number -menetelmä: Aliverkotus 5 sekunnissa
+                </h4>
+                <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
+                    Tuotantoverkoissa tai sertifiointitenteissä (kuten Cisco CCNA) kenelläkään ei ole aikaa piirtää 32-bittisiä bittikaavioita tai laskea potensseja. Insinöörit käyttävät aina <strong class="text-amber-300">Magic Number</strong> -menetelmää.
+                </p>
+                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700/80 text-xs text-slate-200 space-y-2">
+                    <div class="font-bold text-cyan-300 text-sm">Kolme askelta:</div>
+                    <p>1. <strong class="text-white">Tunnista muuttuva oktetti:</strong> Esim. maskissa <span class="font-mono text-cyan-300">255.255.255.224</span> (/27) muutos tapahtuu 4. oktetissa (<code class="text-amber-300 font-bold">224</code>).</p>
+                    <p>2. <strong class="text-white">Laske Magic Number:</strong> Vähennä luvusta 256: <span class="font-mono text-emerald-300 font-bold">256 − 224 = 32</span>. Lohkokoko on siis <strong class="text-emerald-300">32</strong>!</p>
+                    <p>3. <strong class="text-white">Hyppää lohkokoon välein:</strong> Aliverkot alkavat: <span class="font-mono text-purple-300">.0, .32, .64, .96, .128, .160, .192, .224</span>.</p>
+                </div>
+            </div>
+
+            <!-- Esimerkkianalyysi -->
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-xs text-slate-300 space-y-1.5">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                    <span>🎯</span> Esimerkki: Mihin aliverkkoon IP 192.168.1.75 kuuluu maskilla /27?
+                </div>
+                <p class="leading-relaxed">
+                    Lohkokoko on 32. Luvut ovat 0, 32, 64, 96... Luku 75 sijoittuu lukujen <strong class="text-cyan-300">64</strong> ja <strong class="text-slate-400">96</strong> väliin.
+                    Aliverkon osoite on siis <strong class="text-emerald-300">192.168.1.64</strong>, ensimmäinen isäntä on <strong class="text-white">.65</strong>, viimeinen isäntä on <strong class="text-white">.94</strong> ja broadcast on <strong class="text-amber-300">.95</strong> (yhtä vaille seuraava lohko 96)!
+                </p>
+            </div>
+
+            <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-lg text-xs text-emerald-200 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-emerald-300">
+                    <span>💡</span> Pro-vinkki: Maskiarvot ja Magic Numberit ulkoa
+                </div>
+                <p class="leading-relaxed font-mono text-[11px]">
+                    /25 (.128) → 256−128 = 128 | /26 (.192) → 256−192 = 64 | /27 (.224) → 256−224 = 32<br>
+                    /28 (.240) → 256−240 = 16  | /29 (.248) → 256−248 = 8  | /30 (.252) → 256−252 = 4
+                </p>
+            </div>
+        </div>
+        ${subnetBlock(details, cidr)}`,
+
+    // -------------------------------------------------------------------------
+    // 26. BITWISE_AND (Reitittimen logiikka)
+    // -------------------------------------------------------------------------
+    bitwise_and: (details, cidr) => `
+        <div class="space-y-3">
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-600 shadow-md">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                        ⚙️ RAUTATASON LOGIIKKA
+                    </span>
+                    <span class="text-xs font-mono text-slate-400">Bitwise AND Operation</span>
+                </div>
+                <h4 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                    🧩 Miten tietokone tietää, onko kohde paikallisverkossa?
+                </h4>
+                <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
+                    Kun tietokone haluaa lähettää paketin IP-osoitteeseen B, käyttöjärjestelmän TCP/IP-pino tekee <strong class="text-amber-300">loogisen AND-operaation</strong> kahdesti:
+                </p>
+                <ol class="list-decimal list-inside text-xs text-slate-200 space-y-1 mb-2.5">
+                    <li><code class="text-cyan-300">Oma IP AND Oma Maski = Oma Network ID</code></li>
+                    <li><code class="text-cyan-300">Kohteen IP AND Oma Maski = Kohteen Network ID</code></li>
+                </ol>
+                <p class="text-slate-300 text-xs leading-relaxed">
+                    Jos tulokset ovat <strong class="text-emerald-300">identtiset</strong>, laite tietää kohteen olevan samassa kytkimessä ja lähettää suoraan ARP-kyselyn. Jos tulokset ovat <strong class="text-rose-300">erilaiset</strong>, paketti ohjataan <strong class="text-white">Oletusyhdyskäytävälle (Default Gateway)</strong>.
+                </p>
+            </div>
+
+            <!-- Totuustaulu & Esimerkki -->
+            <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700/80 text-xs text-slate-200 space-y-2">
+                <div class="font-bold text-cyan-400 text-xs">Bitwise AND -totuustaulu:</div>
+                <div class="font-mono text-xs grid grid-cols-4 gap-2 bg-slate-800 p-2 rounded text-center">
+                    <div>1 AND 1 = <strong class="text-emerald-400">1</strong></div>
+                    <div>1 AND 0 = <strong class="text-slate-400">0</strong></div>
+                    <div>0 AND 1 = <strong class="text-slate-400">0</strong></div>
+                    <div>0 AND 0 = <strong class="text-slate-400">0</strong></div>
+                </div>
+                <p class="text-slate-300 text-[11px] leading-relaxed">
+                    Maskissa jokainen <span class="text-emerald-300 font-bold">1-bitti</span> kopioi IP-osoitteen bitin suoraan verkko-osoitteeseen, ja jokainen <span class="text-amber-300 font-bold">0-bitti</span> pakottaa tuloksen nollaksi (isäntäosa nollautuu).
+                </p>
+            </div>
+
+            <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-lg text-xs text-emerald-200 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-emerald-300">
+                    <span>💡</span> Pro-vinkki: Laitteistokiihdytys (TCAM)
+                </div>
+                <p class="leading-relaxed">
+                    Yritysreitittimet eivät laske AND-operaatiota ohjelmallisella CPU:lla, vaan erikoistuneilla <strong class="text-white">TCAM (Ternary Content-Addressable Memory)</strong> -piireillä rinnakkain nanosekunneissa sadoille miljoonille paketeille sekunnissa (Line-rate forwarding).
+                </p>
+            </div>
+        </div>
+        ${subnetBlock(details, cidr)}`,
+
+    // -------------------------------------------------------------------------
+    // 27. CLASSFUL_NETWORKING (Luokat A, B, C, D, E vs CIDR)
+    // -------------------------------------------------------------------------
+    classful_networking: (details, cidr) => `
+        <div class="space-y-3">
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-600 shadow-md">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                        📜 HISTORIA & STANDARDI
+                    </span>
+                    <span class="text-xs font-mono text-slate-400">RFC 791 vs RFC 1519</span>
+                </div>
+                <h4 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                    🏛️ Luokallinen verkko (Classful) vs. Luokaton CIDR
+                </h4>
+                <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
+                    Alun perin vuonna 1981 (RFC 791) aliverkon peitteitä ei lähetetty reititystauluissa! IP-osoitteet oli jaettu kiinteisiin luokkiin ensimmäisen oktetin mukaan:
+                </p>
+                <div class="space-y-1.5 text-xs font-mono">
+                    <div class="p-2 bg-slate-900 rounded border border-slate-700/60 flex justify-between">
+                        <span class="text-blue-300 font-bold">Luokka A (1–126)</span>
+                        <span class="text-slate-300">Maski /8 (255.0.0.0) · 16,7M isäntää</span>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded border border-slate-700/60 flex justify-between">
+                        <span class="text-purple-300 font-bold">Luokka B (128–191)</span>
+                        <span class="text-slate-300">Maski /16 (255.255.0.0) · 65 534 isäntää</span>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded border border-slate-700/60 flex justify-between">
+                        <span class="text-emerald-300 font-bold">Luokka C (192–223)</span>
+                        <span class="text-slate-300">Maski /24 (255.255.255.0) · 254 isäntää</span>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded border border-slate-700/60 flex justify-between">
+                        <span class="text-amber-300 font-bold">Luokka D (224–239)</span>
+                        <span class="text-slate-300">Multicast (Ryhmälähetys, esim. OSPF)</span>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded border border-slate-700/60 flex justify-between">
+                        <span class="text-rose-300 font-bold">Luokka E (240–255)</span>
+                        <span class="text-slate-300">Kokeellinen / Varattu tulevaisuuteen</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CIDR-vallankumous -->
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-xs text-slate-300 space-y-1.5">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                    <span>🚀</span> Miksi CIDR (Classless Inter-Domain Routing) luotiin 1993?
+                </div>
+                <p class="leading-relaxed">
+                    Yritykselle, joka tarvitsi 300 osoitetta, oli annettava koko Luokka B (65 534 IP-osoitetta), jolloin 65 234 osoitetta meni hukkaan! Vuonna 1993 <strong class="text-cyan-300">CIDR (RFC 1519)</strong> vapautti peitteet mielivaltaisiksi (/8 – /32). Nyt verkko voidaan mitoittaa tarkasti tarpeen mukaan (esim. /23 = 510 isäntää).
+                </p>
+            </div>
+
+            <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-lg text-xs text-emerald-200 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-emerald-300">
+                    <span>💡</span> Pro-vinkki: Miksi osoite 127.0.0.0 puuttuu luokista?
+                </div>
+                <p class="leading-relaxed">
+                    Koko osoitealue <code class="text-white font-bold">127.0.0.0/8</code> (yli 16 miljoonaa osoitetta!) varattiin aikoinaan pelkkään laitteen sisäiseen silmukkaan (<strong class="text-cyan-300">Loopback / Localhost</strong>). Tämän päivän silmin tämä oli valtavaa osoitehukkaa, mutta standardi on pysyvä.
+                </p>
+            </div>
+        </div>
+        ${subnetBlock(details, cidr)}`,
+
+    // -------------------------------------------------------------------------
+    // 28. SPECIAL_IPS (RFC 1918, APIPA, Loopback)
+    // -------------------------------------------------------------------------
+    special_ips: (details, cidr) => `
+        <div class="space-y-3">
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-600 shadow-md">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        🛡️ ERIKOISOSOITTEET
+                    </span>
+                    <span class="text-xs font-mono text-slate-400">RFC 1918 & RFC 3927</span>
+                </div>
+                <h4 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                    🔒 Yksityiset verkot, APIPA ja Vianmääritys
+                </h4>
+                <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
+                    Kaikkia IPv4-osoitteita ei saa reitittää julkiseen Internettiin. Insinöörin on tunnettava nämä ulkoa:
+                </p>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2.5 bg-slate-900 rounded-lg border border-slate-700/80">
+                        <div class="font-bold text-cyan-300 mb-1">1. RFC 1918 – Yksityiset IP-osoitteet (Private IPs):</div>
+                        <p class="text-slate-300 mb-1">Ilmaiseksi kenen tahansa käytettävissä sisäverkoissa. Internetin reitittimet hylkäävät nämä välittömästi ilman <strong class="text-amber-300">NAT-osoitteenmuunnosta</strong>:</p>
+                        <ul class="list-disc list-inside font-mono text-slate-200 text-[11px] space-y-0.5">
+                            <li><strong class="text-white">10.0.0.0/8</strong> (10.0.0.0 – 10.255.255.255)</li>
+                            <li><strong class="text-white">172.16.0.0/12</strong> (172.16.0.0 – 172.31.255.255)</li>
+                            <li><strong class="text-white">192.168.0.0/16</strong> (192.168.0.0 – 192.168.255.255)</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-2.5 bg-slate-900 rounded-lg border border-slate-700/80">
+                        <div class="font-bold text-amber-300 mb-1">2. APIPA (Automatic Private IP Addressing, RFC 3927):</div>
+                        <p class="text-slate-300">
+                            Osoitealue <span class="font-mono text-white font-bold">169.254.0.0/16</span>. Jos tietokoneessa näkyy tämä osoite, se on <strong class="text-rose-400">hälytysmerkki</strong>: DHCP-palvelin on alhaalla, kaapeli irti tai VLAN-määritys väärin!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-lg text-xs text-emerald-200 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-emerald-300">
+                    <span>💡</span> Pro-vinkki: CGNAT (100.64.0.0/10, RFC 6598)
+                </div>
+                <p class="leading-relaxed">
+                    Jos mobiililiittymäsi tai kotireitittimesi WAN-portti saa osoitteen väliltä <code class="text-white">100.64.0.0 – 100.127.255.255</code>, operaattorisi käyttää <strong class="text-cyan-300">Carrier-Grade NAT</strong> -tekniikkaa. Tällöin sinulla ei ole julkista IP-osoitetta, eikä portinohjaus (Port Forwarding) toimi ilman IPv6- tai VPN-tunnelia!
+                </p>
+            </div>
+        </div>
+        ${subnetBlock(details, cidr)}`,
+
+    // -------------------------------------------------------------------------
+    // 29. POINT_TO_POINT_31 (RFC 3021 /31 ja /32 Konesaleissa)
+    // -------------------------------------------------------------------------
+    point_to_point_31: (details, cidr) => `
+        <div class="space-y-3">
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-600 shadow-md">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                        🏢 KONESALISTANDARDI
+                    </span>
+                    <span class="text-xs font-mono text-slate-400">RFC 3021 & RFC 4632</span>
+                </div>
+                <h4 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                    ⚡ /31 ja /32: Miten modernit runkoverkot säästävät IP-osoitteita?
+                </h4>
+                <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
+                    Perinteisesti kahden reitittimen välille luotiin <strong class="text-amber-300">/30-aliverkko</strong> (4 osoitetta: 1 verkko, 1 broadcast, 2 isäntää). Tämä tuhlaa 50% osoitteista!
+                </p>
+                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700/80 text-xs text-slate-200 space-y-2">
+                    <div class="font-bold text-cyan-300 text-sm">RFC 3021: Kahden isännän /31-linkit:</div>
+                    <p class="text-slate-300">
+                        Konesaliverkoissa (Spine-Leaf) ja runkoreitittimien välissä käytetään poikkeuksetta <strong class="text-emerald-300">/31-aliverkkoa</strong> (peite <span class="font-mono text-white">255.255.255.254</span>).
+                    </p>
+                    <p class="text-slate-300">
+                        Koska linkissä on vain kaksi laitetta, <span class="text-white font-bold">verkko- ja broadcast-osoitteita ei tarvita!</span> Molemmat osoitteet (esim. <code class="text-cyan-300">10.0.0.0</code> ja <code class="text-cyan-300">10.0.0.1</code>) toimivat isäntäosoitteina reititinpäissä. Tämä tuplaa runkoverkon kapasiteetin.
+                    </p>
+                </div>
+            </div>
+
+            <!-- /32 Host Route -->
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-xs text-slate-300 space-y-1.5">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                    <span>📍</span> /32 (255.255.255.255): Yhden laitteen reitti (Host Route)
+                </div>
+                <p class="leading-relaxed">
+                    /32 tarkoittaa, että kaikki 32 bittiä kuuluvat verkolle (0 isäntäbittiä). Sitä käytetään reitittimen virtuaalisessa <strong class="text-purple-300">Loopback0-rajapinnassa</strong> (OSPF/BGP Router ID) sekä palomuurien säännöissä, jotka koskevat täsmälleen yhtä ainoaa palvelinta.
+                </p>
+            </div>
+
+            <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-lg text-xs text-emerald-200 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-emerald-300">
+                    <span>💡</span> Pro-vinkki: Kaapelimodeemit ja point-to-point
+                </div>
+                <p class="leading-relaxed">
+                    Kaikki modernit yrityskytkimet (Cisco IOS-XE, Juniper Junos, Arista EOS) tukevat suoraan /31-osoitteita. Jos yrität määrittää vanhaan Windows XP -koneeseen /31-osoitetta, käyttöjärjestelmä estää sen, koska vanhat pinot vaativat perinteisen broadcast-osoitteen.
+                </p>
+            </div>
+        </div>
+        ${subnetBlock(details, cidr)}`,
+
+    // -------------------------------------------------------------------------
+    // 30. WILDCARD_MASKS (Käänteinen peite palomuureille)
+    // -------------------------------------------------------------------------
+    wildcard_masks: (details, cidr) => `
+        <div class="space-y-3">
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-600 shadow-md">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                        🔥 PALOMUURIT & ACL
+                    </span>
+                    <span class="text-xs font-mono text-slate-400">Wildcard Mask (Inverse Mask)</span>
+                </div>
+                <h4 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                    🔄 Mikä on Wildcard Mask ja miten se lasketaan?
+                </h4>
+                <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
+                    Cisco-palomuureissa (Access Control Lists, ACL) ja OSPF/EIGRP-reititysprotokollissa ei käytetä tavallista aliverkon peitettä, vaan <strong class="text-amber-300">Wildcard Maskia (käänteistä peitettä)</strong>.
+                </p>
+                <div class="bg-slate-900/90 p-3 rounded-lg border border-slate-700/80 text-xs text-slate-200 space-y-2">
+                    <div class="font-bold text-cyan-300 text-sm">Yksinkertainen laskukaava:</div>
+                    <div class="p-2 bg-slate-800 rounded font-mono text-sm text-center text-emerald-300 font-bold">
+                        255.255.255.255 − Aliverkon Peite = Wildcard Mask
+                    </div>
+                    <p class="text-slate-300">
+                        Esimerkki: Aliverkon /27 peite on <span class="font-mono text-white">255.255.255.224</span>.<br>
+                        Vähennetään: <span class="font-mono text-purple-300">255.255.255.255 − 255.255.255.224 = 0.0.0.31</span>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Merkitys biteissä -->
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-xs text-slate-300 space-y-1.5">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                    <span>💡</span> Mitä bitit tarkoittavat palomuurille?
+                </div>
+                <ul class="list-disc list-inside text-xs text-slate-200 space-y-1">
+                    <li><strong class="text-emerald-400">0-bitti:</strong> "Tämän bitin on vastattava tarkasti" (Match exactly).</li>
+                    <li><strong class="text-amber-400">1-bitti:</strong> "Tällä bitillä ei ole väliä" (Ignore / Wildcard).</li>
+                </ul>
+                <p class="text-slate-400 text-[11px] mt-1">
+                    Siksi yksittäinen isäntäosoite (/32) määritellään ACL:ssä: <code class="text-cyan-300">host 192.168.1.50</code> tai <code class="text-cyan-300">192.168.1.50 0.0.0.0</code>.
+                </p>
+            </div>
+
+            <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-lg text-xs text-emerald-200 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-emerald-300">
+                    <span>💡</span> Pro-vinkki: Epäjatkuvat Wildcardit (Discontiguous Mask)
+                </div>
+                <p class="leading-relaxed">
+                    Toisin kuin aliverkon peitteen, Wildcard Maskin ykkösten ja nollien ei tarvitse olla peräkkäisiä! Maskilla <code class="text-white">0.0.0.1</code> voidaan yhdellä ACL-säännöllä suodattaa kaikki aliverkon parittomat IP-osoitteet kerralla.
+                </p>
+            </div>
+        </div>
+        ${subnetBlock(details, cidr)}`
+};
+
 // Yhdistetty globaali opetusmateriaali
 const TEACHING_CONTENT = Object.assign({},
     typeof TEACHING_PART_1 !== 'undefined' ? TEACHING_PART_1 : {},
     typeof TEACHING_PART_2 !== 'undefined' ? TEACHING_PART_2 : {},
-    typeof TEACHING_PART_3 !== 'undefined' ? TEACHING_PART_3 : {}
+    typeof TEACHING_PART_3 !== 'undefined' ? TEACHING_PART_3 : {},
+    typeof TEACHING_PART_EXTENDED !== 'undefined' ? TEACHING_PART_EXTENDED : {}
 );
 
 if (typeof window !== 'undefined') {
