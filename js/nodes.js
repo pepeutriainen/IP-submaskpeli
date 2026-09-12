@@ -419,12 +419,12 @@ function tryLoadCustomModel(node, type) {
         // WiFi-tukiasema on AINA oma huipputason Enterprise Wi-Fi 7 Access Point
         modelUrl = (typeof window !== 'undefined' && window.CEILING_AP_MODEL)
             ? window.CEILING_AP_MODEL
-            : 'assets/models/ap-ceiling.glb?v=20260912_v20';
+            : 'assets/models/ap-ceiling.glb?v=20260912_v21';
     } else if (type === nodeTypes.FIREWALL) {
         // Enterprise Next-Gen Threat Defense Firewall (firewall.glb)
         modelUrl = (typeof window !== 'undefined' && window.FIREWALL_MODEL)
             ? window.FIREWALL_MODEL
-            : 'assets/models/firewall.glb?v=20260912_v20';
+            : 'assets/models/firewall.glb?v=20260912_v21';
     }
     if (!modelUrl) return;
 
@@ -606,15 +606,17 @@ function applyModelToNode(node, modelMesh) {
                 }
 
                 // Varmistetaan, että teksturoiduissa materiaaleissa (m.map) perusväri on puhdas valkoinen (1,1,1)
-                // eikä metallisuus sammuta diffuusia valoa ilman envMapia
-                const matsToCheck = Array.isArray(child.material) ? child.material : [child.material];
-                matsToCheck.forEach(m => {
-                    if (m.map) {
-                        m.color.setRGB(1.0, 1.0, 1.0);
-                        m.metalness = Math.min(m.metalness ?? 0.08, 0.12);
-                        m.roughness = Math.max(m.roughness ?? 0.32, 0.32);
-                    }
-                });
+                // VAIN laitteille joiden oma PBR-tekstuuri sisältää valmiin teollisen värityksen (Gateway, AP, Palomuuri)
+                if (type === nodeTypes.GATEWAY || type === nodeTypes.WIFI || type === nodeTypes.FIREWALL) {
+                    const matsToCheck = Array.isArray(child.material) ? child.material : [child.material];
+                    matsToCheck.forEach(m => {
+                        if (m.map) {
+                            m.color.setRGB(1.0, 1.0, 1.0);
+                            m.metalness = Math.min(m.metalness ?? 0.08, 0.12);
+                            m.roughness = Math.max(m.roughness ?? 0.32, 0.32);
+                        }
+                    });
+                }
 
                 // Default Gateway (gateway-edge.glb): säilytetään korkeatasoiset PBR-tekstuurit ja korostetaan ledejä
                 if (type === nodeTypes.GATEWAY) {
@@ -772,22 +774,28 @@ function updateNodeVisualState(node) {
                     const orig = child.userData.originalMaterials[idx];
                     if (!orig) return;
 
-                    // 1. Jos materiaalilla on tekstuuri (m.map), säilytetään väri AINA kirkkaana (1,1,1)
-                    // Tämä estää tekstuurien (logot, tekstit, kaaviot) muuttumisen pimeäksi/mustaksi!
-                    if (m.map) {
-                        m.color.setRGB(1.0, 1.0, 1.0);
-                        if (m.emissive && orig.emissive) {
-                            m.emissive.copy(orig.emissive);
-                        }
-                    } else if (type === nodeTypes.FIREWALL || type === nodeTypes.GATEWAY || type === nodeTypes.WIFI) {
-                        // 2. Erillissuunnitellut 3D-verkkolaitteet (Palomuuri, Gateway, Wi-Fi 7 AP):
-                        // Laitteiston teollinen ilme, punainen suojauslohko ja kotelo säilytetään aina
+                    // 1. Kytkin (SWITCH) ja Ydinlinkki (CORE_SWITCH) säilyttävät aina alkuperäisen oranssin/hopeisen värinsä
+                    if (type === nodeTypes.SWITCH || type === nodeTypes.CORE_SWITCH) {
                         m.color.copy(orig.color);
                         if (m.emissive && orig.emissive) {
                             if (isActive) {
                                 m.emissive.copy(orig.emissive);
                             } else {
-                                // Valmiustilassa verkkoliikenteen linkkiledit sammuksissa, mutta laitteen oma tila/suojaledi päällä
+                                m.emissive.copy(orig.emissive).multiplyScalar(0.2);
+                            }
+                        }
+                    } else if (type === nodeTypes.FIREWALL || type === nodeTypes.GATEWAY || type === nodeTypes.WIFI) {
+                        // 2. Erillissuunnitellut 3D-verkkolaitteet (Palomuuri, Gateway, Wi-Fi 7 AP):
+                        // PBR-tekstuurit pidetään puhtaina valkoisella diffuusilla, teollinen runko säilytetään aina
+                        if (m.map) {
+                            m.color.setRGB(1.0, 1.0, 1.0);
+                        } else {
+                            m.color.copy(orig.color);
+                        }
+                        if (m.emissive && orig.emissive) {
+                            if (isActive) {
+                                m.emissive.copy(orig.emissive);
+                            } else {
                                 if (m.name && (m.name.includes('LED_Green') || m.name.includes('Fiber'))) {
                                     m.emissive.setHex(0x000000);
                                 } else {
