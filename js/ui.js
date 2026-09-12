@@ -1933,7 +1933,7 @@ function updateLevelUI(levelConfig) {
     const difficultyEl = document.getElementById('level-difficulty');
     if (difficultyEl) {
         difficultyEl.innerText = getDifficultyStars(levelConfig.difficulty);
-        difficultyEl.className = `text-sm ${getDifficultyColor(levelConfig.difficulty)}`;
+        difficultyEl.className = `text-lg font-bold tracking-wider ${getDifficultyColor(levelConfig.difficulty)}`;
     }
 
     // Vaihe

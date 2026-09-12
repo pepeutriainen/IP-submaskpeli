@@ -118,77 +118,79 @@
             <div class="flex justify-between items-start p-3 gap-3">
 
                 <!-- Vasemmalla: Tason tiedot (Iso koko näytön korkuinen sivupalkki, suuret ja selkeät fontit) -->
-                <div id="level-info-panel" class="glass-panel p-6 rounded-2xl shadow-2xl flex flex-col pointer-events-auto border border-slate-700/70 custom-scrollbar overflow-y-auto" 
-                     style="width: 440px; max-width: 92vw; height: calc(100vh - 140px); max-height: calc(100vh - 140px); overscroll-behavior: contain;">
+                <div id="level-info-panel" class="glass-panel p-6 sm:p-7 rounded-2xl shadow-2xl flex flex-col pointer-events-auto border border-slate-700/80 custom-scrollbar overflow-y-auto" 
+                     style="width: 490px; max-width: 94vw; height: calc(100vh - 130px); max-height: calc(100vh - 130px); overscroll-behavior: contain;">
                     
                     <!-- Yläotsikko & Valikko-nappi -->
-                    <div class="flex justify-between items-start mb-4 pb-4 border-b border-slate-700/80">
-                        <div>
-                            <h2 id="level-title" class="text-xl font-black text-white leading-snug">Taso 1</h2>
-                            <div class="flex items-center gap-3 mt-1.5">
-                                <span id="level-difficulty" class="text-base text-green-400 font-bold">⭐☆☆☆☆</span>
-                                <span id="level-phase" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-600">🟢 Perusteet</span>
+                    <div class="flex justify-between items-start mb-5 pb-4 border-b border-slate-700/90 gap-3">
+                        <div class="flex-1 min-w-0">
+                            <h2 id="level-title" class="text-2xl font-black text-white leading-tight">Taso 1</h2>
+                            <div class="flex items-center gap-3 mt-2">
+                                <span id="level-difficulty" class="text-lg text-green-400 font-bold tracking-wider">⭐☆☆☆☆</span>
+                                <span id="level-phase" class="text-xs sm:text-sm font-extrabold px-3 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-600">🟢 Perusteet</span>
                             </div>
                         </div>
-                        <button id="btn-back-menu" class="text-sm bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white font-extrabold px-4 py-2.5 rounded-xl transition shadow-lg flex-shrink-0">
+                        <button id="btn-back-menu" class="text-base bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white font-extrabold px-5 py-2.5 rounded-xl transition shadow-lg flex-shrink-0 flex items-center gap-1.5">
                             ← Valikko
                         </button>
                     </div>
 
                     <!-- Tehtävänanto -->
-                    <div class="mb-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                        <div class="text-xs font-extrabold text-sky-400 uppercase tracking-wider mb-1.5">📋 Tehtävänanto</div>
-                        <p id="level-scenario" class="text-sm text-slate-100 font-medium leading-relaxed">Yhdistä toimisto pääverkkoon.</p>
+                    <div class="mb-4 bg-slate-800/90 p-4 sm:p-5 rounded-xl border border-slate-700 shadow-md">
+                        <div class="text-xs sm:text-sm font-black text-sky-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <span class="text-base">📋</span> Tehtävänanto
+                        </div>
+                        <p id="level-scenario" class="text-base sm:text-[17px] text-slate-100 font-medium leading-relaxed">Yhdistä toimisto pääverkkoon.</p>
                     </div>
 
                     <!-- Verkon tiedot -->
-                    <div class="mb-4 bg-blue-950/60 p-4 rounded-xl border border-blue-700/60 flex justify-between items-center">
-                        <span class="text-sm font-bold text-blue-200">Pääverkko:</span>
-                        <span id="level-network" class="font-mono text-cyan-300 font-black text-base tracking-wide">192.168.1.0/24</span>
+                    <div class="mb-4 bg-blue-950/70 p-4 sm:p-5 rounded-xl border border-blue-600/70 flex justify-between items-center shadow-md">
+                        <span class="text-sm sm:text-base font-extrabold text-blue-200">Pääverkko:</span>
+                        <span id="level-network" class="font-mono text-cyan-300 font-black text-lg sm:text-xl tracking-wider">192.168.1.0/24</span>
                     </div>
 
                     <!-- Vihjeosio (Aina näkyvillä) -->
-                    <div class="mb-4 p-4 bg-amber-950/50 border border-amber-500/60 rounded-xl space-y-1.5">
-                        <div class="text-xs font-black text-amber-300 flex items-center gap-2 uppercase tracking-wide">
-                            <span class="text-base">💡</span> Vihje
+                    <div class="mb-4 p-4 sm:p-5 bg-amber-950/60 border border-amber-500/70 rounded-xl space-y-2 shadow-md">
+                        <div class="text-xs sm:text-sm font-black text-amber-300 flex items-center gap-2 uppercase tracking-wide">
+                            <span class="text-lg">💡</span> Vihje
                         </div>
-                        <p id="hint-text" class="text-sm text-amber-100 font-medium leading-relaxed">Vihje ladataan...</p>
+                        <p id="hint-text" class="text-base sm:text-[16.5px] text-amber-100 font-medium leading-relaxed">Vihje ladataan...</p>
                     </div>
 
                     <!-- Ohjeet ja Verkkosäännöt (Aina näkyvillä, suuret fontit) -->
-                    <div class="bg-slate-900/90 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 space-y-4">
+                    <div class="bg-slate-900/95 border border-slate-700/80 rounded-xl p-4 sm:p-5 text-slate-100 space-y-5 shadow-md">
                         <div>
-                            <h3 class="font-black text-sky-300 uppercase text-xs tracking-wider mb-2 flex items-center gap-2">
-                                <span class="text-base">🔌</span> Kaapelointi & Portit
+                            <h3 class="font-black text-sky-300 uppercase text-xs sm:text-sm tracking-wider mb-2.5 flex items-center gap-2">
+                                <span class="text-lg">🔌</span> Kaapelointi & Portit
                             </h3>
-                            <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-200 leading-normal">
+                            <ul class="list-disc pl-5 space-y-2 text-sm sm:text-[15px] text-slate-100 leading-relaxed">
                                 <li><strong class="text-rose-400 font-bold">Ei PC → PC</strong>: Työasemat vaativat kytkimen väliin.</li>
-                                <li><strong>Default Gateway:</strong> Yhdistää verkon Internetiin. Kytketään LAN-kytkimeen tai palomuuriin.</li>
-                                <li><strong>LAN-kytkin:</strong> 24 porttia päätelaitteille ja WiFi-tukiasemille.</li>
-                                <li><strong>Ydinlinkki:</strong> 48 porttia hierarkkiseen runkoon.</li>
-                                <li><strong>WiFi AP:</strong> Kytketään LAN-kytkimeen (PoE). Ei suoraan toiseen WiFi-tukiasemaan.</li>
-                                <li><strong>Palomuuri:</strong> Vaaditaan suojaamaan palvelimia tai DMZ-aluetta.</li>
+                                <li><strong class="text-white font-bold">Default Gateway:</strong> Yhdistää verkon Internetiin. Kytketään LAN-kytkimeen tai palomuuriin.</li>
+                                <li><strong class="text-white font-bold">LAN-kytkin:</strong> 24 porttia päätelaitteille ja WiFi-tukiasemille.</li>
+                                <li><strong class="text-white font-bold">Ydinlinkki:</strong> 48 porttia hierarkkiseen runkoon.</li>
+                                <li><strong class="text-white font-bold">WiFi AP:</strong> Kytketään LAN-kytkimeen (PoE). Ei suoraan toiseen WiFi-tukiasemaan.</li>
+                                <li><strong class="text-white font-bold">Palomuuri:</strong> Vaaditaan suojaamaan palvelimia tai DMZ-aluetta.</li>
                             </ul>
                         </div>
 
-                        <div class="border-t border-slate-800 pt-3">
-                            <h3 class="font-black text-emerald-300 uppercase text-xs tracking-wider mb-2 flex items-center gap-2">
-                                <span class="text-base">🎯</span> IP-osoitealueet (Tasot 11+)
+                        <div class="border-t border-slate-800 pt-4">
+                            <h3 class="font-black text-emerald-300 uppercase text-xs sm:text-sm tracking-wider mb-2.5 flex items-center gap-2">
+                                <span class="text-lg">🎯</span> IP-osoitealueet (Tasot 11+)
                             </h3>
-                            <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-200 leading-normal">
-                                <li><strong class="text-white font-semibold">Palvelimet:</strong> <span class="text-emerald-400 font-mono font-bold">.1 – .19</span> (kiinteä)</li>
-                                <li><strong class="text-white font-semibold">Käyttäjät (PC/Läppäri):</strong> <span class="text-emerald-400 font-mono font-bold">.20 – .199</span> (DHCP)</li>
-                                <li><strong class="text-white font-semibold">VoIP-puhelimet:</strong> <span class="text-emerald-400 font-mono font-bold">.100 – .199</span> (Voice VLAN)</li>
-                                <li><strong class="text-white font-semibold">Tulostimet:</strong> <span class="text-emerald-400 font-mono font-bold">.200 – .250</span> (Oheislaitteet)</li>
+                            <ul class="list-disc pl-5 space-y-2 text-sm sm:text-[15px] text-slate-100 leading-relaxed">
+                                <li><strong class="text-white font-bold">Palvelimet:</strong> <span class="text-emerald-400 font-mono font-bold">.1 – .19</span> (kiinteä)</li>
+                                <li><strong class="text-white font-bold">Käyttäjät (PC/Läppäri):</strong> <span class="text-emerald-400 font-mono font-bold">.20 – .199</span> (DHCP)</li>
+                                <li><strong class="text-white font-bold">VoIP-puhelimet:</strong> <span class="text-emerald-400 font-mono font-bold">.100 – .199</span> (Voice VLAN)</li>
+                                <li><strong class="text-white font-bold">Tulostimet:</strong> <span class="text-emerald-400 font-mono font-bold">.200 – .250</span> (Oheislaitteet)</li>
                             </ul>
                         </div>
 
-                        <div class="border-t border-slate-800 pt-3">
-                            <h3 class="font-black text-purple-300 uppercase text-xs tracking-wider mb-1.5 flex items-center gap-2">
-                                <span class="text-base">🗺️</span> Topologia
+                        <div class="border-t border-slate-800 pt-4">
+                            <h3 class="font-black text-purple-300 uppercase text-xs sm:text-sm tracking-wider mb-2 flex items-center gap-2">
+                                <span class="text-lg">🗺️</span> Topologia
                             </h3>
-                            <p class="text-xs text-slate-300 leading-relaxed">
-                                DMZ-vyöhykkeessä kytkentäjärjestys: <strong>Gateway → Palomuuri → Kytkin → Palvelin</strong>.
+                            <p class="text-sm sm:text-[15px] text-slate-200 leading-relaxed">
+                                DMZ-vyöhykkeessä kytkentäjärjestys: <strong class="text-purple-200">Gateway → Palomuuri → Kytkin → Palvelin</strong>.
                             </p>
                         </div>
                     </div>
@@ -519,24 +521,24 @@
     </div>
 
     <!-- ===================== SKRIPTIT (oikeassa järjestyksessä) ===================== -->
-    <script src="assets/models/juniper-9204.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/server-4002.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/gateway-edge.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/firewall.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/toimisto.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/kannettava.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/pc.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/tulostin.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/router.glb.js?v=20260912_v21"></script>
-    <script src="assets/models/ap-ceiling.glb.js?v=20260912_v21"></script>
-    <script src="js/state.js?v=20260912_v21"></script>
-    <script src="js/network.js?v=20260912_v21"></script>
-    <script src="js/levels.js?v=20260912_v21"></script>
-    <script src="js/scene.js?v=20260912_v21"></script>
-    <script src="js/nodes.js?v=20260912_v21"></script>
-    <script src="js/cables.js?v=20260912_v21"></script>
-    <script src="js/teaching.js?v=20260912_v21"></script>
-    <script src="js/ui.js?v=20260912_v21"></script>
-    <script src="js/game.js?v=20260912_v21"></script>
+    <script src="assets/models/juniper-9204.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/server-4002.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/gateway-edge.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/firewall.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/toimisto.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/kannettava.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/pc.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/tulostin.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/router.glb.js?v=20260912_v22"></script>
+    <script src="assets/models/ap-ceiling.glb.js?v=20260912_v22"></script>
+    <script src="js/state.js?v=20260912_v22"></script>
+    <script src="js/network.js?v=20260912_v22"></script>
+    <script src="js/levels.js?v=20260912_v22"></script>
+    <script src="js/scene.js?v=20260912_v22"></script>
+    <script src="js/nodes.js?v=20260912_v22"></script>
+    <script src="js/cables.js?v=20260912_v22"></script>
+    <script src="js/teaching.js?v=20260912_v22"></script>
+    <script src="js/ui.js?v=20260912_v22"></script>
+    <script src="js/game.js?v=20260912_v22"></script>
 </body>
 </html>
