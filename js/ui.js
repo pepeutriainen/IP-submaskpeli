@@ -425,25 +425,12 @@ function renderLevelMenu() {
         preview3DScene = new THREE.Scene();
         preview3DScene.background = new THREE.Color(0x080d1a);
 
-        preview3DRenderer.outputEncoding = THREE.sRGBEncoding;
-        preview3DRenderer.shadowMap.enabled = false;
-
-        // Maailmanvalo esikatseluun (varjoton 360° ympäristövalo)
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 0.95);
-        preview3DScene.add(hemiLight);
-
+        // Valot esikatseluun
         const ambLight = new THREE.AmbientLight(0xffffff, 0.75);
         preview3DScene.add(ambLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
         dirLight.position.set(25, 45, 25);
-        dirLight.castShadow = false;
         preview3DScene.add(dirLight);
-
-        const fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.50);
-        fillLight.position.set(-25, 25, -20);
-        fillLight.castShadow = false;
-        preview3DScene.add(fillLight);
 
         // Ruudukko
         const grid = new THREE.GridHelper(80, 40, 0x334155, 0x1e293b);

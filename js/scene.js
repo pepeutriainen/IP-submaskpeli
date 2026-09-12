@@ -21,34 +21,13 @@ function initThreeJS() {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = false; // Varmistetaan että varjot ovat ehdottomasti pois päältä
-    renderer.outputEncoding = THREE.sRGBEncoding; // Oikeaoppinen sRGB-väriavaruus
 
-    // Maailmanvalo (Kattava 360° ympäristö- ja ambient-valaistus ilman pistevaloja tai varjoja)
-    // 1. HemisphereLight: Simuloi maailman ilmakehän ja taivaan valoa ylhäältä ja pehmeää heijastusta maasta
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 0.95);
-    hemiLight.position.set(0, 50, 0);
-    scene.add(hemiLight);
-
-    // 2. AmbientLight: Tasainen 360-asteen perusmaailmanvalo kaikille pinnoille
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Valot
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
-
-    // 3. Pehmeät täytevalot eri ilmansuunnista ilman varjoja (takaa laitteiden etupaneelien ja kylkien tasaisen näkyvyyden)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.65);
-    keyLight.position.set(25, 35, 25);
-    keyLight.castShadow = false;
-    scene.add(keyLight);
-
-    const fillLight1 = new THREE.DirectionalLight(0xe2e8f0, 0.50);
-    fillLight1.position.set(-25, 25, -20);
-    fillLight1.castShadow = false;
-    scene.add(fillLight1);
-
-    const fillLight2 = new THREE.DirectionalLight(0x94a3b8, 0.35);
-    fillLight2.position.set(-20, 20, 25);
-    fillLight2.castShadow = false;
-    scene.add(fillLight2);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(20, 40, 20);
+    scene.add(dirLight);
 
     // Grid (ruudukko)
     const gridHelper = new THREE.GridHelper(100, 50, 0x334155, 0x1e293b);
