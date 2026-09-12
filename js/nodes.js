@@ -360,7 +360,7 @@ function getNodeAppearance(type) {
 
 // Määritellään mille laitetyypeille on olemassa oikeat 3D-mallit assets/models/ -kansiossa
 const customModels = {
-    [nodeTypes.GATEWAY]: 'assets/models/server-4002.glb',
+    [nodeTypes.GATEWAY]: 'assets/models/gateway-edge.glb?v=20260912_v16',
     [nodeTypes.ROUTER]: 'assets/models/router.glb',
     [nodeTypes.CORE_SWITCH]: 'assets/models/juniper-9204.glb',
     [nodeTypes.SWITCH]: 'assets/models/juniper-9204.glb',
@@ -369,7 +369,8 @@ const customModels = {
     [nodeTypes.LAPTOP]: 'assets/models/kannettava.glb',
     [nodeTypes.PC]: 'assets/models/pc.glb',
     [nodeTypes.PRINTER]: 'assets/models/tulostin.glb',
-    [nodeTypes.WIFI]: 'assets/models/ap-ceiling.glb',
+    [nodeTypes.WIFI]: 'assets/models/ap-ceiling.glb?v=20260912_v16',
+    [nodeTypes.FIREWALL]: 'assets/models/firewall.glb?v=20260912_v16',
 };
 const modelCache = {};
 let gltfLoaderInstance = null;
@@ -399,8 +400,8 @@ function tryLoadCustomModel(node, type) {
     if ((type === nodeTypes.CORE_SWITCH || type === nodeTypes.SWITCH) && typeof window !== 'undefined' && window.JUNIPER_9204_MODEL) {
         modelUrl = window.JUNIPER_9204_MODEL;
     } else if (type === nodeTypes.GATEWAY) {
-        // Default Gateway on AINA sininen palvelinräkki (server-4002.glb)
-        modelUrl = (typeof window !== 'undefined' && window.SERVER_4002_MODEL) ? window.SERVER_4002_MODEL : 'assets/models/server-4002.glb';
+        // Default Gateway on Enterprise Edge Gateway (gateway-edge.glb)
+        modelUrl = (typeof window !== 'undefined' && window.GATEWAY_EDGE_MODEL) ? window.GATEWAY_EDGE_MODEL : 'assets/models/gateway-edge.glb?v=20260912_v16';
     } else if (type === nodeTypes.ROUTER) {
         // Normaali reititin on AINA 4-antenninen pöytäreititin (router.glb)
         modelUrl = (typeof window !== 'undefined' && window.WIFI_AP_MODEL) ? window.WIFI_AP_MODEL : 'assets/models/router.glb';
@@ -415,16 +416,15 @@ function tryLoadCustomModel(node, type) {
     } else if (type === nodeTypes.PRINTER && typeof window !== 'undefined' && window.PRINTER_MODEL) {
         modelUrl = window.PRINTER_MODEL;
     } else if (type === nodeTypes.WIFI) {
-        // Yritystasoilla (21+) käytetään uutta Blenderillä luotua ammattimaista Katto-AP:ta (ap-ceiling.glb)
-        // Pientoimistoissa (1-20) käytetään 4-antennista pöytäreititintä (router.glb)
-        const isEnterprise = (typeof currentLevel !== 'undefined' && currentLevel >= 21);
-        if (isEnterprise && typeof window !== 'undefined' && window.CEILING_AP_MODEL) {
-            modelUrl = window.CEILING_AP_MODEL;
-        } else if (typeof window !== 'undefined' && window.WIFI_AP_MODEL) {
-            modelUrl = window.WIFI_AP_MODEL;
-        } else {
-            modelUrl = isEnterprise ? 'assets/models/ap-ceiling.glb' : 'assets/models/router.glb';
-        }
+        // WiFi-tukiasema on AINA oma huipputason Enterprise Wi-Fi 7 Access Point
+        modelUrl = (typeof window !== 'undefined' && window.CEILING_AP_MODEL)
+            ? window.CEILING_AP_MODEL
+            : 'assets/models/ap-ceiling.glb?v=20260912_v17';
+    } else if (type === nodeTypes.FIREWALL) {
+        // Enterprise Next-Gen Threat Defense Firewall (firewall.glb)
+        modelUrl = (typeof window !== 'undefined' && window.FIREWALL_MODEL)
+            ? window.FIREWALL_MODEL
+            : 'assets/models/firewall.glb?v=20260912_v17';
     }
     if (!modelUrl) return;
 
@@ -547,8 +547,11 @@ function applyModelToNode(node, modelMesh) {
         // SOHO-reititin käännetään niin että etupaneelin LEDit osoittavat eteen ja antennit ovat takana
         modelMesh.rotation.y = Math.PI / 2;
     } else if (type === nodeTypes.WIFI) {
-        // Käännetään WiFi AP samansuuntaiseksi isometrisen ruudukon ja muiden laitteiden kanssa (etupaneeli eteen, antennit takana)
-        modelMesh.rotation.y = Math.PI / 2;
+        // WiFi AP etupaneeli ja Wi-Fi 7 tekstit suoraan kohti isometristä pelaajanäkymää
+        modelMesh.rotation.y = 0;
+    } else if (type === nodeTypes.FIREWALL) {
+        // Palomuuri etupaneeli ja suojalogo suoraan kohti kameraa
+        modelMesh.rotation.y = 0;
     }
 
     const box = new THREE.Box3().setFromObject(modelMesh);
@@ -557,7 +560,7 @@ function applyModelToNode(node, modelMesh) {
     const maxDim = Math.max(size.x, size.y, size.z);
     if (maxDim > 0) {
         let targetSize = 2.0;
-        if (type === nodeTypes.GATEWAY) targetSize = 3.2; // Default Gateway – näyttävä sininen palvelinräkki
+        if (type === nodeTypes.GATEWAY) targetSize = 2.7; // Default Gateway – näyttävä 3U Enterprise Security Gateway
         if (type === nodeTypes.SERVER) targetSize = 3.2;  // Palvelin erottuu selkeänä ja korkeana
         if (type === nodeTypes.ROUTER) targetSize = 2.2;  // Pöytäreititin selkeässä koossa antenneineen
         if (type === nodeTypes.OFFICE) targetSize = 5.0;  // Toimistorakennus on näyttävä, kookas ja huonemainen kokonaisuus
@@ -566,7 +569,8 @@ function applyModelToNode(node, modelMesh) {
         if (type === nodeTypes.PRINTER) targetSize = 2.0; // Toimistotulostin selkeässä ja sopivassa koossa
         if (type === nodeTypes.CORE_SWITCH) targetSize = 1.7; // Ydinlinkki (kompakti runkokytkin)
         if (type === nodeTypes.SWITCH) targetSize = 1.4;  // Kytkin (puolet pienempi, ei vie liikaa tilaa kartalta)
-        if (type === nodeTypes.WIFI) targetSize = 1.6;    // WiFi AP (selkeä ja siro katto/pöytätukiasema)
+        if (type === nodeTypes.WIFI) targetSize = 1.85;   // Enterprise WiFi 7 AP – selkeä, tyylikäs katto/pöytätukiasema
+        if (type === nodeTypes.FIREWALL) targetSize = 2.4; // Enterprise Next-Gen Firewall – näyttävä 2U turvalaite
         const scale = targetSize / maxDim;
         if (type === nodeTypes.SWITCH) {
             // Tehdään LAN-kytkimestä huomattavasti litteämpi (perinteinen 1U kytkin)
@@ -601,16 +605,52 @@ function applyModelToNode(node, modelMesh) {
                     child.material = child.material.clone();
                 }
 
-                // Default Gatewaylle annetaan AINA tunnistettava sininen sävy (server-4002.glb)
+                // Varmistetaan, että teksturoiduissa materiaaleissa (m.map) perusväri on puhdas valkoinen (1,1,1)
+                // eikä metallisuus sammuta diffuusia valoa ilman envMapia
+                const matsToCheck = Array.isArray(child.material) ? child.material : [child.material];
+                matsToCheck.forEach(m => {
+                    if (m.map) {
+                        m.color.setRGB(1.0, 1.0, 1.0);
+                        m.metalness = Math.min(m.metalness ?? 0.08, 0.12);
+                        m.roughness = Math.max(m.roughness ?? 0.32, 0.32);
+                    }
+                });
+
+                // Default Gateway (gateway-edge.glb): säilytetään korkeatasoiset PBR-tekstuurit ja korostetaan ledejä
                 if (type === nodeTypes.GATEWAY) {
                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                     mats.forEach(m => {
-                        m.color = new THREE.Color(0x2563eb);
-                        m.roughness = 0.35;
-                        m.metalness = 0.5;
-                        if (m.emissive) {
-                            m.emissive = new THREE.Color(0x38bdf8);
-                            m.emissiveIntensity = 0.55;
+                        // Varmistetaan että diffuse-tekstuuri näkyy kirkkaana Three.js:n valoissa ilman envMapia
+                        m.metalness = Math.min(m.metalness ?? 0.1, 0.15);
+                        m.roughness = Math.max(m.roughness ?? 0.35, 0.35);
+                        if (m.name && (m.name.includes('Fiber') || m.name.includes('OLED') || m.name.includes('LED') || m.name.includes('StatusBar'))) {
+                            if (m.emissive) {
+                                m.emissiveIntensity = 1.0;
+                            }
+                        }
+                    });
+                } else if (type === nodeTypes.WIFI) {
+                    // Enterprise Wi-Fi 7 Access Point: säilytetään titaani/valkoinen PBR ja LED-halo
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(m => {
+                        m.metalness = Math.min(m.metalness ?? 0.06, 0.12);
+                        m.roughness = Math.max(m.roughness ?? 0.32, 0.32);
+                        if (m.name && (m.name.includes('LedRing') || m.name.includes('LED') || m.name.includes('Halo'))) {
+                            if (m.emissive) {
+                                m.emissiveIntensity = 1.0;
+                            }
+                        }
+                    });
+                } else if (type === nodeTypes.FIREWALL) {
+                    // Enterprise Next-Gen Firewall: säilytetään grafiitti/punainen PBR, OLED ja kuituvalot
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(m => {
+                        m.metalness = Math.min(m.metalness ?? 0.08, 0.15);
+                        m.roughness = Math.max(m.roughness ?? 0.35, 0.35);
+                        if (m.name && (m.name.includes('Glow') || m.name.includes('LED') || m.name.includes('OLED') || m.name.includes('Fiber'))) {
+                            if (m.emissive) {
+                                m.emissiveIntensity = 1.0;
+                            }
                         }
                     });
                 } else if (type === nodeTypes.SWITCH) {
@@ -670,8 +710,8 @@ function isNodeActive(node) {
         return true;
     }
 
-    // Reititin herää heti kun sillä on verkkoyhteys Gatewayhin
-    if (type === nodeTypes.ROUTER) {
+    // Reititin ja Palomuuri heräävät heti kun niillä on verkkoyhteys
+    if (type === nodeTypes.ROUTER || type === nodeTypes.FIREWALL) {
         return !!node.userData.isConnected;
     }
 
@@ -684,8 +724,8 @@ function isNodeActive(node) {
         return !!(node.userData.isConnected && node.userData.correctIp);
     }
 
-    // Kytkimet, palomuurit, ydinlinkit ja WiFi-tukiasemat:
-    if ([nodeTypes.SWITCH, nodeTypes.CORE_SWITCH, nodeTypes.FIREWALL, nodeTypes.WIFI].includes(type)) {
+    // Kytkimet, ydinlinkit ja WiFi-tukiasemat:
+    if ([nodeTypes.SWITCH, nodeTypes.CORE_SWITCH, nodeTypes.WIFI].includes(type)) {
         return !!(node.userData.isConnected && nodes.some(n => n.userData.isConnected && n.userData.correctIp));
     }
 
@@ -701,6 +741,7 @@ function isNodeActive(node) {
 function updateNodeVisualState(node) {
     if (!node || !node.mesh) return;
 
+    const type = node.userData ? node.userData.type : null;
     const isActive = isNodeActive(node);
     const isIpOk = !!node.userData.correctIp;
 
@@ -731,8 +772,31 @@ function updateNodeVisualState(node) {
                     const orig = child.userData.originalMaterials[idx];
                     if (!orig) return;
 
-                    if (!isActive) {
-                        // Väritön / harmaasävy
+                    // 1. Jos materiaalilla on tekstuuri (m.map), säilytetään väri AINA kirkkaana (1,1,1)
+                    // Tämä estää tekstuurien (logot, tekstit, kaaviot) muuttumisen pimeäksi/mustaksi!
+                    if (m.map) {
+                        m.color.setRGB(1.0, 1.0, 1.0);
+                        if (m.emissive && orig.emissive) {
+                            m.emissive.copy(orig.emissive);
+                        }
+                    } else if (type === nodeTypes.FIREWALL || type === nodeTypes.GATEWAY || type === nodeTypes.WIFI) {
+                        // 2. Erillissuunnitellut 3D-verkkolaitteet (Palomuuri, Gateway, Wi-Fi 7 AP):
+                        // Laitteiston teollinen ilme, punainen suojauslohko ja kotelo säilytetään aina
+                        m.color.copy(orig.color);
+                        if (m.emissive && orig.emissive) {
+                            if (isActive) {
+                                m.emissive.copy(orig.emissive);
+                            } else {
+                                // Valmiustilassa verkkoliikenteen linkkiledit sammuksissa, mutta laitteen oma tila/suojaledi päällä
+                                if (m.name && (m.name.includes('LED_Green') || m.name.includes('Fiber'))) {
+                                    m.emissive.setHex(0x000000);
+                                } else {
+                                    m.emissive.copy(orig.emissive).multiplyScalar(0.7);
+                                }
+                            }
+                        }
+                    } else if (!isActive) {
+                        // 3. Päätelaitteiden (PC, toimisto, läppäri jne.) normaali desaturaatio ennen kytkentää
                         const luma = orig.color.r * 0.299 + orig.color.g * 0.587 + orig.color.b * 0.114;
                         const grey = luma * 0.46 + 0.14;
                         m.color.setRGB(grey, grey, grey);

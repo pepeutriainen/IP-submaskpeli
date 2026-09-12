@@ -7,7 +7,7 @@ let isLoadingLevel = false;
 
 // Verkkojen laitteiden tyypit – kaikki tuetut laiteryhmät
 const nodeTypes = {
-    GATEWAY:      'gateway',      // Default Gateway – sininen palvelinräkki (server-4002.glb) yhteydessä Pilveen
+    GATEWAY:      'gateway',      // Default Gateway – Enterprise Edge Gateway (gateway-edge.glb) yhteydessä Pilveen
     ROUTER:       'router',       // Reititin – 4-antenninen pöytäreititin (router.glb)
     SWITCH:       'switch',       // Kytkin – LAN-yhdistin
     CORE_SWITCH:  'core_switch',  // Ydinlinkki – hierarkkinen core-kytkin
