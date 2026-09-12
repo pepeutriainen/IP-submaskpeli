@@ -419,12 +419,12 @@ function tryLoadCustomModel(node, type) {
         // WiFi-tukiasema on AINA oma huipputason Enterprise Wi-Fi 7 Access Point
         modelUrl = (typeof window !== 'undefined' && window.CEILING_AP_MODEL)
             ? window.CEILING_AP_MODEL
-            : 'assets/models/ap-ceiling.glb?v=20260912_v19';
+            : 'assets/models/ap-ceiling.glb?v=20260912_v20';
     } else if (type === nodeTypes.FIREWALL) {
         // Enterprise Next-Gen Threat Defense Firewall (firewall.glb)
         modelUrl = (typeof window !== 'undefined' && window.FIREWALL_MODEL)
             ? window.FIREWALL_MODEL
-            : 'assets/models/firewall.glb?v=20260912_v19';
+            : 'assets/models/firewall.glb?v=20260912_v20';
     }
     if (!modelUrl) return;
 

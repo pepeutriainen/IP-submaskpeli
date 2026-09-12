@@ -7994,7 +7994,6 @@ function generateLevels() {
                 { x: -2,  z: 32, w: 16, d: 10, color: 440020,   name: "DMZ-palvelimet .192/27",   subnet: "10.30.0.192/27" }
             ],
             requiredNodes: [
-                { type: nodeTypes.CLOUD,       pos: { x: 0,   z: -8 } },
                 { type: nodeTypes.FIREWALL,    pos: { x: -6,  z: -2 } },
                 { type: nodeTypes.FIREWALL,    pos: { x: 6,   z: -2 } },
                 { type: nodeTypes.CORE_SWITCH, pos: { x: -6,  z: 8  } },
@@ -8076,7 +8075,6 @@ function generateLevels() {
                 { x: 20,  z: 30, w: 18, d: 16, color: 16096779, name: "Kauppakeskus .64.0/20",  subnet: "10.0.64.0/20" }
             ],
             requiredNodes: [
-                { type: nodeTypes.CLOUD,       pos: { x: 0,   z: -8 } },
                 { type: nodeTypes.FIREWALL,    pos: { x: 0,   z: -2 } },
                 { type: nodeTypes.CORE_SWITCH, pos: { x: -10, z: 6  } },
                 { type: nodeTypes.CORE_SWITCH, pos: { x: 10,  z: 6  } },
@@ -8184,3 +8182,77 @@ function generateLevels() {
         level.subnetDetails = calculateSubnetDetails(level.network, level.cidr);
     });
 }
+
+/**
+ * Laskee tasolle älykkäät WAN-reunan (Internet-pilvi & Default Gateway) koordinaatit.
+ * Takaa, että:
+ * 1. Cloud ja Default Gateway ovat AINA kaikkien huoneiden/alueiden ulkopuolella.
+ * 2. Cloud ja Gateway eivät koskaan mene päällekkäin toistensa tai muiden laitteiden kanssa.
+ * 3. Isometrisessä kamerassa kummallakin on oma selkeä tila ja viistokaapeli ilman tekstien peittymistä.
+ */
+function getLevelWanLayout(level) {
+    if (level && level.wan) {
+        return level.wan;
+    }
+
+    let minX = 0, maxX = 0, minZ = 0, maxZ = 0;
+    let hasBounds = false;
+
+    if (level && Array.isArray(level.zones) && level.zones.length > 0) {
+        level.zones.forEach(z => {
+            const hW = (z.w || 10) / 2;
+            const hD = (z.d || 8) / 2;
+            const zMinX = z.x - hW;
+            const zMaxX = z.x + hW;
+            const zMinZ = z.z - hD;
+            const zMaxZ = z.z + hD;
+            if (!hasBounds) {
+                minX = zMinX; maxX = zMaxX;
+                minZ = zMinZ; maxZ = zMaxZ;
+                hasBounds = true;
+            } else {
+                minX = Math.min(minX, zMinX);
+                maxX = Math.max(maxX, zMaxX);
+                minZ = Math.min(minZ, zMinZ);
+                maxZ = Math.max(maxZ, zMaxZ);
+            }
+        });
+    }
+
+    if (level && Array.isArray(level.requiredNodes) && level.requiredNodes.length > 0) {
+        level.requiredNodes.forEach(rn => {
+            if (rn.type === nodeTypes.CLOUD || rn.type === nodeTypes.GATEWAY) return;
+            if (!rn.pos) return;
+            const px = rn.pos.x;
+            const pz = rn.pos.z;
+            if (!hasBounds) {
+                minX = px - 2; maxX = px + 2;
+                minZ = pz - 2; maxZ = pz + 2;
+                hasBounds = true;
+            } else {
+                minX = Math.min(minX, px - 2);
+                maxX = Math.max(maxX, px + 2);
+                minZ = Math.min(minZ, pz - 2);
+                maxZ = Math.max(maxZ, pz + 2);
+            }
+        });
+    }
+
+    if (!hasBounds) {
+        minX = -10; maxX = 10;
+        minZ = 0; maxZ = 15;
+    }
+
+    const centerX = Math.round((minX + maxX) / 2);
+    // Sijoitetaan WAN reilusti huoneiden pohjoispuolelle (ulkopuolelle)
+    const baseZ = minZ - 5;
+
+    // Cloud yläviistoon oikealle, Gateway alaviistoon vasemmalle:
+    // Isometrisessä katselukulmassa (20,20,20) suuri vaakaero (dx=8, dz=3),
+    // jolloin laitteiden 3D-rungot tai nimitekstit eivät koskaan leikkaa toisiaan.
+    const cloudPos = { x: centerX + 5, z: baseZ - 4 };
+    const gatewayPos = { x: centerX - 3, z: baseZ - 1 };
+
+    return { cloud: cloudPos, gateway: gatewayPos };
+}
+

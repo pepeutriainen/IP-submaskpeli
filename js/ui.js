@@ -555,21 +555,23 @@ function renderLevelMenu() {
             return mesh;
         };
 
-        const cloudMesh = addPreviewDevice(nodeTypes.CLOUD, 0, -8, true);
-        const gatewayMesh = addPreviewDevice(nodeTypes.GATEWAY, 0, -2, true);
+        const wan = getLevelWanLayout(lvl);
+        const cloudMesh = addPreviewDevice(nodeTypes.CLOUD, wan.cloud.x, wan.cloud.z, true);
+        const gatewayMesh = addPreviewDevice(nodeTypes.GATEWAY, wan.gateway.x, wan.gateway.z, true);
 
         // Kaapeli Cloud -> Gateway
         const cableGeo = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, 0.5, -8),
-            new THREE.Vector3(0, 0.5, -2)
+            new THREE.Vector3(wan.cloud.x, 0.5, wan.cloud.z),
+            new THREE.Vector3(wan.gateway.x, 0.5, wan.gateway.z)
         ]);
         const cableMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 2 });
         const cableLine = new THREE.Line(cableGeo, cableMat);
         preview3DScene.add(cableLine);
 
-        // 3. Luodaan tason kiinteät laitteet
+        // 3. Luodaan tason kiinteät laitteet (ohitetaan mahdolliset duplikaatit)
         if (lvl.requiredNodes && lvl.requiredNodes.length > 0) {
             lvl.requiredNodes.forEach(rn => {
+                if (rn.type === nodeTypes.CLOUD || rn.type === nodeTypes.GATEWAY) return;
                 addPreviewDevice(rn.type, rn.pos.x, rn.pos.z, true);
             });
         }

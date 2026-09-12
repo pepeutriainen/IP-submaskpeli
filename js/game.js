@@ -82,8 +82,19 @@ function loadLevel(levelId) {
 
             if (progress.signature === currentSignature && Array.isArray(progress.nodes) && hasGateway && hasCloud) {
                 // Luo solmut tallennuksesta
+                const wan = getLevelWanLayout(currentLevelConfig);
                 progress.nodes.forEach(savedNode => {
-                    const node = createNode(savedNode.type, savedNode.x, savedNode.z, savedNode.isPredefined);
+                    let posX = savedNode.x;
+                    let posZ = savedNode.z;
+                    // Päivitetään vanhat oletuskoordinaatit (0, -8) ja (0, -2) automaattisesti uusiin törmäämättömiin
+                    if (savedNode.type === nodeTypes.CLOUD && savedNode.x === 0 && savedNode.z === -8) {
+                        posX = wan.cloud.x;
+                        posZ = wan.cloud.z;
+                    } else if (savedNode.type === nodeTypes.GATEWAY && savedNode.x === 0 && savedNode.z === -2) {
+                        posX = wan.gateway.x;
+                        posZ = wan.gateway.z;
+                    }
+                    const node = createNode(savedNode.type, posX, posZ, savedNode.isPredefined);
                     node.id = savedNode.id;
                     node.userData.ip = savedNode.ip;
                     node.userData.mask = savedNode.mask;
@@ -114,15 +125,20 @@ function loadLevel(levelId) {
     }
 
     function createDefaultNodes() {
-        // Luo Internet-pilvi ja Default Gateway kentän yläosaan
-        const cloud = createNode(nodeTypes.CLOUD, 0, -8, true);
-        const gateway = createNode(nodeTypes.GATEWAY, 0, -2, true);
+        const wan = getLevelWanLayout(currentLevelConfig);
+
+        // Luo Internet-pilvi ja Default Gateway tason ulkopuolelle
+        const cloud = createNode(nodeTypes.CLOUD, wan.cloud.x, wan.cloud.z, true);
+        const gateway = createNode(nodeTypes.GATEWAY, wan.gateway.x, wan.gateway.z, true);
         connectNodes(cloud, gateway, 0x3b82f6);
 
-        // Luo tason kiinteät laitteet
-        currentLevelConfig.requiredNodes.forEach(rn => {
-            createNode(rn.type, rn.pos.x, rn.pos.z, true);
-        });
+        // Luo tason kiinteät laitteet (ohitetaan mahdolliset duplikaatit)
+        if (currentLevelConfig.requiredNodes) {
+            currentLevelConfig.requiredNodes.forEach(rn => {
+                if (rn.type === nodeTypes.CLOUD || rn.type === nodeTypes.GATEWAY) return;
+                createNode(rn.type, rn.pos.x, rn.pos.z, true);
+            });
+        }
     }
 
     // Valitse työkalu
