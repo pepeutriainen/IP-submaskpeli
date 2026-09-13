@@ -40,18 +40,18 @@
     "semantic_hash": "e9df5333be50d48eead5ab57f1d47006"
   },
   "js/cables.js": {
-    "mtime": 1789307254.2854726,
-    "ast_hash": "8f753757fa47226f75cae7649ae3242d",
-    "semantic_hash": ""
+    "mtime": 1788964398.469593,
+    "ast_hash": "a52a3b26113197ecb6fb87be3239b914",
+    "semantic_hash": "a52a3b26113197ecb6fb87be3239b914"
   },
   "js/game.js": {
-    "mtime": 1789331726.2855885,
-    "ast_hash": "a6730dbd5dec0bb1d02b7982cba3fb98",
+    "mtime": 1789243672.7155263,
+    "ast_hash": "eb016181b1684e6f52fe59290a47287a",
     "semantic_hash": ""
   },
   "js/levels.js": {
-    "mtime": 1789306824.341278,
-    "ast_hash": "44cb0a79bb94ef4c26ace2dab9b212ab",
+    "mtime": 1789243665.496732,
+    "ast_hash": "e5f043b7f7a71e2b9bb092526713a867",
     "semantic_hash": ""
   },
   "js/network.js": {
@@ -60,28 +60,28 @@
     "semantic_hash": ""
   },
   "js/nodes.js": {
-    "mtime": 1789321912.026256,
-    "ast_hash": "40f2ff4e53c065c80f55b96883c6cee8",
+    "mtime": 1789243689.9871662,
+    "ast_hash": "cc880add679257e644fd945bc8ac9a76",
     "semantic_hash": ""
   },
   "js/scene.js": {
-    "mtime": 1789306413.2623155,
-    "ast_hash": "1101f84e32d04d58c6c7fb65a1a81925",
+    "mtime": 1789243372.548448,
+    "ast_hash": "d70ffa32ba0c067e2dc3fd909e5e38ea",
     "semantic_hash": ""
   },
   "js/state.js": {
-    "mtime": 1789331702.4366932,
-    "ast_hash": "f45a5cdc08831283d07bb84987b69b25",
+    "mtime": 1789238113.993286,
+    "ast_hash": "1f8f5ff87a0b37e62d3ed3e6a5d5c280",
     "semantic_hash": ""
   },
   "js/teaching.js": {
-    "mtime": 1789323634.8061347,
-    "ast_hash": "6546237b0f7f73fff739a826c8f01273",
+    "mtime": 1789166777.9996467,
+    "ast_hash": "2be7cba9709bd0c49610f88873f4acbc",
     "semantic_hash": ""
   },
   "js/ui.js": {
-    "mtime": 1789331790.5188217,
-    "ast_hash": "e1e723c4f8b91101bf7e630516931a92",
+    "mtime": 1789243678.3152122,
+    "ast_hash": "9864f26d0f9db99ee00afc2279bd083a",
     "semantic_hash": ""
   },
   "assets/models/gateway-edge.glb.js": {
@@ -125,8 +125,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789331782.697939,
-    "ast_hash": "131476911d88d22066098907630ee020",
+    "mtime": 1789243685.1242728,
+    "ast_hash": "b408d5aa4904350de4618c78856b940d",
     "semantic_hash": ""
   },
   "peli.txt": {
@@ -207,11 +207,6 @@
   "assets/models/firewall_texture.png": {
     "mtime": 1789241522.5624993,
     "ast_hash": "4563d3eb40a76223d841e724b4a93739",
-    "semantic_hash": ""
-  },
-  "assets/models/voip.glb.js": {
-    "mtime": 1789321767.6398182,
-    "ast_hash": "b61810e895ae82badb3582658b5ad02b",
     "semantic_hash": ""
   }
 }

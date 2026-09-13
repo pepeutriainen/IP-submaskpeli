@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "js/game.js": {
-    "mtime": 1789331726.2855885,
-    "ast_hash": "a6730dbd5dec0bb1d02b7982cba3fb98",
+    "mtime": 1789306397.7640347,
+    "ast_hash": "4ef25b2b00b61959e9f3e2d0f1239452",
     "semantic_hash": ""
   },
   "js/levels.js": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "js/nodes.js": {
-    "mtime": 1789321912.026256,
-    "ast_hash": "40f2ff4e53c065c80f55b96883c6cee8",
+    "mtime": 1789306816.9338987,
+    "ast_hash": "387a4b9950d2d4ef4a8e6464ad5ae420",
     "semantic_hash": ""
   },
   "js/scene.js": {
@@ -70,18 +70,18 @@
     "semantic_hash": ""
   },
   "js/state.js": {
-    "mtime": 1789331702.4366932,
-    "ast_hash": "f45a5cdc08831283d07bb84987b69b25",
+    "mtime": 1789307251.949937,
+    "ast_hash": "e6550878e06e1defe8c3a884741d7420",
     "semantic_hash": ""
   },
   "js/teaching.js": {
-    "mtime": 1789323634.8061347,
-    "ast_hash": "6546237b0f7f73fff739a826c8f01273",
+    "mtime": 1789254768.1396918,
+    "ast_hash": "f001a3eeef34cfd5b50ca551218424f6",
     "semantic_hash": ""
   },
   "js/ui.js": {
-    "mtime": 1789331790.5188217,
-    "ast_hash": "e1e723c4f8b91101bf7e630516931a92",
+    "mtime": 1789306393.2534041,
+    "ast_hash": "6c57655ca2143cf33977caeaf1983050",
     "semantic_hash": ""
   },
   "assets/models/gateway-edge.glb.js": {
@@ -125,8 +125,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789331782.697939,
-    "ast_hash": "131476911d88d22066098907630ee020",
+    "mtime": 1789307257.605561,
+    "ast_hash": "35e18979ee7f323cd845b30a2e6b27d5",
     "semantic_hash": ""
   },
   "peli.txt": {
@@ -207,11 +207,6 @@
   "assets/models/firewall_texture.png": {
     "mtime": 1789241522.5624993,
     "ast_hash": "4563d3eb40a76223d841e724b4a93739",
-    "semantic_hash": ""
-  },
-  "assets/models/voip.glb.js": {
-    "mtime": 1789321767.6398182,
-    "ast_hash": "b61810e895ae82badb3582658b5ad02b",
     "semantic_hash": ""
   }
 }

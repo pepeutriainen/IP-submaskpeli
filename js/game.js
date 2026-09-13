@@ -1,17 +1,43 @@
 // --- Pelin elinkaari ja pääohjaus ---
 
 /**
- * Siivoaa kaiken 3D-maailman sisällön muistivuotojen estämiseksi.
+ * Siivoaa kaiken 3D-maailman sisällön ja vapauttaa WebGL GPU-muistin muistivuotojen estämiseksi.
  */
 function clearWorld() {
-    cables.forEach(c => scene.remove(c.line));
-    nodes.forEach(n => scene.remove(n.mesh));
-    zoneMeshes.forEach(z => scene.remove(z));
-    labelMeshes.forEach(l => scene.remove(l));
-    particles.forEach(p => scene.remove(p.mesh));
+    cables.forEach(c => {
+        if (c.line) {
+            scene.remove(c.line);
+            if (typeof disposeHierarchy === 'function') disposeHierarchy(c.line);
+        }
+    });
+    nodes.forEach(n => {
+        if (n.mesh) {
+            scene.remove(n.mesh);
+            if (typeof disposeHierarchy === 'function') disposeHierarchy(n.mesh);
+        }
+        if (n.userData && n.userData.labelMesh) {
+            scene.remove(n.userData.labelMesh);
+            if (typeof disposeHierarchy === 'function') disposeHierarchy(n.userData.labelMesh);
+        }
+    });
+    zoneMeshes.forEach(z => {
+        scene.remove(z);
+        if (typeof disposeHierarchy === 'function') disposeHierarchy(z);
+    });
+    labelMeshes.forEach(l => {
+        scene.remove(l);
+        if (typeof disposeHierarchy === 'function') disposeHierarchy(l);
+    });
+    particles.forEach(p => {
+        if (p.mesh) {
+            scene.remove(p.mesh);
+            if (typeof disposeHierarchy === 'function') disposeHierarchy(p.mesh);
+        }
+    });
     
     if (cableActionState && cableActionState.lineTemp) {
         scene.remove(cableActionState.lineTemp);
+        if (typeof disposeHierarchy === 'function') disposeHierarchy(cableActionState.lineTemp);
     }
     
     cables = [];
@@ -26,11 +52,12 @@ function clearWorld() {
 
 /**
  * Lataa valitun tason ja alustaa maailman sen mukaiseksi.
- * @param {number} levelId Tason numero (1-30)
+ * @param {number} levelId Tason numero (1-61)
  */
 function loadLevel(levelId) {
     isLoadingLevel = true;
     currentLevel = levelId;
+    cheatSheetUsedInCurrentLevel = false;
     currentLevelConfig = levels[levelId - 1];
     if (!currentLevelConfig) {
         console.error('Tasoa ei löydy:', levelId);
@@ -38,17 +65,22 @@ function loadLevel(levelId) {
         return;
     }
 
-    // Piilota päävalikko, näytä pelin UI
+    // 1. Näytä IT Studio Level Loading HUD Overlay
+    if (typeof showLevelLoader === 'function') {
+        showLevelLoader(currentLevelConfig);
+    }
+
+    // 2. Piilota päävalikko, näytä pelin UI
     document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('game-ui').classList.remove('hidden');
 
-    // Tyhjennä edellinen 3D-maailma
+    // 3. Tyhjennä edellinen 3D-maailma ja vapauta GPU-muisti
     clearWorld();
 
-    // Päivitä UI tason tiedoilla
+    // 4. Päivitä UI tason tiedoilla
     updateLevelUI(currentLevelConfig);
 
-    // Nollaa kamera (tai keskitä tason mukaan)
+    // 5. Nollaa ja keskitä kamera
     if (cameraTarget) {
         if (currentLevelConfig.cameraCenter) {
             cameraTarget.set(currentLevelConfig.cameraCenter.x, 0, currentLevelConfig.cameraCenter.z);
@@ -58,6 +90,15 @@ function loadLevel(levelId) {
     }
     cameraZoom = 1;
     camera.updateProjectionMatrix();
+
+    if (typeof updateLevelLoader === 'function') {
+        updateLevelLoader(45, "Generoidaan laiterajapintoja ja huonegeometrioita...");
+    }
+
+    // 6. Esilataa tarvittavat 3D-mallit asynkronisesti taustalla
+    if (typeof preloadLevelModels === 'function') {
+        preloadLevelModels(currentLevelConfig);
+    }
 
     // Luo VLAN-alueet – välitetään nyt myös nimi ja aliverkko-string lapuille
     if (currentLevelConfig.zones && currentLevelConfig.zones.length > 0) {
@@ -102,11 +143,11 @@ function loadLevel(levelId) {
                     updateNodeLabel(node);
                 });
 
-                // Luo kaapelit
+                // Luo kaapelit (vain sääntöjen mukaiset lailliset kaapelit)
                 progress.cables.forEach(savedCable => {
                     const nodeA = nodes.find(n => n.id === savedCable.nodeAId);
                     const nodeB = nodes.find(n => n.id === savedCable.nodeBId);
-                    if (nodeA && nodeB) {
+                    if (nodeA && nodeB && !getCableError(nodeA, nodeB)) {
                         connectNodes(nodeA, nodeB, 0x64748b);
                     }
                 });
@@ -145,6 +186,15 @@ function loadLevel(levelId) {
     const selectBtn = document.querySelector('[data-tool="select"]');
     if (selectBtn) selectBtn.click();
 
+    if (typeof updateLevelLoader === 'function') {
+        updateLevelLoader(100, "Verkkotopologia valmis!");
+    }
+    setTimeout(() => {
+        if (typeof hideLevelLoader === 'function') {
+            hideLevelLoader();
+        }
+    }, 260);
+
     isLoadingLevel = false;
     checkConnections();
 }
@@ -158,7 +208,7 @@ function nextLevel() {
         loadLevel(currentLevel + 1);
     } else {
         goToMenu();
-        showToast("🏆 Läpäisit kaikki 30 tasoa! Olet nyt verkkoammattilainen!", "success");
+        showToast(`🏆 Läpäisit kaikki ${TOTAL_LEVELS} tasoa! Olet nyt todellinen verkkoarkkitehti!`, "success");
     }
 }
 
@@ -234,6 +284,10 @@ window.addEventListener('DOMContentLoaded', () => {
     setupTools();
     setupOctetInputs();
     initThreeJS();
+
+    if (typeof dismissBootLoader === 'function') {
+        dismissBootLoader();
+    }
 
     document.getElementById('btn-back-menu')?.addEventListener('click', goToMenu);
 

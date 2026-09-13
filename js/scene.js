@@ -235,13 +235,44 @@ function onPointerDown(event) {
     }
 }
 
+/// Partikkelien jaetut resurssit (estää satojen geometroiden/materiaalien jatkuvan luonnin ja vuodon)
+let sparkGeo = null;
+let sparkMat = null;
+let confettiGeo = null;
+let confettiMat = null;
+
+function getSparkResources() {
+    if (!sparkGeo) sparkGeo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    if (!sparkMat) sparkMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa });
+    return { geo: sparkGeo, mat: sparkMat };
+}
+
+function getConfettiResources() {
+    if (!confettiGeo) confettiGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+    if (!confettiMat) confettiMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+    return { geo: confettiGeo, mat: confettiMat };
+}
+
+// Välimuisti DOM-elementeille renderöintiluupissa
+let domRefs = null;
+function getDomRefs() {
+    if (!domRefs) {
+        domRefs = {
+            gameUi: document.getElementById('game-ui'),
+            ipModal: document.getElementById('ip-modal'),
+            winModal: document.getElementById('win-modal'),
+            mainMenu: document.getElementById('main-menu')
+        };
+    }
+    return domRefs;
+}
+
 /**
- * Luo sähkökipinäpartikkelit kaapeliliitännän yhteydessä.
+ * Luo sähkökipinäpartikkelit kaapeliliitännän yhteydessä (jaetuilla resursseilla).
  */
 function createSparks(position) {
+    const { geo, mat } = getSparkResources();
     for (let i = 0; i < 15; i++) {
-        const geo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-        const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.copy(position);
         mesh.position.y += 1;
@@ -255,12 +286,11 @@ function createSparks(position) {
 }
 
 /**
- * Luo vihreät datakonfettipartikkelit oikean IP:n asettamisen kunniaksi.
+ * Luo vihreät datakonfettipartikkelit oikean IP:n asettamisen kunniaksi (jaetuilla resursseilla).
  */
 function createDataConfetti(position) {
+    const { geo, mat } = getConfettiResources();
     for (let i = 0; i < 30; i++) {
-        const geo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-        const mat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.copy(position);
         mesh.position.y += 2;
@@ -275,15 +305,19 @@ function createDataConfetti(position) {
 }
 
 /**
- * Pelin pääsilmukka (renderöinti ja animaatio).
+ * Pelin pääsilmukka (korkean suorituskyvyn renderöinti ja animaatio).
  */
 function animate() {
     requestAnimationFrame(animate);
 
+    const now = performance.now();
+    const refs = getDomRefs();
+    const gameUi = refs.gameUi;
+    const ipModal = refs.ipModal;
+    const winModal = refs.winModal;
+    const mainMenu = refs.mainMenu;
+
     // Kameran ohjaus näppäimistöllä
-    const gameUi = document.getElementById('game-ui');
-    const ipModal = document.getElementById('ip-modal');
-    const winModal = document.getElementById('win-modal');
     const isModalOpen = (ipModal && !ipModal.classList.contains('hidden')) || 
                         (winModal && !winModal.classList.contains('hidden'));
 
@@ -292,18 +326,17 @@ function animate() {
         if (keys.w || keys.up) { cameraTarget.x -= speed; cameraTarget.z -= speed; }
         if (keys.s || keys.down) { cameraTarget.x += speed; cameraTarget.z += speed; }
         if (keys.a || keys.left) { cameraTarget.x -= speed; cameraTarget.z += speed; }
-        if (keys.d || keys.right) { cameraTarget.x += speed; cameraTarget.z -= speed; }
+        if (keys.d || keys.right) { cameraTarget.x += speed; cameraTarget.z += speed; }
     }
 
     // Lerp kamera kohteeseen
-    const mainMenu = document.getElementById('main-menu');
     if (mainMenu && mainMenu.classList.contains('hidden')) {
         camera.position.x = THREE.MathUtils.lerp(camera.position.x, cameraTarget.x + 20, 0.1);
         camera.position.z = THREE.MathUtils.lerp(camera.position.z, cameraTarget.z + 20, 0.1);
         camera.lookAt(cameraTarget.x, 0, cameraTarget.z);
     } else {
         // Valikossa kamera pyörii keskipisteen ympäri
-        const time = Date.now() * 0.0001;
+        const time = now * 0.0001;
         camera.position.x = Math.cos(time) * 30;
         camera.position.z = Math.sin(time) * 30;
         camera.lookAt(0, 0, 0);
@@ -329,33 +362,37 @@ function animate() {
         }
     }
 
-    // Pomppivat laitteet (Onnistumisanimaatio)
+    // Pomppivat laitteet & solmuanimaatiot
+    const wifiTime = now * 0.002;
+    const wifiSine = Math.sin(wifiTime);
+
     nodes.forEach(n => {
         if (n.userData.animating) {
             const elapsed = Date.now() - n.userData.animStart;
+            const geo = n.mesh.geometry;
+            const baseHeight = (geo && geo.boundingBox) ? (geo.boundingBox.max.y - geo.boundingBox.min.y) / 2 : 1;
             if (elapsed < 500) {
-                // Hyppy (Siniaalto)
-                const baseHeight = (n.mesh.geometry.boundingBox.max.y - n.mesh.geometry.boundingBox.min.y) / 2;
                 n.mesh.position.y = baseHeight + Math.sin((elapsed / 500) * Math.PI) * 2;
             } else {
-                n.mesh.position.y = (n.mesh.geometry.boundingBox.max.y - n.mesh.geometry.boundingBox.min.y) / 2;
+                n.mesh.position.y = baseHeight;
                 n.userData.animating = false;
             }
         }
 
-        // WiFi-renkaan pulse-animaatio
+        // WiFi-renkaan pulse-animaatio (välimuistitetulla viitteellä)
         if (n.userData.type === 'wifi') {
-            const ring = n.mesh.getObjectByName("wifiRing");
+            if (!n.wifiRingMesh) {
+                n.wifiRingMesh = n.mesh.getObjectByName("wifiRing");
+            }
+            const ring = n.wifiRingMesh;
             if (ring) {
-                const t = Date.now() * 0.002;
-                ring.scale.setScalar(1 + Math.sin(t) * 0.03);
-                // Animaation opacity:
-                const isActive = isNodeActive ? isNodeActive(n) : true;
+                ring.scale.setScalar(1 + wifiSine * 0.03);
+                const isActive = n.userData.isConnected;
                 if (isActive) {
-                    ring.material.opacity = 0.5 + Math.sin(t) * 0.3;
+                    ring.material.opacity = 0.5 + wifiSine * 0.3;
                     ring.material.color.setHex(0xa855f7);
                 } else {
-                    ring.material.opacity = 0.2 + Math.sin(t) * 0.1;
+                    ring.material.opacity = 0.2 + wifiSine * 0.1;
                     ring.material.color.setHex(0x475569);
                 }
             }

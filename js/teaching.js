@@ -168,7 +168,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 256 = 0 $\rightarrow$ 255.255.255.0</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 256 = 0 ➔ 255.255.255.0</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">3 täyttä tavua (255.255.255) ja 4. tavu on 0.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -226,7 +226,7 @@ const TEACHING_PART_1 = {
                     ✂️ /25 – Yhden verkon jakaminen kahteen osaan
                 </h4>
                 <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
-                    Kun prefiksi kasvaa /24 $\rightarrow$ <strong class="text-cyan-300">/25</strong>, lainataan <strong class="text-white">yksi bitti</strong> neljännen oktetin alusta verkolle. Yksi bitti voi olla joko 0 tai 1, joten perinteinen 256 osoitteen avaruus leikkautuu tarkalleen kahteen 128 osoitteen itsenäiseen aliverkkoon!
+                    Kun prefiksi kasvaa /24 ➔ <strong class="text-cyan-300">/25</strong>, lainataan <strong class="text-white">yksi bitti</strong> neljännen oktetin alusta verkolle. Yksi bitti voi olla joko 0 tai 1, joten perinteinen 256 osoitteen avaruus leikkautuu tarkalleen kahteen 128 osoitteen itsenäiseen aliverkkoon!
                 </p>
                 <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
                     <strong class="text-amber-300">🌍 Reaalimaailman käyttökohde:</strong>
@@ -252,7 +252,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 128 = 128 $\rightarrow$ 255.255.255.128</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 128 = 128 ➔ 255.255.255.128</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">Peitteen viimeinen oktetti on tasan 128.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -314,7 +314,7 @@ const TEACHING_PART_1 = {
                     🗂️ /26 – Kvarttijako osastoverkoille
                 </h4>
                 <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
-                    Prefiksissä <strong class="text-cyan-300">/26</strong> verkolle on lainattu <strong class="text-white">2 bittiä</strong> neljännestä oktetista ($2^2 = 4$ aliverkkoa). Jokaiseen aliverkkoon jää $32 - 26 = 6$ bittiä, mikä luo tasan <strong class="text-amber-300">64 osoitteen lohkot</strong>.
+                    Prefiksissä <strong class="text-cyan-300">/26</strong> verkolle on lainattu <strong class="text-white">2 bittiä</strong> neljännestä oktetista (2² = 4 aliverkkoa). Jokaiseen aliverkkoon jää 32 − 26 = 6 bittiä, mikä luo tasan <strong class="text-amber-300">64 osoitteen lohkot</strong>.
                 </p>
                 <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
                     <strong class="text-amber-300">🌍 Reaalimaailman käyttökohde:</strong>
@@ -340,7 +340,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 64 = 192 $\rightarrow$ 255.255.255.192</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 64 = 192 ➔ 255.255.255.192</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">Aliverkon peitteen viimeinen oktetti on 192.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -396,7 +396,7 @@ const TEACHING_PART_1 = {
                     🏢 /27 – Tiimien ja palvelintilojen aliverkko
                 </h4>
                 <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
-                    CIDR-prefiksin <strong class="text-cyan-300">/27</strong> myötä verkolle varataan <strong class="text-white">3 bittiä</strong> neljännestä oktetista ($2^3 = 8$ aliverkkoa). Isännille jää $32 - 27 = 5$ bittiä, jolloin yhden lohkon koko on tarkalleen <strong class="text-amber-300">32 osoitetta</strong>.
+                    CIDR-prefiksin <strong class="text-cyan-300">/27</strong> myötä verkolle varataan <strong class="text-white">3 bittiä</strong> neljännestä oktetista (2³ = 8 aliverkkoa). Isännille jää 32 − 27 = 5 bittiä, jolloin yhden lohkon koko on tarkalleen <strong class="text-amber-300">32 osoitetta</strong>.
                 </p>
                 <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
                     <strong class="text-amber-300">🌍 Reaalimaailman käyttökohde:</strong>
@@ -422,7 +422,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 32 = 224 $\rightarrow$ 255.255.255.224</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 32 = 224 ➔ 255.255.255.224</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">Peitteen jaettu oktetti on aina 224.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -475,7 +475,7 @@ const TEACHING_PART_1 = {
                     🔒 /28 – Pienryhmät, DMZ ja tulostinverkot
                 </h4>
                 <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
-                    Prefiksissä <strong class="text-cyan-300">/28</strong> verkkobittejä on jo 28 kappaletta ja isännille jää vain <strong class="text-white">4 bittiä</strong> ($32 - 28 = 4$). Tämä luo tiiviitä <strong class="text-amber-300">16 osoitteen lohkoja</strong>, joista laitteille voidaan konfiguroida tasan <strong class="text-white">14 osoitetta</strong>.
+                    Prefiksissä <strong class="text-cyan-300">/28</strong> verkkobittejä on jo 28 kappaletta ja isännille jää vain <strong class="text-white">4 bittiä</strong> (32 − 28 = 4). Tämä luo tiiviitä <strong class="text-amber-300">16 osoitteen lohkoja</strong>, joista laitteille voidaan konfiguroida tasan <strong class="text-white">14 osoitetta</strong>.
                 </p>
                 <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
                     <strong class="text-amber-300">🌍 Reaalimaailman käyttökohde:</strong>
@@ -501,7 +501,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 16 = 240 $\rightarrow$ 255.255.255.240</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 16 = 240 ➔ 255.255.255.240</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">Aliverkon peitteen viimeinen oktetti on 240.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -554,7 +554,7 @@ const TEACHING_PART_1 = {
                     ⚙️ /29 – Klusterit ja julkiset operaattoripoolit
                 </h4>
                 <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
-                    CIDR-prefiksissä <strong class="text-cyan-300">/29</strong> verkolle varataan huimat 29 bittiä ja isännille jää enää vain <strong class="text-white">3 bittiä</strong>. Lohkokoko on $2^3 = 8$ osoitetta, josta jää $8 - 2 =$ <strong class="text-amber-300">6 käyttökelpoista IP-osoitetta</strong> laitteille.
+                    CIDR-prefiksissä <strong class="text-cyan-300">/29</strong> verkolle varataan huimat 29 bittiä ja isännille jää enää vain <strong class="text-white">3 bittiä</strong>. Lohkokoko on 2³ = 8 osoitetta, josta jää 8 − 2 = <strong class="text-amber-300">6 käyttökelpoista IP-osoitetta</strong> laitteille.
                 </p>
                 <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
                     <strong class="text-amber-300">🌍 Reaalimaailman käyttökohde:</strong>
@@ -580,7 +580,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 8 = 248 $\rightarrow$ 255.255.255.248</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 8 = 248 ➔ 255.255.255.248</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">Aliverkon peitteen jaettu oktetti on tasan 248.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -638,7 +638,7 @@ const TEACHING_PART_1 = {
                     🔗 /30 – Reitittimien välinen runkolinkki
                 </h4>
                 <p class="text-slate-300 text-xs leading-relaxed mb-2.5">
-                    CIDR-prefiksi <strong class="text-cyan-300">/30</strong> on tietoliikennetekniikan klassisin Point-to-Point -linkkikoko. Isäntälaitteille jää vain vaivaiset <strong class="text-white">2 bittiä</strong> ($32 - 30 = 2$). Kokonaislohkokoko on $2^2 = 4$ osoitetta, josta syntyy tasan <strong class="text-amber-300">kaksi käyttökelpoista osoitetta</strong>!
+                    CIDR-prefiksi <strong class="text-cyan-300">/30</strong> on tietoliikennetekniikan klassisin Point-to-Point -linkkikoko. Isäntälaitteille jää vain vaivaiset <strong class="text-white">2 bittiä</strong> (32 − 30 = 2). Kokonaislohkokoko on 2² = 4 osoitetta, josta syntyy tasan <strong class="text-amber-300">kaksi käyttökelpoista osoitetta</strong>!
                 </p>
                 <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-700/60 text-xs text-slate-300">
                     <strong class="text-amber-300">🌍 Reaalimaailman käyttökohde:</strong>
@@ -664,7 +664,7 @@ const TEACHING_PART_1 = {
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
                         <span class="text-slate-400 block text-[11px] font-medium">3. Taikanumero & Peite</span>
-                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 4 = 252 $\rightarrow$ 255.255.255.252</span>
+                        <span class="font-mono text-emerald-300 font-bold text-xs">256 − 4 = 252 ➔ 255.255.255.252</span>
                         <span class="text-slate-400 block text-[10px] mt-0.5">Aliverkon peitteen viimeinen oktetti on aina 252.</span>
                     </div>
                     <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/70">
@@ -793,7 +793,7 @@ const TEACHING_PART_2 = {
                     <span>💡</span> Pro-vinkki / Reitityksen tiivistäminen (Supernetting):
                 </p>
                 <p>
-                    /23 yhdistää kaksi peräkkäistä /24-verkkoa yhdeksi reitiksi (esim. <span class="font-mono text-white">192.168.0.0/24</span> ja <span class="font-mono text-white">192.168.1.0/24</span> $\rightarrow$ <span class="font-mono text-white">192.168.0.0/23</span>).
+                    /23 yhdistää kaksi peräkkäistä /24-verkkoa yhdeksi reitiksi (esim. <span class="font-mono text-white">192.168.0.0/24</span> ja <span class="font-mono text-white">192.168.1.0/24</span> ➔ <span class="font-mono text-white">192.168.0.0/23</span>).
                     <strong>Kultainen sääntö:</strong> Yhdistettävistä verkoista ensimmäisen 3. oktetin on aina oltava <em>parillinen</em>! Verkkoja .1.0/24 ja .2.0/24 ei voi yhdistää /23-verkoksi, koska niiden binaariprefiksit eroavat toisistaan.
                 </p>
             </div>

@@ -1,6 +1,79 @@
 // --- Käyttöliittymä, modaalit, työkalut ja ilmoitukset ---
 // Kattava Full Teaching -opetusmateriaali (kaikki 24 aihetta / 61 tasoa) ladataan tiedostosta js/teaching.js.
 
+// ==========================================================================
+// IT STUDIO CYBERPUNK / NOC TERMINAL LOADER SERVICE
+// ==========================================================================
+
+/**
+ * Piilottaa sovelluksen kylmäkäynnistyksen Boot Loaderin sulavalla siirtymällä.
+ */
+function dismissBootLoader() {
+    const boot = document.getElementById('app-boot-loader');
+    if (!boot) return;
+    const bar = document.getElementById('boot-progress-bar');
+    const status = document.getElementById('boot-status-text');
+    if (bar) bar.style.width = '100%';
+    if (status) status.innerText = 'Verkkoydin ja käyttöliittymä alustettu. Valmis!';
+    setTimeout(() => {
+        boot.classList.add('boot-hidden');
+        setTimeout(() => {
+            if (boot.parentNode) boot.parentNode.removeChild(boot);
+        }, 450);
+    }, 300);
+}
+if (typeof window !== 'undefined') window.dismissBootLoader = dismissBootLoader;
+
+/**
+ * Avaa tasosiirtymän cyber-HUD -peitekerroksen ja asettaa tason telemetrian.
+ */
+function showLevelLoader(levelConfig) {
+    const overlay = document.getElementById('level-loader-overlay');
+    if (!overlay) return;
+    const titleEl = document.getElementById('loader-level-title');
+    const badgeEl = document.getElementById('loader-mission-badge');
+    const subnetEl = document.getElementById('loader-subnet-info');
+    const barEl = document.getElementById('level-progress-bar');
+    const teleEl = document.getElementById('loader-telemetry-text');
+
+    if (levelConfig) {
+        if (titleEl) titleEl.innerText = levelConfig.name || `Taso ${levelConfig.id}`;
+        if (badgeEl) badgeEl.innerText = `MISSION #${levelConfig.id} // ${levelConfig.phase ? levelConfig.phase.toUpperCase() : 'LAN TOPOLOGY'}`;
+        if (subnetEl) subnetEl.innerText = `${levelConfig.network || '192.168.1.0'} /${levelConfig.cidr || 24}`;
+    }
+    if (barEl) barEl.style.width = '25%';
+    if (teleEl) {
+        teleEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span>Alustetaan verkkotopologiaa ja rajapintoja...</span>`;
+    }
+    overlay.classList.remove('loader-hidden');
+}
+
+/**
+ * Päivittää tasosiirtymän edistymispalkin ja statustekstin.
+ */
+function updateLevelLoader(percent, text) {
+    const barEl = document.getElementById('level-progress-bar');
+    const teleEl = document.getElementById('loader-telemetry-text');
+    if (barEl) barEl.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    if (teleEl && text) {
+        teleEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>${text}</span>`;
+    }
+}
+
+/**
+ * Häivyttää tasosiirtymän loader-overlayn pehmeästi pois.
+ */
+function hideLevelLoader() {
+    const overlay = document.getElementById('level-loader-overlay');
+    if (overlay) {
+        overlay.classList.add('loader-hidden');
+    }
+}
+if (typeof window !== 'undefined') {
+    window.showLevelLoader = showLevelLoader;
+    window.updateLevelLoader = updateLevelLoader;
+    window.hideLevelLoader = hideLevelLoader;
+}
 
 /**
  * Apufunktio – rakentaa tehtävänannon ja laskentaohjeen IP-modaaliin.
@@ -222,12 +295,16 @@ function renderLevelMenu() {
         currentMenuPhase = activeLevelObj.phase || 'all';
     }
 
-    // 4. Hakukentän kuuntelija
+    // 4. Hakukentän kuuntelija (Debounce 140ms estää mikrojäätymisen)
     if (searchInput && !searchInput.dataset.listening) {
         searchInput.dataset.listening = 'true';
+        let searchDebounceTimer = null;
         searchInput.addEventListener('input', (e) => {
-            currentMenuSearch = e.target.value.trim().toLowerCase();
-            renderLevelList();
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                currentMenuSearch = e.target.value.trim().toLowerCase();
+                renderLevelList();
+            }, 140);
         });
     }
 
@@ -285,6 +362,14 @@ function renderLevelMenu() {
     }
 
     // 6. Renderöi tehtävälista ja esikatselu
+    let previewDebounceTimer = null;
+    function schedulePreviewUpdate(lvl) {
+        clearTimeout(previewDebounceTimer);
+        previewDebounceTimer = setTimeout(() => {
+            renderPreviewCard(lvl);
+        }, 70);
+    }
+
     renderLevelList();
 
     function renderLevelList() {
@@ -296,8 +381,10 @@ function renderLevelMenu() {
         }
         if (currentMenuSearch) {
             filtered = filtered.filter(l => {
-                const text = `${l.id} ${l.name} ${l.scenario || ''} ${l.teachingTopic || ''} ${l.phase || ''} ${l.network || ''}`.toLowerCase();
-                return text.includes(currentMenuSearch);
+                if (!l._searchTokens) {
+                    l._searchTokens = `${l.id} ${l.name} ${l.scenario || ''} ${l.teachingTopic || ''} ${l.phase || ''} ${l.network || ''}`.toLowerCase();
+                }
+                return l._searchTokens.includes(currentMenuSearch);
             });
         }
 
@@ -313,7 +400,7 @@ function renderLevelMenu() {
                     <p class="text-xs text-slate-500 mt-1">Kokeile toista hakusanaa tai valitse jokin toinen vaihe ylhäältä.</p>
                 </div>
             `;
-            renderPreviewCard(null);
+            schedulePreviewUpdate(null);
             return;
         }
 
@@ -321,6 +408,8 @@ function renderLevelMenu() {
         if (!filtered.some(l => l.id === selectedMenuLevelId)) {
             selectedMenuLevelId = filtered[0].id;
         }
+
+        const fragment = document.createDocumentFragment();
 
         filtered.forEach(lvl => {
             const isCompleted = lvl.id < unlockedLevels;
@@ -332,10 +421,17 @@ function renderLevelMenu() {
             let statusText = 'Lukittu';
             let statusColor = 'text-slate-400 bg-slate-800/80 border-slate-700';
 
+            const isMasterCompleted = Array.isArray(masterStarLevels) && masterStarLevels.includes(lvl.id);
+
             if (isCompleted) {
                 statusClass = 'row-completed';
-                statusText = '✅ Läpäisty';
-                statusColor = 'text-emerald-300 bg-emerald-500/20 border-emerald-500/40 font-bold';
+                if (isMasterCompleted) {
+                    statusText = '🏆 Pro Master';
+                    statusColor = 'text-amber-300 bg-amber-500/20 border-amber-500/50 font-black shadow-sm';
+                } else {
+                    statusText = '✅ Läpäisty';
+                    statusColor = 'text-emerald-300 bg-emerald-500/20 border-emerald-500/40 font-bold';
+                }
             } else if (isUnlocked) {
                 statusClass = 'row-unlocked';
                 statusText = '⚡ Seuraava';
@@ -371,7 +467,7 @@ function renderLevelMenu() {
                 selectedMenuLevelId = lvl.id;
                 document.querySelectorAll('.mission-row').forEach(r => r.classList.remove('row-selected'));
                 row.classList.add('row-selected');
-                renderPreviewCard(lvl);
+                schedulePreviewUpdate(lvl);
             };
 
             // Tuplaklikkaus tai klikkaus avoimeen tasoon käynnistää suoraan
@@ -379,12 +475,14 @@ function renderLevelMenu() {
                 if (!isLocked) loadLevel(lvl.id);
             };
 
-            container.appendChild(row);
+            fragment.appendChild(row);
         });
+
+        container.appendChild(fragment);
 
         // Päivitä esikatseluruutu
         const selectedObj = levels.find(l => l.id === selectedMenuLevelId) || filtered[0];
-        renderPreviewCard(selectedObj);
+        schedulePreviewUpdate(selectedObj);
     }
 
     /**
@@ -421,6 +519,11 @@ function renderLevelMenu() {
 
         preview3DRenderer.setSize(w, h, false);
         preview3DRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+        // Vapautetaan edellisen esikatselun WebGL-resurssit muistivuodon estämiseksi
+        if (preview3DScene && typeof disposeHierarchy === 'function') {
+            disposeHierarchy(preview3DScene);
+        }
 
         preview3DScene = new THREE.Scene();
         preview3DScene.background = new THREE.Color(0x080d1a);
@@ -639,8 +742,14 @@ function renderLevelMenu() {
         let actionBtnText = `🔒 Avaa edeltävät tasot ensin`;
         let actionBtnDisabled = true;
 
+        const isMasterCompleted = Array.isArray(masterStarLevels) && masterStarLevels.includes(lvl.id);
+
         if (isCompleted) {
-            statusBadge = `<span class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">✅ Läpäisty</span>`;
+            if (isMasterCompleted) {
+                statusBadge = `<span class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm flex items-center gap-1.5"><span>🏆</span> Pro Master (Exam Mode)</span>`;
+            } else {
+                statusBadge = `<span class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">✅ Läpäisty</span>`;
+            }
             actionBtnText = `PELAA UUDELLEEN ▶`;
             actionBtnDisabled = false;
         } else if (isUnlocked) {
@@ -666,7 +775,7 @@ function renderLevelMenu() {
 
         previewPanel.innerHTML = `
             <!-- Yläosa: Taso, Otsikko, Vaihe & Tähdet (Pysyvä yläreuna) -->
-            <div class="p-3.5 sm:p-4 pb-3 border-b border-slate-800 bg-slate-900/60 flex-shrink-0 flex items-center justify-between gap-3">
+            <div class="p-4 pb-3.5 border-b border-slate-800 bg-slate-900/70 flex-shrink-0 flex items-center justify-between gap-3">
                 <div class="flex flex-col gap-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs font-mono font-black px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm">
@@ -679,7 +788,7 @@ function renderLevelMenu() {
                     </div>
                     <h2 class="text-base sm:text-lg font-black text-white truncate leading-tight">${lvl.name}</h2>
                 </div>
-                <div class="text-amber-400 text-sm sm:text-base font-bold flex-shrink-0" title="Vaikeusaste: ${lvl.difficulty}/5">${stars}</div>
+                <div class="text-amber-400 text-xs sm:text-sm font-bold flex-shrink-0" title="Vaikeusaste: ${lvl.difficulty}/5">${stars}</div>
             </div>
 
             <!-- Sisältöalue: 3D-tilannekuva, Statsit, Tehtävänanto & Vyöhykkeet (Vieritettävä jos ei mahdu) -->
@@ -687,7 +796,7 @@ function renderLevelMenu() {
                 
                 <!-- Aito 3D-tilannekuva tasosta (Starting State 3D-render) -->
                 <div class="relative rounded-xl overflow-hidden border border-slate-700/80 bg-slate-950 shadow-inner flex-shrink-0">
-                    <div class="absolute top-2 left-2.5 z-10 flex items-center gap-1.5 bg-slate-900/85 backdrop-blur px-2.5 py-1 rounded-lg border border-slate-700/60 text-xs font-bold text-sky-300 pointer-events-none">
+                    <div class="absolute top-2 left-2.5 z-10 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur px-2.5 py-1 rounded-lg border border-slate-700/70 text-xs font-bold text-sky-300 pointer-events-none">
                         <span>🌐 3D-tilannekuva tasosta</span>
                         <span class="text-slate-400 font-normal text-[11px]">(${(lvl.requiredNodes || []).length} kiinteää laitetta)</span>
                     </div>
@@ -697,18 +806,18 @@ function renderLevelMenu() {
                 <!-- Verkkotiedot & Statsit ruudukkona -->
                 <div class="grid grid-cols-2 gap-2.5 text-xs sm:text-sm flex-shrink-0">
                     <div class="preview-stat-card">
-                        <span class="text-[11px] uppercase font-extrabold text-slate-400 block mb-0.5 tracking-wider">Pääverkko</span>
+                        <span class="text-[10px] sm:text-[11px] uppercase font-bold text-slate-400 block mb-0.5 tracking-wider">Pääverkko</span>
                         <span class="font-mono text-cyan-300 font-black text-sm sm:text-base">${lvl.network}/${lvl.cidr}</span>
                     </div>
                     <div class="preview-stat-card">
-                        <span class="text-[11px] uppercase font-extrabold text-slate-400 block mb-0.5 tracking-wider">Oppimisaihe</span>
-                        <span class="text-amber-300 font-extrabold text-xs sm:text-sm truncate block">🎯 ${topic}</span>
+                        <span class="text-[10px] sm:text-[11px] uppercase font-bold text-slate-400 block mb-0.5 tracking-wider">Oppimisaihe</span>
+                        <span class="text-amber-300 font-bold text-xs sm:text-sm truncate block">🎯 ${topic}</span>
                     </div>
                 </div>
 
                 <!-- Tehtävänanto / Skenaario selkeällä tekstillä -->
-                <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-xs sm:text-sm leading-relaxed shadow-inner">
-                    <span class="text-xs uppercase font-extrabold text-sky-400 block mb-1 flex items-center gap-1.5">
+                <div class="bg-slate-950/75 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-xs sm:text-sm leading-relaxed shadow-inner">
+                    <span class="text-[11px] uppercase font-bold text-sky-400 block mb-1 flex items-center gap-1.5">
                         <span>📋</span> Tehtävänanto
                     </span>
                     <p class="text-slate-200 font-medium">${lvl.scenario || 'Rakenna ja konfiguroi verkkoinfrastruktuuri tason vaatimusten mukaisesti.'}</p>
@@ -718,9 +827,9 @@ function renderLevelMenu() {
             </div>
 
             <!-- Käynnistyspainike: AINA NÄKYVILLÄ kiinnitettynä paneelin alareunaan -->
-            <div class="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/80 backdrop-blur flex-shrink-0">
+            <div class="p-3 sm:p-3.5 border-t border-slate-800 bg-slate-950/85 backdrop-blur flex-shrink-0">
                 <button id="btn-start-preview-mission" 
-                        class="w-full py-3.5 rounded-xl font-black text-sm sm:text-base text-white shadow-xl flex items-center justify-center gap-2.5 cursor-pointer transition ${actionBtnDisabled ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'preview-start-btn'}"
+                        class="w-full py-3.5 rounded-xl font-black text-sm sm:text-base text-white shadow-lg flex items-center justify-center gap-2 cursor-pointer transition ${actionBtnDisabled ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : 'preview-start-btn'}"
                         ${actionBtnDisabled ? 'disabled' : ''}>
                     ${actionBtnText}
                 </button>
@@ -878,10 +987,10 @@ function updateModalDeviceList(selectedNode) {
             if (hasIp) {
                 ipBadgeHtml = `<span class="font-mono text-xs font-black ${isIpCorrect ? 'text-emerald-400' : 'text-amber-400'}">IP: ${n.userData.ip}</span>`;
             } else {
-                ipBadgeHtml = `<span class="text-xs font-black text-amber-300 bg-amber-950/70 px-2 py-0.5 rounded-lg border border-amber-600/50">IP puuttuu</span>`;
+                ipBadgeHtml = `<span class="text-xs font-black text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-600/60">IP puuttuu</span>`;
             }
         } else {
-            ipBadgeHtml = `<span class="text-xs text-slate-500 font-bold">Ei vaadi IP:tä</span>`;
+            ipBadgeHtml = `<span class="text-xs text-slate-400 font-extrabold">Ei vaadi IP:tä</span>`;
         }
 
         let cableBadgeHtml = hasCable 
@@ -889,16 +998,16 @@ function updateModalDeviceList(selectedNode) {
             : `<span class="text-xs font-black text-rose-400 flex items-center gap-1.5"><span>🔴</span> Ei kaapelia</span>`;
 
         itemsHtml += `
-            <div onclick="selectNodeInModal(${idx})" class="p-3.5 rounded-2xl border ${statusBg} cursor-pointer transition-all flex flex-col gap-2 select-none group">
+            <div onclick="selectNodeInModal(${idx})" class="p-3.5 rounded-2xl border ${statusBg} cursor-pointer transition-all flex flex-col gap-2 select-none group shadow-sm">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl group-hover:scale-110 transition-transform">${icon}</span>
                         <div>
-                            <span class="text-sm font-black text-white block leading-snug">${typeLabel}</span>
-                            ${zoneName ? `<span class="text-xs text-cyan-300 font-bold block">${zoneName}</span>` : ''}
+                            <span class="text-[15px] font-black text-white block leading-snug">${typeLabel}</span>
+                            ${zoneName ? `<span class="text-xs text-cyan-300 font-extrabold block">${zoneName}</span>` : ''}
                         </div>
                     </div>
-                    ${isSelected ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-cyan-500/25 text-cyan-300 border border-cyan-500/60">Valittu</span>` : ''}
+                    ${isSelected ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-cyan-500/25 text-cyan-300 border border-cyan-500/60 shadow-sm">Valittu</span>` : ''}
                 </div>
                 <div class="flex items-center justify-between pt-2 border-t border-slate-800/90 text-xs">
                     ${cableBadgeHtml}
@@ -936,8 +1045,8 @@ function switchHelpTab(tab) {
     const binaryView = document.getElementById('ip-help-binary-view');
     const matrixView = document.getElementById('ip-help-matrix-view');
 
-    const activeClass = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
-    const inactiveClass = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white hover:bg-slate-800';
+    const activeClass = 'px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13.5px] font-black transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
+    const inactiveClass = 'px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13.5px] font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800';
 
     if (stepsBtn) stepsBtn.className = currentHelpTab === 'steps' ? activeClass : inactiveClass;
     if (theoryBtn) theoryBtn.className = currentHelpTab === 'theory' ? activeClass : inactiveClass;
@@ -952,6 +1061,7 @@ function switchHelpTab(tab) {
     if (currentHelpTab === 'binary') {
         renderBinaryVisualizer();
     } else if (currentHelpTab === 'matrix') {
+        cheatSheetUsedInCurrentLevel = true;
         renderSubnetMatrix();
     }
 }
@@ -996,7 +1106,7 @@ function renderBinaryVisualizer() {
 
     function formatBitRow(binStr, isMask = false) {
         const raw = binStr.replace(/\./g, '');
-        let html = '<div class="flex items-center gap-0.5 sm:gap-1 font-mono text-[10px] sm:text-xs select-none overflow-x-auto py-1">';
+        let html = '<div class="flex items-center gap-0.5 sm:gap-1 font-mono text-xs sm:text-sm select-none overflow-x-auto py-1.5">';
         for (let i = 0; i < 32; i++) {
             const bit = raw[i] || '0';
             const isNetBit = i < cidr;
@@ -1007,10 +1117,10 @@ function renderBinaryVisualizer() {
                 ? (isMask ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/70' : 'bg-cyan-950/90 text-cyan-300 border-cyan-500/70')
                 : (isMask ? 'bg-slate-900 text-slate-500 border-slate-700' : 'bg-amber-950/90 text-amber-300 border-amber-500/70');
 
-            let extraBorder = isCutBit ? 'border-r-2 border-r-rose-400 ring-1 ring-rose-500/60' : '';
-            html += `<span class="inline-flex items-center justify-center w-4 sm:w-5 h-5 sm:h-6 rounded border ${colorBg} ${extraBorder} font-bold text-center">${bit}</span>`;
+            let extraBorder = isCutBit ? 'border-r-2 border-r-rose-400 ring-2 ring-rose-500/60' : '';
+            html += `<span class="inline-flex items-center justify-center w-5 sm:w-6 h-6 sm:h-7 rounded border ${colorBg} ${extraBorder} font-black text-center">${bit}</span>`;
             if (isOctetBorder) {
-                html += '<span class="text-slate-500 font-bold px-0.5">.</span>';
+                html += '<span class="text-slate-400 font-bold px-1 text-sm sm:text-base">.</span>';
             }
         }
         html += '</div>';
@@ -1019,66 +1129,66 @@ function renderBinaryVisualizer() {
 
     let statusBadge = '';
     if (breakdown.isNetworkAddress && cidr < 31) {
-        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">⚠️ Network ID – Ei voida antaa laitteelle!</span>';
+        statusBadge = '<span class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-black bg-rose-500/20 text-rose-300 border border-rose-500/50">⚠️ Network ID – Ei voida antaa laitteelle!</span>';
     } else if (breakdown.isBroadcastAddress && cidr < 31) {
-        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ Broadcast – Ei voida antaa laitteelle!</span>';
+        statusBadge = '<span class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-black bg-amber-500/20 text-amber-300 border border-amber-500/50">⚠️ Broadcast – Ei voida antaa laitteelle!</span>';
     } else if (breakdown.isUsableHost) {
-        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">✅ Sallittu Isäntäosoite</span>';
+        statusBadge = '<span class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/50">✅ Sallittu Isäntäosoite</span>';
     } else {
-        statusBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">ℹ️ Aliverkon ulkopuolella</span>';
+        statusBadge = '<span class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-black bg-purple-500/20 text-purple-300 border border-purple-500/50">ℹ️ Aliverkon ulkopuolella</span>';
     }
 
     container.innerHTML = `
         <div class="space-y-4 text-slate-100">
             <!-- Yhteenvetokortti ja tilamerkki -->
-            <div class="bg-slate-800/95 p-4 rounded-2xl border border-slate-600 shadow-xl space-y-3">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            <div class="bg-slate-800/95 p-4 sm:p-5 rounded-2xl border border-slate-600 shadow-xl space-y-3.5">
+                <div class="flex items-center justify-between gap-2.5 flex-wrap">
+                    <div class="flex items-center gap-2.5">
+                        <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/50">
                             ⚙️ 32-BIT VISUALISOIJA
                         </span>
-                        <span class="text-xs font-mono text-slate-400">Prefiksi: /${cidr}</span>
+                        <span class="text-xs sm:text-sm font-mono text-slate-300 font-bold">Prefiksi: /${cidr}</span>
                     </div>
                     ${statusBadge}
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
-                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">IP-Luokka:</span>
-                        <span class="font-bold text-white text-sm">${ipClass.classType}</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs sm:text-[13px] text-slate-400 uppercase font-extrabold block mb-1 tracking-wider">IP-Luokka:</span>
+                        <span class="font-black text-white text-lg">${ipClass.classType}</span>
                     </div>
-                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Tyyppi:</span>
-                        <span class="font-bold text-cyan-300 text-xs truncate block" title="${special.type}">${special.type}</span>
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs sm:text-[13px] text-slate-400 uppercase font-extrabold block mb-1 tracking-wider">Tyyppi:</span>
+                        <span class="font-bold text-cyan-300 text-sm sm:text-[15px] truncate block" title="${special.type}">${special.type}</span>
                     </div>
-                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Magic Number:</span>
-                        <span class="font-mono font-bold text-amber-300 text-sm">${magic.blockSize}</span>
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs sm:text-[13px] text-slate-400 uppercase font-extrabold block mb-1 tracking-wider">Magic Number:</span>
+                        <span class="font-mono font-black text-amber-300 text-lg">${magic.blockSize}</span>
                     </div>
-                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-700">
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Wildcard:</span>
-                        <span class="font-mono font-bold text-purple-300 text-xs">${wildcard}</span>
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs sm:text-[13px] text-slate-400 uppercase font-extrabold block mb-1 tracking-wider">Wildcard:</span>
+                        <span class="font-mono font-black text-purple-300 text-sm sm:text-base">${wildcard}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Reaaliaikainen 32-bittinen totuustaulu -->
-            <div class="bg-slate-800/95 p-4 rounded-2xl border border-slate-600 shadow-xl space-y-3.5">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-700 text-xs flex-wrap gap-2">
-                    <span class="font-bold text-white flex items-center gap-1.5">
-                        <span>🔍</span> Bitwise AND -hajotelma (Rautatason laskenta)
+            <div class="bg-slate-800/95 p-4 sm:p-5 rounded-2xl border border-slate-600 shadow-xl space-y-4">
+                <div class="flex items-center justify-between pb-2.5 border-b border-slate-700 flex-wrap gap-2">
+                    <span class="font-black text-white text-base sm:text-[17px] flex items-center gap-2">
+                        <span class="text-lg">🔍</span> Bitwise AND -hajotelma (Rautatason laskenta)
                     </span>
-                    <div class="flex items-center gap-3 text-[11px]">
-                        <span class="flex items-center gap-1 text-cyan-300 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span> Verkko (${cidr}b)</span>
-                        <span class="flex items-center gap-1 text-amber-300 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Isäntä (${32 - cidr}b)</span>
+                    <div class="flex items-center gap-3 text-xs sm:text-sm font-bold">
+                        <span class="flex items-center gap-1.5 text-cyan-300"><span class="w-3 h-3 rounded-full bg-cyan-500 inline-block"></span> Verkko (${cidr}b)</span>
+                        <span class="flex items-center gap-1.5 text-amber-300"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Isäntä (${32 - cidr}b)</span>
                     </div>
                 </div>
 
                 <!-- IP Binaari -->
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-300 font-bold">Syötetty IP:</span>
-                        <span class="font-mono text-cyan-300 font-bold">${ip}</span>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-sm sm:text-base">
+                        <span class="text-slate-200 font-extrabold">Syötetty IP:</span>
+                        <span class="font-mono text-cyan-300 font-black text-base sm:text-lg">${ip}</span>
                     </div>
                     <div class="overflow-x-auto pb-1">
                         ${formatBitRow(breakdown.ipBinary, false)}
@@ -1086,58 +1196,58 @@ function renderBinaryVisualizer() {
                 </div>
 
                 <!-- Mask Binaari -->
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-300 font-bold">Aliverkon Peite (AND-maski):</span>
-                        <span class="font-mono text-emerald-300 font-bold">${mask}</span>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-sm sm:text-base">
+                        <span class="text-slate-200 font-extrabold">Aliverkon Peite (AND-maski):</span>
+                        <span class="font-mono text-emerald-300 font-black text-base sm:text-lg">${mask}</span>
                     </div>
                     <div class="overflow-x-auto pb-1">
                         ${formatBitRow(breakdown.maskBinary, true)}
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-slate-600 my-2"></div>
+                <div class="border-t border-dashed border-slate-600 my-2.5"></div>
 
                 <!-- Tulos (Network ID) -->
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-white font-bold flex items-center gap-1">
-                            <span>➔</span> Bitwise AND -tulos (Network ID):
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-sm sm:text-base">
+                        <span class="text-white font-black flex items-center gap-1.5 text-base sm:text-[17px]">
+                            <span class="text-cyan-400 font-black">➔</span> Bitwise AND -tulos (Network ID):
                         </span>
-                        <span class="font-mono text-white font-black text-sm bg-slate-900 px-2 py-0.5 rounded">${breakdown.network}</span>
+                        <span class="font-mono text-white font-black text-base sm:text-lg bg-slate-900 px-3 py-1 rounded-lg border border-slate-700 shadow-inner">${breakdown.network}</span>
                     </div>
                     <div class="overflow-x-auto pb-1">
                         ${formatBitRow(breakdown.networkBinary, false)}
                     </div>
                 </div>
 
-                <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700/80 text-xs text-slate-300 space-y-1 leading-relaxed">
+                <div class="bg-slate-900/95 p-4 rounded-xl border border-slate-700 text-sm sm:text-[14.5px] text-slate-200 space-y-1.5 leading-relaxed">
                     <p>
                         Punainen pystyviiva osoittaa <strong class="text-white">CIDR-leikkauskohdan (/${cidr})</strong>.
-                        Maskin ykkösbitit kopioivat IP:n verkko-osan suoraan tulokseen. Maskin nollabitit pakottavat tuloksen isäntäosan nolliksi, jolloin saadaan aliverkon <strong class="text-cyan-300">Network ID (${breakdown.network})</strong>.
+                        Maskin ykkösbitit kopioivat IP:n verkko-osan suoraan tulokseen. Maskin nollabitit pakottavat tuloksen isäntäosan nolliksi, jolloin saadaan aliverkon <strong class="text-cyan-300 font-mono font-black">Network ID (${breakdown.network})</strong>.
                     </p>
                 </div>
             </div>
 
             <!-- Aliverkon sallitut rajat -->
-            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-700 text-xs space-y-2">
-                <div class="font-bold text-white text-xs uppercase tracking-wider">Tämän Aliverkkolohkon Rajat:</div>
-                <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
-                        <span class="text-slate-400 block text-[10px]">Alin (Verkko-IP):</span>
-                        <span class="text-rose-300 font-bold">${breakdown.details.network}</span>
+            <div class="bg-slate-900/95 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-3 shadow-lg">
+                <div class="font-black text-white text-sm sm:text-base uppercase tracking-wider">Tämän Aliverkkolohkon Rajat:</div>
+                <div class="grid grid-cols-2 gap-2.5 font-mono">
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block text-xs sm:text-[13px] uppercase font-bold mb-1">Alin (Verkko-IP):</span>
+                        <span class="text-rose-300 font-black text-base sm:text-lg">${breakdown.details.network}</span>
                     </div>
-                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
-                        <span class="text-slate-400 block text-[10px]">Ylin (Broadcast):</span>
-                        <span class="text-amber-300 font-bold">${breakdown.details.broadcast}</span>
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block text-xs sm:text-[13px] uppercase font-bold mb-1">Ylin (Broadcast):</span>
+                        <span class="text-amber-300 font-black text-base sm:text-lg">${breakdown.details.broadcast}</span>
                     </div>
-                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
-                        <span class="text-slate-400 block text-[10px]">1. Sallittu isäntä:</span>
-                        <span class="text-emerald-300 font-bold">${breakdown.details.firstHost}</span>
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block text-xs sm:text-[13px] uppercase font-bold mb-1">1. Sallittu isäntä:</span>
+                        <span class="text-emerald-300 font-black text-base sm:text-lg">${breakdown.details.firstHost}</span>
                     </div>
-                    <div class="p-2 bg-slate-950 rounded-lg border border-slate-800">
-                        <span class="text-slate-400 block text-[10px]">Viim. sallittu isäntä:</span>
-                        <span class="text-emerald-300 font-bold">${breakdown.details.lastHost}</span>
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block text-xs sm:text-[13px] uppercase font-bold mb-1">Viim. sallittu isäntä:</span>
+                        <span class="text-emerald-300 font-black text-base sm:text-lg">${breakdown.details.lastHost}</span>
                     </div>
                 </div>
             </div>
@@ -1365,6 +1475,17 @@ function openIpModal(node) {
         }
     }
 
+    const matrixTabBtn = document.getElementById('tab-btn-matrix');
+    if (matrixTabBtn) {
+        if (levelId <= 10) {
+            matrixTabBtn.innerHTML = '📊 Cheat Sheet';
+            matrixTabBtn.title = 'Aliverkkotaulukko';
+        } else {
+            matrixTabBtn.innerHTML = '📊 Cheat Sheet (Apuneuvo)';
+            matrixTabBtn.title = 'Avaamalla tämän luovut Pro Master -tähdestä tällä kierroksella!';
+        }
+    }
+
     // Tasokohtainen opetusmateriaali kyseiselle aliverkolle
     const topic = (currentLevelConfig && currentLevelConfig.teachingTopic && typeof TEACHING_CONTENT !== 'undefined' && TEACHING_CONTENT[currentLevelConfig.teachingTopic])
         ? currentLevelConfig.teachingTopic
@@ -1384,93 +1505,93 @@ function openIpModal(node) {
         // TASOT 1–5: ALOITTELIJAN TUKI (Täydet esimerkit ja selkeät mallivastaukset)
         // =========================================================================
         stepCards = `
-            <div class="space-y-4 text-slate-100">
-                <div class="bg-blue-950/40 p-3 rounded-xl border border-blue-500/40 text-xs text-blue-200">
+            <div class="space-y-3.5 text-slate-100">
+                <div class="bg-blue-950/40 p-2.5 rounded-xl border border-blue-500/40 text-xs text-blue-200">
                     💡 <strong>Aloittelijan opastus:</strong> Tällä alkutasolla vaiheittainen ohje näyttää verkon laskennan ja arvot valmiina. Myöhemmillä tasoilla saat laskea verkon rajat itse!
                 </div>
 
                 <!-- VAIHE 1: ALIVERKKO & PEITE -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-blue-500/50 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-blue-500 text-white tracking-wider uppercase">VAIHE 1</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Kohdeverkko & Aliverkon Peite</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-blue-500/50 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500 text-white tracking-wider uppercase">VAIHE 1</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Kohdeverkko & Aliverkon Peite</h5>
                         </div>
-                        <span class="font-mono text-lg sm:text-xl font-black text-cyan-300 bg-cyan-950/80 px-3.5 py-1.5 rounded-xl border border-cyan-600/50">/${cidr}</span>
+                        <span class="font-mono text-base font-black text-cyan-300 bg-cyan-950/80 px-2.5 py-1 rounded-xl border border-cyan-600/50">/${cidr}</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-slate-700">
-                            <span class="text-xs text-slate-400 block uppercase font-bold mb-1.5">Aliverkon Osoite (Network):</span>
-                            <span class="font-mono text-2xl sm:text-3xl font-black text-cyan-300 block">${details.network}</span>
-                            <span class="text-sm text-slate-300 font-medium mt-1.5 block">Tunnistaa aliverkon lohkon</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-slate-700">
+                            <span class="text-[11px] text-slate-400 block uppercase font-bold mb-1">Aliverkon Osoite (Network):</span>
+                            <span class="font-mono text-xl sm:text-2xl font-black text-cyan-300 block">${details.network}</span>
+                            <span class="text-xs text-slate-300 font-medium mt-1 block">Tunnistaa aliverkon lohkon</span>
                         </div>
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-purple-800/60">
-                            <span class="text-xs text-slate-400 block uppercase font-bold mb-1.5">Aliverkon Peite (Subnet Mask):</span>
-                            <span class="font-mono text-2xl sm:text-3xl font-black text-purple-300 block">${details.mask}</span>
-                            <span class="text-sm text-purple-200/90 font-medium mt-1.5 block">${cidr} bittiä verkolle, ${hostBits} isännille</span>
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-purple-800/60">
+                            <span class="text-[11px] text-slate-400 block uppercase font-bold mb-1">Aliverkon Peite (Subnet Mask):</span>
+                            <span class="font-mono text-xl sm:text-2xl font-black text-purple-300 block">${details.mask}</span>
+                            <span class="text-xs text-purple-200/90 font-medium mt-1 block">${cidr} bittiä verkolle, ${hostBits} isännille</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- VAIHE 2: VERKON RAJAT -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-amber-500/40 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-amber-500 text-slate-950 tracking-wider uppercase">VAIHE 2</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Verkon Rajat (Alin & Ylin Osoite)</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-amber-500/40 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-slate-950 tracking-wider uppercase">VAIHE 2</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Verkon Rajat (Alin & Ylin Osoite)</h5>
                         </div>
-                        <span class="text-xs font-black text-amber-300 bg-amber-950/70 px-3.5 py-1.5 rounded-xl border border-amber-500/50">Lohkokoko: ${details.totalIps} kpl</span>
+                        <span class="text-xs font-black text-amber-300 bg-amber-950/70 px-2.5 py-1 rounded-xl border border-amber-500/50">Lohkokoko: ${details.totalIps} kpl</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-red-900/40">
-                            <div class="flex items-center justify-between mb-1.5"><span class="text-xs font-bold text-red-300 uppercase">Verkko-IP (Network ID):</span><span class="text-xs text-slate-400 font-bold">Alin osoite</span></div>
-                            <span class="font-mono text-2xl sm:text-3xl font-black text-red-300 block">${details.network}</span>
-                            <p class="text-sm text-slate-300 mt-2 leading-relaxed">Lohkon ensimmäinen osoite. Tätä <strong>ei voi</strong> antaa laitteelle!</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-red-900/40">
+                            <div class="flex items-center justify-between mb-1"><span class="text-[11px] font-bold text-red-300 uppercase">Verkko-IP (Network ID):</span><span class="text-[11px] text-slate-400 font-bold">Alin osoite</span></div>
+                            <span class="font-mono text-xl sm:text-2xl font-black text-red-300 block">${details.network}</span>
+                            <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">Lohkon ensimmäinen osoite. Tätä <strong>ei voi</strong> antaa laitteelle!</p>
                         </div>
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-red-900/40">
-                            <div class="flex items-center justify-between mb-1.5"><span class="text-xs font-bold text-red-300 uppercase">Broadcast-osoite:</span><span class="text-xs text-slate-400 font-bold">Ylin osoite</span></div>
-                            <span class="font-mono text-2xl sm:text-3xl font-black text-red-300 block">${details.broadcast}</span>
-                            <p class="text-sm text-slate-300 mt-2 leading-relaxed">Yleislähetysosoite. Tätä <strong>ei voi</strong> antaa laitteelle!</p>
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-red-900/40">
+                            <div class="flex items-center justify-between mb-1"><span class="text-[11px] font-bold text-red-300 uppercase">Broadcast-osoite:</span><span class="text-[11px] text-slate-400 font-bold">Ylin osoite</span></div>
+                            <span class="font-mono text-xl sm:text-2xl font-black text-red-300 block">${details.broadcast}</span>
+                            <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">Yleislähetysosoite. Tätä <strong>ei voi</strong> antaa laitteelle!</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- VAIHE 3: SALLITUT ISÄNTÄOSOITTEET -->
-                <div class="bg-emerald-950/70 p-5 rounded-2xl border-2 border-emerald-500/60 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-emerald-700/50">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500 text-slate-950 tracking-wider uppercase">VAIHE 3</span>
-                            <h5 class="text-lg sm:text-xl font-black text-emerald-300">Laitteille Sallitut IP-Osoitteet</h5>
+                <div class="bg-emerald-950/70 p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-500/60 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-emerald-700/50">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500 text-slate-950 tracking-wider uppercase">VAIHE 3</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-emerald-300">Laitteille Sallitut IP-Osoitteet</h5>
                         </div>
-                        <span class="text-xs font-mono font-black text-emerald-300 bg-emerald-900/80 px-3.5 py-1.5 rounded-xl border border-emerald-500/50">${details.usableHosts || (details.totalIps - 2)} vapaata osoitetta</span>
+                        <span class="text-xs font-mono font-black text-emerald-300 bg-emerald-900/80 px-2.5 py-1 rounded-xl border border-emerald-500/50">${details.usableHosts || (details.totalIps - 2)} vapaata osoitetta</span>
                     </div>
-                    <div class="bg-slate-900/95 p-4 rounded-xl border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div>
-                            <span class="text-xs text-slate-400 uppercase font-bold block mb-1.5">Sallittu osoiteväli:</span>
-                            <div class="font-mono text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
+                            <span class="text-[11px] text-slate-400 uppercase font-bold block mb-1">Sallittu osoiteväli:</span>
+                            <div class="font-mono text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
                                 <span class="text-emerald-300">${details.firstHost}</span>
-                                <span class="text-slate-500 text-lg font-sans font-black">➔</span>
+                                <span class="text-slate-500 text-base font-sans font-black">➔</span>
                                 <span class="text-emerald-300">${details.lastHost}</span>
                             </div>
                         </div>
-                        <span class="px-3.5 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-xs inline-block border border-emerald-500/50">Valitse mikä tahansa vapaa IP!</span>
+                        <span class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold text-xs inline-block border border-emerald-500/50">Valitse mikä tahansa vapaa IP!</span>
                     </div>
-                    <p class="text-sm text-emerald-200/95 font-medium leading-relaxed pt-1">💡 <strong>Sääntö:</strong> Jokaisella laitteella on oltava uniikki IP tältä väliltä.</p>
+                    <p class="text-xs text-emerald-200/95 font-medium leading-relaxed pt-0.5">💡 <strong>Sääntö:</strong> Jokaisella laitteella on oltava uniikki IP tältä väliltä.</p>
                 </div>
 
                 <!-- VAIHE 4: KAAVAT -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-indigo-500/40 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-indigo-500 text-white tracking-wider uppercase">VAIHE 4</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Miten Nämä Lasketaan?</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-indigo-500/40 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-500 text-white tracking-wider uppercase">VAIHE 4</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Miten Nämä Lasketaan?</h5>
                         </div>
                         <span class="text-xs font-mono text-indigo-300 font-bold">Kaavat & Apuri</span>
                     </div>
-                    <div class="space-y-3 text-sm sm:text-base text-slate-200 leading-relaxed">
-                        <div class="p-3.5 bg-slate-900/95 rounded-xl border border-slate-700"><strong class="text-cyan-300 block mb-1">1. Isäntäbitit (Host bits):</strong> 32 bittiä − /${cidr} = <strong class="text-white font-mono">${hostBits} bittiä</strong>.</div>
-                        <div class="p-3.5 bg-slate-900/95 rounded-xl border border-slate-700"><strong class="text-amber-300 block mb-1">2. Lohkokoko (Block size):</strong> 2^${hostBits} = <strong class="text-white font-mono">${details.totalIps} osoitetta</strong>.</div>
-                        <div class="p-3.5 bg-slate-900/95 rounded-xl border border-slate-700"><strong class="text-purple-300 block mb-1">3. Taikanumerokaava peitteelle:</strong> Täydet tavut 255. Jaettu tavu: <code class="text-white font-mono">256 − ${details.totalIps > 256 ? Math.floor(details.totalIps / 256) : details.totalIps}</code>.</div>
+                    <div class="space-y-2 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                        <div class="p-2.5 sm:p-3 bg-slate-900/95 rounded-xl border border-slate-700"><strong class="text-cyan-300 block mb-0.5">1. Isäntäbitit (Host bits):</strong> 32 bittiä − /${cidr} = <strong class="text-white font-mono">${hostBits} bittiä</strong>.</div>
+                        <div class="p-2.5 sm:p-3 bg-slate-900/95 rounded-xl border border-slate-700"><strong class="text-amber-300 block mb-0.5">2. Lohkokoko (Block size):</strong> 2^${hostBits} = <strong class="text-white font-mono">${details.totalIps} osoitetta</strong>.</div>
+                        <div class="p-2.5 sm:p-3 bg-slate-900/95 rounded-xl border border-slate-700"><strong class="text-purple-300 block mb-0.5">3. Taikanumerokaava peitteelle:</strong> Täydet tavut 255. Jaettu tavu: <code class="text-white font-mono">256 − ${details.totalIps > 256 ? Math.floor(details.totalIps / 256) : details.totalIps}</code>.</div>
                     </div>
                 </div>
             </div>
@@ -1480,51 +1601,51 @@ function openIpModal(node) {
         // TASOT 6–10: OHJATTU LASKENTA (Kaavat ja vihjeet, mutta pelaaja laskee itse)
         // =========================================================================
         stepCards = `
-            <div class="space-y-4 text-slate-100">
-                <div class="bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 text-xs text-amber-200">
+            <div class="space-y-3.5 text-slate-100">
+                <div class="bg-amber-950/40 p-2.5 rounded-xl border border-amber-500/40 text-xs text-amber-200">
                     🧮 <strong>Ohjattu laskenta:</strong> Laske aliverkon rajat ja peite käyttämällä apulaskinta ja alla olevia kaavoja!
                 </div>
 
                 <!-- VAIHE 1: KOHDEVERKKO JA PEITTEEN LASKENTA -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-blue-500/50 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-blue-500 text-white tracking-wider uppercase">VAIHE 1</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Kohdeverkko & Peitteen Laskenta</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-blue-500/50 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500 text-white tracking-wider uppercase">VAIHE 1</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Kohdeverkko & Peitteen Laskenta</h5>
                         </div>
-                        <span class="font-mono text-lg sm:text-xl font-black text-cyan-300 bg-cyan-950/80 px-3.5 py-1.5 rounded-xl border border-cyan-600/50">/${cidr}</span>
+                        <span class="font-mono text-base font-black text-cyan-300 bg-cyan-950/80 px-2.5 py-1 rounded-xl border border-cyan-600/50">/${cidr}</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-slate-700">
-                            <span class="text-xs text-slate-400 block uppercase font-bold mb-1.5">Kohdeverkon Tunniste:</span>
-                            <span class="font-mono text-2xl sm:text-3xl font-black text-cyan-300 block">${details.network}</span>
-                            <span class="text-sm text-slate-300 font-medium mt-1.5 block">Aliverkon alkupiste</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-slate-700">
+                            <span class="text-[11px] text-slate-400 block uppercase font-bold mb-1">Kohdeverkon Tunniste:</span>
+                            <span class="font-mono text-xl sm:text-2xl font-black text-cyan-300 block">${details.network}</span>
+                            <span class="text-xs text-slate-300 font-medium mt-1 block">Aliverkon alkupiste</span>
                         </div>
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-purple-800/60">
-                            <span class="text-xs text-slate-400 block uppercase font-bold mb-1.5">Aliverkon Peite (Laske itse):</span>
-                            <span class="font-mono text-xl sm:text-2xl font-black text-purple-300 block">255.255.255.???</span>
-                            <span class="text-sm text-purple-200/90 font-medium mt-1.5 block">Kaava: <code class="text-white font-mono">256 − ${details.totalIps}</code></span>
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-purple-800/60">
+                            <span class="text-[11px] text-slate-400 block uppercase font-bold mb-1">Aliverkon Peite (Laske itse):</span>
+                            <span class="font-mono text-lg sm:text-xl font-black text-purple-300 block">255.255.255.???</span>
+                            <span class="text-xs text-purple-200/90 font-medium mt-1 block">Kaava: <code class="text-white font-mono">256 − ${details.totalIps}</code></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- VAIHE 2: VERKON RAJAT -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-amber-500/40 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-amber-500 text-slate-950 tracking-wider uppercase">VAIHE 2</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Laske Verkon Rajat</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-amber-500/40 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-slate-950 tracking-wider uppercase">VAIHE 2</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Laske Verkon Rajat</h5>
                         </div>
-                        <span class="text-xs font-black text-amber-300 bg-amber-950/70 px-3.5 py-1.5 rounded-xl border border-amber-500/50">Lohko: 2^${hostBits} = ${details.totalIps} IP:tä</span>
+                        <span class="text-xs font-black text-amber-300 bg-amber-950/70 px-2.5 py-1 rounded-xl border border-amber-500/50">Lohko: 2^${hostBits} = ${details.totalIps} IP:tä</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-slate-700">
-                            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Verkko-IP (Alin):</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-slate-700">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase block mb-1">Verkko-IP (Alin):</span>
                             <span class="font-mono text-xl sm:text-2xl font-black text-cyan-300 block">${details.network}</span>
                             <span class="text-xs text-slate-400 mt-1 block">Varattu verkolle</span>
                         </div>
-                        <div class="bg-slate-900/95 p-4 rounded-xl border border-red-900/40">
-                            <span class="text-xs font-bold text-red-300 uppercase block mb-1">Broadcast (Ylin):</span>
+                        <div class="bg-slate-900/95 p-3 sm:p-3.5 rounded-xl border border-red-900/40">
+                            <span class="text-[11px] font-bold text-red-300 uppercase block mb-1">Broadcast (Ylin):</span>
                             <span class="font-mono text-xl sm:text-2xl font-black text-red-300 block">${details.network.replace(/\.\d+$/, '')}.???</span>
                             <span class="text-xs text-slate-300 mt-1 block">Laske: Alin + ${details.totalIps - 1}</span>
                         </div>
@@ -1532,15 +1653,15 @@ function openIpModal(node) {
                 </div>
 
                 <!-- VAIHE 3: ISÄNTÄOSOITTEET -->
-                <div class="bg-emerald-950/70 p-5 rounded-2xl border-2 border-emerald-500/60 shadow-xl space-y-3">
-                    <div class="flex items-center justify-between pb-3 border-b border-emerald-700/50">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500 text-slate-950 tracking-wider uppercase">VAIHE 3</span>
-                            <h5 class="text-lg sm:text-xl font-black text-emerald-300">Sallitut Laitteiden IP-Osoitteet</h5>
+                <div class="bg-emerald-950/70 p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-500/60 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-emerald-700/50">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500 text-slate-950 tracking-wider uppercase">VAIHE 3</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-emerald-300">Sallitut Laitteiden IP-Osoitteet</h5>
                         </div>
-                        <span class="text-xs font-mono font-black text-emerald-300 bg-emerald-900/80 px-3 py-1 rounded-lg border border-emerald-500/50">${details.totalIps - 2} käyttökelpoista</span>
+                        <span class="text-xs font-mono font-black text-emerald-300 bg-emerald-900/80 px-2.5 py-1 rounded-lg border border-emerald-500/50">${details.totalIps - 2} käyttökelpoista</span>
                     </div>
-                    <p class="text-sm text-emerald-200 leading-relaxed">
+                    <p class="text-xs sm:text-sm text-emerald-200 leading-relaxed">
                         Sallittu väli alkaa osoitteesta <strong class="text-white font-mono">${details.firstHost}</strong> ja päättyy juuri ennen Broadcast-osoitetta. Valitse vapaa IP tältä väliltä!
                     </p>
                 </div>
@@ -1551,26 +1672,26 @@ function openIpModal(node) {
         // TASOT 11–61: INSINÖÖRIN LASKENTAOHJE & VAATIMUKSET (Ei valmiita vastauksia)
         // =========================================================================
         stepCards = `
-            <div class="space-y-4 text-slate-100">
-                <div class="bg-indigo-950/50 p-3.5 rounded-xl border border-indigo-500/40 text-xs sm:text-sm text-indigo-200 leading-relaxed">
+            <div class="space-y-3.5 text-slate-100">
+                <div class="bg-indigo-950/50 p-3 rounded-xl border border-indigo-500/40 text-xs text-indigo-200 leading-relaxed">
                     ⚙️ <strong>Insinöörin tehtävä:</strong> Tällä tasolla ei anneta valmiita vastauksia. Laske aliverkon peite ja verkon rajat apulaskimella ja syötä ne kenttiin.
                 </div>
 
                 <!-- VAATIMUS 1: KOHDEVERKKO & PEITE -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-blue-500/50 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-blue-500 text-white tracking-wider uppercase">VAIHE 1</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Kohdeverkon Määritys</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-blue-500/50 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500 text-white tracking-wider uppercase">VAIHE 1</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Kohdeverkon Määritys</h5>
                         </div>
-                        <span class="font-mono text-lg sm:text-xl font-black text-cyan-300 bg-cyan-950/80 px-3.5 py-1.5 rounded-xl border border-cyan-600/50">/${cidr}</span>
+                        <span class="font-mono text-base font-black text-cyan-300 bg-cyan-950/80 px-2.5 py-1 rounded-xl border border-cyan-600/50">/${cidr}</span>
                     </div>
-                    <div class="p-4 bg-slate-900/95 rounded-xl border border-slate-700 space-y-2">
-                        <div class="flex items-center justify-between text-sm sm:text-base">
+                    <div class="p-3 sm:p-3.5 bg-slate-900/95 rounded-xl border border-slate-700 space-y-1.5">
+                        <div class="flex items-center justify-between text-xs sm:text-sm">
                             <span class="text-slate-400">Kohdeverkkoalue:</span>
-                            <span class="font-mono text-cyan-300 font-bold text-lg">${details.network} /${cidr}</span>
+                            <span class="font-mono text-cyan-300 font-bold text-base">${details.network} /${cidr}</span>
                         </div>
-                        <div class="flex items-center justify-between text-sm sm:text-base pt-2 border-t border-slate-800">
+                        <div class="flex items-center justify-between text-xs sm:text-sm pt-1.5 border-t border-slate-800">
                             <span class="text-slate-400">Tehtäväsi:</span>
                             <span class="text-amber-300 font-bold">Laske ja syötä Aliverkon peite (Mask)</span>
                         </div>
@@ -1578,52 +1699,52 @@ function openIpModal(node) {
                 </div>
 
                 <!-- VAATIMUS 2: VERKON RAJAT -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-amber-500/40 shadow-xl space-y-3.5">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-amber-500 text-slate-950 tracking-wider uppercase">VAIHE 2</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Laske Verkon Rajat (Pakollinen)</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-amber-500/40 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-slate-950 tracking-wider uppercase">VAIHE 2</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Laske Verkon Rajat (Pakollinen)</h5>
                         </div>
-                        <span class="text-xs font-black text-amber-300 bg-amber-950/70 px-3 py-1 rounded-lg border border-amber-500/40">Vaaditaan tasoilla 11+</span>
+                        <span class="text-xs font-black text-amber-300 bg-amber-950/70 px-2.5 py-1 rounded-lg border border-amber-500/40">Vaaditaan tasoilla 11+</span>
                     </div>
-                    <p class="text-sm text-slate-300 leading-relaxed">
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
                         Laske lohkon alin osoite (<strong class="text-white">Network ID</strong>) ja ylin osoite (<strong class="text-white">Broadcast</strong>) ja syötä ne vasemmalle <em>Verkon rajat</em> -kenttiin.
                     </p>
                 </div>
 
                 <!-- VAATIMUS 3: LAITEOIKAISU -->
-                <div class="bg-emerald-950/70 p-5 rounded-2xl border-2 border-emerald-500/60 shadow-xl space-y-3">
-                    <div class="flex items-center justify-between pb-3 border-b border-emerald-700/50">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-emerald-500 text-slate-950 tracking-wider uppercase">VAIHE 3</span>
-                            <h5 class="text-lg sm:text-xl font-black text-emerald-300">Aseta Uniikki Laite-IP</h5>
+                <div class="bg-emerald-950/70 p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-500/60 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-emerald-700/50">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500 text-slate-950 tracking-wider uppercase">VAIHE 3</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-emerald-300">Aseta Uniikki Laite-IP</h5>
                         </div>
                     </div>
-                    <p class="text-sm text-emerald-200 leading-relaxed">
+                    <p class="text-xs sm:text-sm text-emerald-200 leading-relaxed">
                         Valitse laitteelle mikä tahansa vapaa isäntäosoite Network ID:n ja Broadcastin väliltä. Muista tarkistaa vasemman sarakkeen laitelistasta verkossa jo varatut osoitteet IP-konfliktien välttämiseksi!
                     </p>
                 </div>
 
                 <!-- VAATIMUS 4: KAAVAT JA APURI -->
-                <div class="bg-slate-800/95 p-5 rounded-2xl border-2 border-indigo-500/40 shadow-xl space-y-3">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <span class="px-3.5 py-1 rounded-full text-xs font-black bg-indigo-500 text-white tracking-wider uppercase">KAAVAT</span>
-                            <h5 class="text-lg sm:text-xl font-black text-white">Insinöörin Pikakaavat</h5>
+                <div class="bg-slate-800/95 p-3.5 sm:p-4 rounded-2xl border-2 border-indigo-500/40 shadow-xl space-y-2.5">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-700">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-500 text-white tracking-wider uppercase">KAAVAT</span>
+                            <h5 class="text-base sm:text-[17px] font-black text-white">Insinöörin Pikakaavat</h5>
                         </div>
                         <span class="text-xs text-indigo-300 font-mono">Apulaskin apuna</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                        <div class="bg-slate-900/95 p-3 rounded-xl border border-slate-700">
-                            <span class="text-xs text-slate-400 block font-bold">1. Isäntäbitit (H):</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                        <div class="bg-slate-900/95 p-2.5 rounded-xl border border-slate-700">
+                            <span class="text-[11px] text-slate-400 block font-bold">1. Isäntäbitit (H):</span>
                             <span class="font-mono text-cyan-300 font-bold">H = 32 − ${cidr} = ${hostBits} bittiä</span>
                         </div>
-                        <div class="bg-slate-900/95 p-3 rounded-xl border border-slate-700">
-                            <span class="text-xs text-slate-400 block font-bold">2. Lohkokoko:</span>
+                        <div class="bg-slate-900/95 p-2.5 rounded-xl border border-slate-700">
+                            <span class="text-[11px] text-slate-400 block font-bold">2. Lohkokoko:</span>
                             <span class="font-mono text-amber-300 font-bold">2^H = 2^${hostBits}</span>
                         </div>
-                        <div class="bg-slate-900/95 p-3 rounded-xl border border-slate-700 sm:col-span-2">
-                            <span class="text-xs text-slate-400 block font-bold">3. Taikanumero aliverkon peitteelle:</span>
+                        <div class="bg-slate-900/95 p-2.5 rounded-xl border border-slate-700 sm:col-span-2">
+                            <span class="text-[11px] text-slate-400 block font-bold">3. Taikanumero aliverkon peitteelle:</span>
                             <span class="font-mono text-purple-300 font-bold">Peiteoktetti = 256 − Lohkokoko</span>
                         </div>
                     </div>
@@ -1909,12 +2030,69 @@ function updateGoalUI() {
         goalCurrentEl.classList.remove('text-white');
         goalCurrentEl.classList.add('text-green-400');
         setTimeout(() => {
-            document.getElementById('win-modal').classList.remove('hidden');
+            const winModal = document.getElementById('win-modal');
+            if (winModal) {
+                const titleEl = document.getElementById('win-level-title');
+                if (titleEl && currentLevelConfig) {
+                    titleEl.innerText = `Taso ${currentLevelConfig.id}: ${currentLevelConfig.name}`;
+                }
+                const isProMaster = !cheatSheetUsedInCurrentLevel;
+                if (isProMaster && currentLevelConfig) {
+                    if (!masterStarLevels.includes(currentLevelConfig.id)) {
+                        masterStarLevels.push(currentLevelConfig.id);
+                        localStorage.setItem('subnetArchitect_masterStars', JSON.stringify(masterStarLevels));
+                    }
+                }
+
+                const winBadgeEl = document.getElementById('win-modal-badge');
+                if (winBadgeEl) {
+                    if (isProMaster) {
+                        winBadgeEl.className = "px-3.5 py-1 rounded-full text-xs font-mono font-black bg-amber-500/25 text-amber-300 border border-amber-500/60 uppercase tracking-wider inline-flex items-center gap-1.5 shadow-lg shadow-amber-950/50";
+                        winBadgeEl.innerHTML = "<span>🏆</span> CCNA PRO MASTER • EXAM MODE";
+                    } else {
+                        winBadgeEl.className = "px-3 py-0.5 rounded-full text-[11px] font-mono font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider inline-block";
+                        winBadgeEl.innerHTML = "Tehtävä Suoritettu";
+                    }
+                }
+
+                const winSubtitleEl = document.getElementById('win-level-subtitle');
+                if (winSubtitleEl) {
+                    if (isProMaster) {
+                        winSubtitleEl.innerHTML = `🌟 <strong>Täydellinen suoritus ilman Cheat Sheetiä!</strong> Lasket aliverkot, taikanumerot ja lohkorajat suoraan päässä kuin aito CCNA-sertifioitu verkkoarkkitehti!`;
+                    } else {
+                        winSubtitleEl.innerHTML = `Kaikki verkon laitteet, kaapeloinnit ja aliverkkomääritykset toimivat moitteettomasti!`;
+                    }
+                }
+
+                const statsEl = document.getElementById('win-stats-container');
+                if (statsEl && currentLevelConfig) {
+                    statsEl.innerHTML = `
+                        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 shadow-inner">
+                            <span class="text-xs uppercase font-extrabold text-slate-400 block mb-0.5 tracking-wider">Pääverkko</span>
+                            <span class="text-base sm:text-lg font-mono font-black text-cyan-300">${currentLevelConfig.network}/${currentLevelConfig.cidr}</span>
+                        </div>
+                        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 shadow-inner">
+                            <span class="text-xs uppercase font-extrabold text-slate-400 block mb-0.5 tracking-wider">Laitteet verkossa</span>
+                            <span class="text-base sm:text-lg font-mono font-black text-emerald-400">${completedIps} / ${requiredIps} kpl</span>
+                        </div>
+                        <div class="bg-slate-950/80 p-3.5 rounded-2xl border ${isProMaster ? 'border-amber-500/50 bg-amber-950/20' : 'border-slate-800'} shadow-inner col-span-2 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs uppercase font-extrabold text-slate-400 block mb-0.5 tracking-wider">Päättelytapa</span>
+                                <span class="text-sm font-bold ${isProMaster ? 'text-amber-300' : 'text-slate-200'}">
+                                    ${isProMaster ? '🧠 Oma päättely / Päässälaskenta (Ei taulukkoa)' : '📖 Tuettu suoritus (Cheat Sheet avattu)'}
+                                </span>
+                            </div>
+                            <span class="text-2xl">${isProMaster ? '🏆' : '👍'}</span>
+                        </div>
+                    `;
+                }
+                winModal.classList.remove('hidden');
+            }
             if (currentLevel === unlockedLevels && currentLevel < TOTAL_LEVELS) {
                 unlockedLevels++;
                 localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
             }
-        }, 1500);
+        }, 1200);
     } else {
         goalCurrentEl.classList.add('text-white');
         goalCurrentEl.classList.remove('text-green-400');

@@ -188,7 +188,7 @@ function updateNodeLabel(node) {
         line1Color = isConnected ? "#e2e8f0" : "#64748b";
     } else if (type === nodeTypes.WIFI) {
         displayLine1 = "📡 WIFI-TUKIASEMA";
-        displayLine2 = isConnected ? "WLAN AP (DHCP)" : "Kytke kytkimeen";
+        displayLine2 = isConnected ? "WLAN AP (Aktiivinen)" : "Kytke kytkimeen";
         bgColor = isConnected ? "rgba(45, 15, 65, 0.94)" : "rgba(15, 23, 42, 0.88)";
         line1Color = isConnected ? "#c084fc" : "#64748b";
     } else if (type === nodeTypes.FIREWALL) {
@@ -210,7 +210,7 @@ function updateNodeLabel(node) {
 
         if (!isConnected) {
             displayLine1 = typeName;
-            displayLine2 = "Kytke kaapeli";
+            displayLine2 = (type === nodeTypes.LAPTOP) ? "Yhdistä WiFiin tai kytkimeen" : "Kytke kaapeli";
             bgColor = "rgba(15, 23, 42, 0.88)";
             line1Color = "#64748b";
         } else if (hasIp) {
@@ -236,6 +236,9 @@ function updateNodeLabel(node) {
     // Poista vanha lappu jos olemassa
     if (node.userData.labelMesh) {
         scene.remove(node.userData.labelMesh);
+        if (typeof disposeHierarchy === 'function') {
+            disposeHierarchy(node.userData.labelMesh);
+        }
         labelMeshes = labelMeshes.filter(l => l !== node.userData.labelMesh);
         node.userData.labelMesh = null;
     }
@@ -355,12 +358,12 @@ function getNodeAppearance(type) {
 }
 
 // =====================================================================
-// 3D-MALLIEN LATAUS JA HALLINTA (GLTF / GLB / OBJ)
+// 3D-MALLIEN LATAUS JA HALLINTA (GLTF / GLB / FBX)
 // =====================================================================
 
 // Määritellään mille laitetyypeille on olemassa oikeat 3D-mallit assets/models/ -kansiossa
 const customModels = {
-    [nodeTypes.GATEWAY]: 'assets/models/gateway-edge.glb?v=20260912_v16',
+    [nodeTypes.GATEWAY]: 'assets/models/gateway-edge.glb',
     [nodeTypes.ROUTER]: 'assets/models/router.glb',
     [nodeTypes.CORE_SWITCH]: 'assets/models/juniper-9204.glb',
     [nodeTypes.SWITCH]: 'assets/models/juniper-9204.glb',
@@ -369,9 +372,12 @@ const customModels = {
     [nodeTypes.LAPTOP]: 'assets/models/kannettava.glb',
     [nodeTypes.PC]: 'assets/models/pc.glb',
     [nodeTypes.PRINTER]: 'assets/models/tulostin.glb',
-    [nodeTypes.WIFI]: 'assets/models/ap-ceiling.glb?v=20260912_v16',
-    [nodeTypes.FIREWALL]: 'assets/models/firewall.glb?v=20260912_v16',
+    [nodeTypes.WIFI]: 'assets/models/ap-ceiling.glb',
+    [nodeTypes.FIREWALL]: 'assets/models/firewall.glb',
+    [nodeTypes.VOIP]: 'assets/models/voip.glb',
 };
+
+const modelPromiseCache = new Map();
 const modelCache = {};
 let gltfLoaderInstance = null;
 let fbxLoaderInstance = null;
@@ -391,64 +397,118 @@ function getFbxLoader() {
 }
 
 /**
- * Yrittää ladata laitteelle oikean 3D-mallin assets/models -kansiosta.
- * Mikäli mallia ei löydy tai sitä ei ole vielä konvertoitu, peli käyttää saumatonta perusgeometriaa.
+ * Palauttaa tai lataa 3D-mallin asynkronisesti Promise-välimuistista.
+ * Estää saman mallin toistuvan latauksen verkosta ja jakaa resursseja.
+ */
+function getOrLoadModel(modelUrl) {
+    if (!modelUrl) return Promise.resolve(null);
+    if (modelCache[modelUrl]) {
+        return Promise.resolve(modelCache[modelUrl].clone(true));
+    }
+    if (!modelPromiseCache.has(modelUrl)) {
+        const isFbx = typeof modelUrl === 'string' && modelUrl.toLowerCase().endsWith('.fbx');
+        const loader = isFbx ? getFbxLoader() : getGltfLoader();
+        if (!loader) return Promise.resolve(null);
+
+        const p = new Promise((resolve) => {
+            loader.load(
+                modelUrl,
+                (result) => {
+                    const scene = isFbx ? result : (result.scene || result);
+                    modelCache[modelUrl] = scene;
+                    resolve(scene);
+                },
+                undefined,
+                (err) => {
+                    console.warn(`Mallia ei voitu ladata (${modelUrl}), käytetään perusgeometriaa:`, err);
+                    resolve(null);
+                }
+            );
+        });
+        modelPromiseCache.set(modelUrl, p);
+    }
+    return modelPromiseCache.get(modelUrl).then(scene => scene ? scene.clone(true) : null);
+}
+
+/**
+ * Palauttaa laitteelle oikean 3D-mallin URL:n (joko base64-data tai tiedostopolku).
+ */
+function getNodeModelUrl(type) {
+    if ((type === nodeTypes.CORE_SWITCH || type === nodeTypes.SWITCH) && typeof window !== 'undefined' && window.JUNIPER_9204_MODEL) {
+        return window.JUNIPER_9204_MODEL;
+    }
+    if (type === nodeTypes.GATEWAY && typeof window !== 'undefined' && window.GATEWAY_EDGE_MODEL) {
+        return window.GATEWAY_EDGE_MODEL;
+    }
+    if (type === nodeTypes.ROUTER && typeof window !== 'undefined' && window.WIFI_AP_MODEL) {
+        return window.WIFI_AP_MODEL;
+    }
+    if (type === nodeTypes.SERVER && typeof window !== 'undefined' && window.SERVER_4002_MODEL) {
+        return window.SERVER_4002_MODEL;
+    }
+    if (type === nodeTypes.OFFICE && typeof window !== 'undefined' && window.TOIMISTO_MODEL) {
+        return window.TOIMISTO_MODEL;
+    }
+    if (type === nodeTypes.LAPTOP && typeof window !== 'undefined' && window.KANNETTAVA_MODEL) {
+        return window.KANNETTAVA_MODEL;
+    }
+    if (type === nodeTypes.PC && typeof window !== 'undefined' && window.PC_MODEL) {
+        return window.PC_MODEL;
+    }
+    if (type === nodeTypes.PRINTER && typeof window !== 'undefined' && window.PRINTER_MODEL) {
+        return window.PRINTER_MODEL;
+    }
+    if (type === nodeTypes.WIFI && typeof window !== 'undefined' && window.CEILING_AP_MODEL) {
+        return window.CEILING_AP_MODEL;
+    }
+    if (type === nodeTypes.FIREWALL && typeof window !== 'undefined' && window.FIREWALL_MODEL) {
+        return window.FIREWALL_MODEL;
+    }
+    if (type === nodeTypes.VOIP && typeof window !== 'undefined' && window.VOIP_MODEL) {
+        return window.VOIP_MODEL;
+    }
+    return customModels[type] || null;
+}
+
+/**
+ * Esilataa tason tarvitsemat 3D-mallit taustalla rinnakkain.
+ */
+function preloadLevelModels(levelConfig) {
+    if (!levelConfig) return Promise.resolve();
+    const neededTypes = new Set();
+    if (levelConfig.requiredNodes) {
+        levelConfig.requiredNodes.forEach(rn => neededTypes.add(rn.type));
+    }
+    neededTypes.add(nodeTypes.CLOUD);
+    neededTypes.add(nodeTypes.GATEWAY);
+
+    const promises = [];
+    neededTypes.forEach(t => {
+        const url = getNodeModelUrl(t);
+        if (url) {
+            promises.push(getOrLoadModel(url));
+        }
+    });
+    return Promise.all(promises);
+}
+
+/**
+ * Yrittää ladata laitteelle oikean 3D-mallin asynkronisesti.
  */
 function tryLoadCustomModel(node, type) {
-    // Haetaan malli (joko suorana base64-datana tai tiedostopolkuna)
-    let modelUrl = customModels[type];
-    if ((type === nodeTypes.CORE_SWITCH || type === nodeTypes.SWITCH) && typeof window !== 'undefined' && window.JUNIPER_9204_MODEL) {
-        modelUrl = window.JUNIPER_9204_MODEL;
-    } else if (type === nodeTypes.GATEWAY) {
-        // Default Gateway on Enterprise Edge Gateway (gateway-edge.glb)
-        modelUrl = (typeof window !== 'undefined' && window.GATEWAY_EDGE_MODEL) ? window.GATEWAY_EDGE_MODEL : 'assets/models/gateway-edge.glb?v=20260912_v16';
-    } else if (type === nodeTypes.ROUTER) {
-        // Normaali reititin on AINA 4-antenninen pöytäreititin (router.glb)
-        modelUrl = (typeof window !== 'undefined' && window.WIFI_AP_MODEL) ? window.WIFI_AP_MODEL : 'assets/models/router.glb';
-    } else if (type === nodeTypes.SERVER && typeof window !== 'undefined' && window.SERVER_4002_MODEL) {
-        modelUrl = window.SERVER_4002_MODEL;
-    } else if (type === nodeTypes.OFFICE && typeof window !== 'undefined' && window.TOIMISTO_MODEL) {
-        modelUrl = window.TOIMISTO_MODEL;
-    } else if (type === nodeTypes.LAPTOP && typeof window !== 'undefined' && window.KANNETTAVA_MODEL) {
-        modelUrl = window.KANNETTAVA_MODEL;
-    } else if (type === nodeTypes.PC && typeof window !== 'undefined' && window.PC_MODEL) {
-        modelUrl = window.PC_MODEL;
-    } else if (type === nodeTypes.PRINTER && typeof window !== 'undefined' && window.PRINTER_MODEL) {
-        modelUrl = window.PRINTER_MODEL;
-    } else if (type === nodeTypes.WIFI) {
-        // WiFi-tukiasema on AINA oma huipputason Enterprise Wi-Fi 7 Access Point
-        modelUrl = (typeof window !== 'undefined' && window.CEILING_AP_MODEL)
-            ? window.CEILING_AP_MODEL
-            : 'assets/models/ap-ceiling.glb?v=20260912_v22';
-    } else if (type === nodeTypes.FIREWALL) {
-        // Enterprise Next-Gen Threat Defense Firewall (firewall.glb)
-        modelUrl = (typeof window !== 'undefined' && window.FIREWALL_MODEL)
-            ? window.FIREWALL_MODEL
-            : 'assets/models/firewall.glb?v=20260912_v22';
-    }
+    const modelUrl = getNodeModelUrl(type);
     if (!modelUrl) return;
 
     if (modelCache[modelUrl]) {
-        applyModelToNode(node, modelCache[modelUrl].clone());
+        applyModelToNode(node, modelCache[modelUrl].clone(true));
         return;
     }
 
-    const isFbx = typeof modelUrl === 'string' && modelUrl.toLowerCase().endsWith('.fbx');
-    const loader = isFbx ? getFbxLoader() : getGltfLoader();
-    if (!loader) return;
-
-    loader.load(
-        modelUrl,
-        (result) => {
-            const scene = isFbx ? result : (result.scene || result);
-            modelCache[modelUrl] = scene;
-            applyModelToNode(node, scene.clone());
-        },
-        undefined,
-        (err) => {
-            // Mikäli lataus epäonnistuu, peli säilyttää siistin perusgeometrian
+    getOrLoadModel(modelUrl).then(clonedScene => {
+        if (clonedScene && node && node.mesh) {
+            applyModelToNode(node, clonedScene);
         }
-    );
+    });
 }
 
 /**
@@ -552,6 +612,9 @@ function applyModelToNode(node, modelMesh) {
     } else if (type === nodeTypes.FIREWALL) {
         // Palomuuri etupaneeli ja suojalogo suoraan kohti kameraa
         modelMesh.rotation.y = 0;
+    } else if (type === nodeTypes.VOIP) {
+        // VoIP-pöytäpuhelin etupaneeli, näyttö ja näppäimistö kohti pelaajan kameraa
+        modelMesh.rotation.y = 0;
     }
 
     const box = new THREE.Box3().setFromObject(modelMesh);
@@ -571,6 +634,7 @@ function applyModelToNode(node, modelMesh) {
         if (type === nodeTypes.SWITCH) targetSize = 1.4;  // Kytkin (puolet pienempi, ei vie liikaa tilaa kartalta)
         if (type === nodeTypes.WIFI) targetSize = 1.85;   // Enterprise WiFi 7 AP – selkeä, tyylikäs katto/pöytätukiasema
         if (type === nodeTypes.FIREWALL) targetSize = 2.4; // Enterprise Next-Gen Firewall – näyttävä 2U turvalaite
+        if (type === nodeTypes.VOIP) targetSize = 1.6;     // Moderni Cisco/Polycom VoIP-pöytäpuhelin sopivassa pöytäkoossa
         const scale = targetSize / maxDim;
         if (type === nodeTypes.SWITCH) {
             // Tehdään LAN-kytkimestä huomattavasti litteämpi (perinteinen 1U kytkin)
@@ -924,6 +988,9 @@ function deleteNode(node) {
     cables = cables.filter(cable => {
         if (cable.nodeA === node || cable.nodeB === node) {
             scene.remove(cable.line);
+            if (typeof disposeHierarchy === 'function') {
+                disposeHierarchy(cable.line);
+            }
             return false;
         }
         return true;
@@ -932,10 +999,19 @@ function deleteNode(node) {
     // Poista myös lappu
     if (node.userData.labelMesh) {
         scene.remove(node.userData.labelMesh);
+        if (typeof disposeHierarchy === 'function') {
+            disposeHierarchy(node.userData.labelMesh);
+        }
         labelMeshes = labelMeshes.filter(l => l !== node.userData.labelMesh);
+        node.userData.labelMesh = null;
     }
 
-    scene.remove(node.mesh);
+    if (node.mesh) {
+        scene.remove(node.mesh);
+        if (typeof disposeHierarchy === 'function') {
+            disposeHierarchy(node.mesh);
+        }
+    }
     nodes = nodes.filter(n => n !== node);
     checkConnections();
 }
@@ -1078,32 +1154,40 @@ function checkConnections() {
     // Päivitetään vyöhykkeiden värit (väritön vs värikäs)
     updateZonesVisualState();
 
-    // Päivitä kaapeleiden värit yhteyksien ja IP:n perusteella
+    // Päivitä kaapeleiden värit yhteyksien, linkkityypin ja IP:n perusteella
     cables.forEach(c => { 
         const isCloudGateway = (c.nodeA.userData.type === nodeTypes.CLOUD && (c.nodeB.userData.type === nodeTypes.GATEWAY || c.nodeB.userData.type === nodeTypes.ROUTER)) ||
                                ((c.nodeA.userData.type === nodeTypes.GATEWAY || c.nodeA.userData.type === nodeTypes.ROUTER) && c.nodeB.userData.type === nodeTypes.CLOUD);
 
+        let targetColor = 0x334155; // Kytkemätön / katkennut – tummanharmaa
+        let isFullyActive = false;
+
         if (isCloudGateway) {
             // Internet-yhdyskäytäväkaapeli on aina aktiivinen ja sininen
-            c.line.material.color.setHex(0x3b82f6);
-            return;
+            targetColor = 0x3b82f6;
+            isFullyActive = true;
+        } else {
+            const isConnectedA = c.nodeA.userData.isConnected;
+            const isConnectedB = c.nodeB.userData.isConnected;
+            const isNodeAConfigured = isConnectedA && (!IP_REQUIRED_TYPES.includes(c.nodeA.userData.type) || c.nodeA.userData.correctIp); 
+            const isNodeBConfigured = isConnectedB && (!IP_REQUIRED_TYPES.includes(c.nodeB.userData.type) || c.nodeB.userData.correctIp); 
+            
+            if (isConnectedA && isConnectedB && isNodeAConfigured && isNodeBConfigured) { 
+                // Vihreä (100% onnistunut: yhdistys OK, maski OK, IP OK!)
+                targetColor = 0x10b981; 
+                isFullyActive = true;
+            } else if (isConnectedA && isConnectedB) { 
+                // Kaapeli kytketty, mutta IP & maski odottaa syöttöä
+                // 10G Kuitu: hohtava oranssi runkolinkki; 1G Kupari: hillitty vaaleanharmaa
+                targetColor = (c.linkType === LINK_TYPES.FIBER_10G) ? 0xf59e0b : 0x64748b; 
+            } else { 
+                targetColor = 0x334155; 
+            } 
         }
 
-        const isConnectedA = c.nodeA.userData.isConnected;
-        const isConnectedB = c.nodeB.userData.isConnected;
-        const isNodeAConfigured = isConnectedA && (!IP_REQUIRED_TYPES.includes(c.nodeA.userData.type) || c.nodeA.userData.correctIp); 
-        const isNodeBConfigured = isConnectedB && (!IP_REQUIRED_TYPES.includes(c.nodeB.userData.type) || c.nodeB.userData.correctIp); 
-        
-        if (isConnectedA && isConnectedB && isNodeAConfigured && isNodeBConfigured) { 
-            // Vihreä (100% onnistunut: 1. yhdistys onnistunut, 2. maski onnistunut, 3. IP syötetty!)
-            c.line.material.color.setHex(0x10b981); 
-        } else if (isConnectedA && isConnectedB) { 
-            // Kaapeli kytketty, mutta IP & maski odottaa syöttöä – hillitty vaaleanharmaa
-            c.line.material.color.setHex(0x64748b); 
-        } else { 
-            // Kytkemätön tai katkennut yhteys – tummanharmaa
-            c.line.material.color.setHex(0x334155); 
-        } 
+        if (c.line && c.line.material) {
+            c.line.material.color.setHex(targetColor);
+        }
     }); 
     updateGoalUI();
     if (typeof saveLevelProgress === 'function' && !isLoadingLevel) {

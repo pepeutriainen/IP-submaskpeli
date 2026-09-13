@@ -78,7 +78,7 @@ function generateLevels() {
             difficulty: 1,
             phase: "🟢 Pienverkot (SOHO)",
             scenario: "Kahvila Bittipannu ottaa käyttöön /25-aliverkon (126 isäntää). Tiskillä on kassapääte ja kuittitulostin, asiakassalissa langaton verkko asiakkaiden kannettaville, ja keittiössä taukotilan työasema.",
-            hint: "/25-verkon aliverkon peite on 255.255.255.128! Osoitealue on .1 – .126. Yhdistä läppärit WiFi-tukiasemaan ja kassa kytkimeen.",
+            hint: "/25-verkon aliverkon peite on 255.255.255.128 (osoitealue .1 – .126). Kytke WiFi-tukiasema kaapelilla kytkimeen, jolloin asiakassalin kannettavat yhdistyvät langattomasti ilman kaapelia. Aseta sitten laitteille uniikit IP-osoitteet ja peite.",
             teachingTopic: "slash25",
             network: "192.168.2.0",
             cidr: 25,
@@ -6547,6 +6547,13 @@ function generateLevels() {
                               "x": -17,
                               "z": 19
                     }
+          },
+          {
+                    "type": "switch",
+                    "pos": {
+                              "x": -22,
+                              "z": 15
+                    }
           }
 ]
         },
@@ -6844,6 +6851,13 @@ function generateLevels() {
                               "x": 14,
                               "z": 20
                     }
+          },
+          {
+                    "type": "switch",
+                    "pos": {
+                              "x": 14,
+                              "z": 13
+                    }
           }
 ]
         },
@@ -6996,6 +7010,13 @@ function generateLevels() {
                     "pos": {
                               "x": 10,
                               "z": 18
+                    }
+          },
+          {
+                    "type": "switch",
+                    "pos": {
+                              "x": 0,
+                              "z": 14
                     }
           }
 ]
@@ -7293,6 +7314,20 @@ function generateLevels() {
                     "pos": {
                               "x": 23,
                               "z": 24
+                    }
+          },
+          {
+                    "type": "switch",
+                    "pos": {
+                              "x": -18,
+                              "z": 17
+                    }
+          },
+          {
+                    "type": "switch",
+                    "pos": {
+                              "x": 18,
+                              "z": 17
                     }
           }
 ]
@@ -8177,9 +8212,10 @@ function generateLevels() {
     
     ];
 
-    // Täytetään jokaisen tason aliverkkotiedot valmiiksi
+    // Täytetään jokaisen tason aliverkkotiedot ja esilaskettu hakusanaindeksi valmiiksi
     levels.forEach(level => {
         level.subnetDetails = calculateSubnetDetails(level.network, level.cidr);
+        level._searchTokens = `${level.id} ${level.name} ${level.scenario || ''} ${level.teachingTopic || ''} ${level.phase || ''} ${level.network || ''}`.toLowerCase();
     });
 }
 

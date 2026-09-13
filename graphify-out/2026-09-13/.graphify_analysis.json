@@ -1,0 +1,258 @@
+{
+  "communities": {
+    "0": [
+      "js_nodes",
+      "js_nodes_applyenterpriseceilingap",
+      "js_nodes_applymodeltonode",
+      "js_nodes_assigndhcpip",
+      "js_nodes_checkconnections",
+      "js_nodes_createlabeltexture",
+      "js_nodes_createnode",
+      "js_nodes_createzone",
+      "js_nodes_createzonelabelmesh",
+      "js_nodes_custommodels",
+      "js_nodes_deletenode",
+      "js_nodes_getfbxloader",
+      "js_nodes_getgltfloader",
+      "js_nodes_getnodeappearance",
+      "js_nodes_isnodeactive",
+      "js_nodes_modelcache",
+      "js_nodes_tryloadcustommodel",
+      "js_nodes_updatenodelabel",
+      "js_nodes_updatenodevisualstate",
+      "js_nodes_updatezonesvisualstate"
+    ],
+    "1": [
+      "js_state",
+      "js_state_cableactionstate",
+      "js_state_cables",
+      "js_state_device_rules",
+      "js_state_ip_required_types",
+      "js_state_keys",
+      "js_state_labelmeshes",
+      "js_state_levels",
+      "js_state_nodes",
+      "js_state_nodetypes",
+      "js_state_panstart",
+      "js_state_particles",
+      "js_state_zonemeshes"
+    ],
+    "2": [
+      "js_ui",
+      "js_ui_calcstate",
+      "js_ui_getdifficultycolor",
+      "js_ui_getdifficultystars",
+      "js_ui_renderlevelmenu",
+      "js_ui_setuptools",
+      "js_ui_subnetblock",
+      "js_ui_updatelevelui",
+      "js_ui_updatetoolbarforlevel"
+    ],
+    "3": [
+      "js_game",
+      "js_game_clearworld",
+      "js_game_gotomenu",
+      "js_game_loadlevel",
+      "js_game_nextlevel",
+      "js_game_savelevelprogress",
+      "js_game_togglehint",
+      "js_game_togglerules"
+    ],
+    "4": [
+      "js_scene",
+      "js_scene_animate",
+      "js_scene_createdataconfetti",
+      "js_scene_createsparks",
+      "js_scene_initthreejs",
+      "js_scene_onpointerdown",
+      "js_scene_onpointermove",
+      "js_scene_onwindowresize"
+    ],
+    "5": [
+      "js_ui_calcbackspace",
+      "js_ui_calcdot",
+      "js_ui_calcequals",
+      "js_ui_calcinputquick",
+      "js_ui_calcnum",
+      "js_ui_calcop",
+      "js_ui_calcpower2",
+      "js_ui_calcupdatescreen"
+    ],
+    "6": [
+      "js_ui_calcclear",
+      "js_ui_getnodesubnetscope",
+      "js_ui_openipmodal",
+      "js_ui_saveipinputstomemory",
+      "js_ui_selectnodeinmodal",
+      "js_ui_setupoctetinputs",
+      "js_ui_switchhelptab",
+      "js_ui_updatemodaldevicelist"
+    ],
+    "7": [
+      "docref_rfc_1918",
+      "js_teaching",
+      "js_teaching_teaching_content",
+      "js_teaching_teaching_part_1",
+      "js_teaching_teaching_part_2",
+      "js_teaching_teaching_part_3"
+    ],
+    "8": [
+      "js_cables",
+      "js_cables_connectnodes",
+      "js_cables_deletecable",
+      "js_cables_getcableerror",
+      "js_cables_handlecabletool"
+    ],
+    "9": [
+      "js_network",
+      "js_network_calculatesubnetdetails",
+      "js_network_ip2long",
+      "js_network_isipinsubnet",
+      "js_network_long2ip"
+    ],
+    "10": [
+      "js_ui_closeipmodal",
+      "js_ui_showtoast",
+      "js_ui_submitip",
+      "js_ui_updategoalui"
+    ],
+    "11": [
+      "js_levels",
+      "js_levels_generatelevels"
+    ],
+    "12": [
+      "assets_models_ap_ceiling_glb"
+    ],
+    "13": [
+      "assets_models_juniper_9204_glb"
+    ],
+    "14": [
+      "assets_models_kannettava_glb"
+    ],
+    "15": [
+      "assets_models_pc_glb"
+    ],
+    "16": [
+      "assets_models_router_glb"
+    ],
+    "17": [
+      "assets_models_server_4002_glb"
+    ],
+    "18": [
+      "assets_models_toimisto_glb"
+    ],
+    "19": [
+      "assets_models_tulostin_glb"
+    ]
+  },
+  "cohesion": {
+    "0": 0.21052631578947367,
+    "1": 0.15384615384615385,
+    "2": 0.3055555555555556,
+    "3": 0.39285714285714285,
+    "4": 0.39285714285714285,
+    "5": 0.2857142857142857,
+    "6": 0.32142857142857145,
+    "7": 0.3333333333333333,
+    "8": 0.5,
+    "9": 0.7,
+    "10": 0.5,
+    "11": 1.0,
+    "12": 1.0,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0
+  },
+  "gods": [
+    {
+      "id": "js_ui_calcupdatescreen",
+      "label": "calcUpdateScreen()",
+      "degree": 9
+    },
+    {
+      "id": "js_nodes_checkconnections",
+      "label": "checkConnections()",
+      "degree": 7
+    },
+    {
+      "id": "js_nodes_updatenodevisualstate",
+      "label": "updateNodeVisualState()",
+      "degree": 7
+    },
+    {
+      "id": "js_nodes_createnode",
+      "label": "createNode()",
+      "degree": 6
+    },
+    {
+      "id": "js_ui_openipmodal",
+      "label": "openIpModal()",
+      "degree": 6
+    },
+    {
+      "id": "js_nodes_tryloadcustommodel",
+      "label": "tryLoadCustomModel()",
+      "degree": 5
+    },
+    {
+      "id": "js_nodes_updatenodelabel",
+      "label": "updateNodeLabel()",
+      "degree": 5
+    },
+    {
+      "id": "js_ui_submitip",
+      "label": "submitIp()",
+      "degree": 5
+    },
+    {
+      "id": "js_scene_initthreejs",
+      "label": "initThreeJS()",
+      "degree": 5
+    },
+    {
+      "id": "js_ui_getnodesubnetscope",
+      "label": "getNodeSubnetScope()",
+      "degree": 5
+    }
+  ],
+  "surprises": [
+    {
+      "source": "submitIp()",
+      "target": "getNodeSubnetScope()",
+      "source_files": [
+        "js/ui.js",
+        "js/ui.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "note": "Bridges community 10 → community 6"
+    },
+    {
+      "source": "calcClear()",
+      "target": "calcUpdateScreen()",
+      "source_files": [
+        "js/ui.js",
+        "js/ui.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "note": "Bridges community 5 → community 6"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `calcUpdateScreen()` connect `calcUpdateScreen` to `ui.js`, `openIpModal`?",
+      "why": "High betweenness centrality (0.003) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `customModels`, `modelCache`, `cableActionState` to the rest of the system?",
+      "why": "20 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}
