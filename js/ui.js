@@ -1313,7 +1313,7 @@ function renderSubnetMatrix() {
             <div class="bg-slate-800/95 p-4 rounded-2xl border border-slate-600 shadow-xl space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                        📊 CCNA & NETWORK+ CHEAT SHEET
+                        📊 CCNA & NETWORK+ MUISTILAPPU (CHEAT SHEET)
                     </span>
                     <span class="text-xs text-slate-400">Prefiksit /8 – /32</span>
                 </div>
