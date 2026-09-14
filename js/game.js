@@ -68,6 +68,7 @@ function loadLevel(levelId) {
     isLoadingLevel = true;
     currentLevel = levelId;
     cheatSheetUsedInCurrentLevel = false;
+    if (typeof achievements !== 'undefined') achievements.levelStartTime = Date.now();
     currentLevelConfig = levels[levelId - 1];
     if (!currentLevelConfig) {
         console.error('Tasoa ei löydy:', levelId);

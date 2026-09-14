@@ -233,8 +233,16 @@
                         WASD / Oikea hiiri = liiku<br>
                         Rullaa = zoom
                     </div>
-                    <div class="flex items-center gap-2 mt-3 w-full justify-end">
-                        <button id="btn-toggle-sound" onclick="toggleAudioMute()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:bg-slate-600 text-xs font-black text-slate-200 border border-slate-700 flex items-center gap-1.5 transition shadow-sm cursor-pointer" title="Kytke peliäänet päälle / pois">
+                    <div class="flex items-center gap-1.5 mt-3 w-full justify-end flex-wrap">
+                        <button id="btn-toggle-terminal" onclick="terminal.toggle()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:bg-slate-600 text-xs font-black text-emerald-400 border border-emerald-500/40 flex items-center gap-1 transition shadow-sm cursor-pointer" title="Avaa komentoriviterminaali (Pikanäppäin: ~ tai §)">
+                            <span>⌨️</span>
+                            <span class="hidden sm:inline">CLI</span>
+                        </button>
+                        <button id="btn-open-achievements" onclick="openAchievementsModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:bg-slate-600 text-xs font-black text-amber-400 border border-amber-500/40 flex items-center gap-1 transition shadow-sm cursor-pointer" title="Avaa saavutukset ja pokaalikaappi">
+                            <span>🏆</span>
+                            <span class="hidden sm:inline">Pokaalit</span>
+                        </button>
+                        <button id="btn-toggle-sound" onclick="toggleAudioMute()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:bg-slate-600 text-xs font-black text-slate-200 border border-slate-700 flex items-center gap-1 transition shadow-sm cursor-pointer" title="Kytke peliäänet päälle / pois">
                             <span id="sound-icon">🔊</span>
                             <span id="sound-text" class="hidden sm:inline">Äänet</span>
                         </button>
@@ -622,6 +630,84 @@
             </div>
         </div>
 
+        <!-- ===================== SAAVUTUS-NOTIFIKAATIO (POP-UP BANNERI) ===================== -->
+        <div id="achievement-toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 translate-y-[-120%] opacity-0 pointer-events-auto">
+            <div class="glass-panel px-6 py-3.5 rounded-2xl border-2 border-amber-400/70 shadow-2xl shadow-amber-950/60 bg-slate-900/95 flex items-center gap-4 min-w-[320px] max-w-[90vw]">
+                <div id="achievement-toast-icon" class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/50 flex items-center justify-center text-3xl shadow-md">
+                    🏆
+                </div>
+                <div class="min-w-0">
+                    <span class="text-[10px] font-mono uppercase tracking-widest font-black text-amber-400 block">
+                        SAAVUTUS AVATTU!
+                    </span>
+                    <h4 id="achievement-toast-title" class="text-sm font-black text-white truncate">Subnet Ninja</h4>
+                    <p id="achievement-toast-desc" class="text-xs text-slate-300 truncate">Läpäise taso ilman laskinta ja cheat sheetia.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== CYBER TERMINAL CLI MODAALI ===================== -->
+        <div id="terminal-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-3 sm:p-6 pointer-events-auto">
+            <div class="w-full max-w-4xl h-[80vh] bg-slate-950/95 border-2 border-emerald-500/50 rounded-3xl shadow-2xl shadow-emerald-950/70 flex flex-col overflow-hidden font-mono">
+                <!-- Yläpalkki -->
+                <div class="px-5 py-3.5 bg-slate-900/90 border-b border-emerald-500/30 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="flex gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-400 tracking-wider">
+                            TERMINAL // root@subnet-core:~$ (CLI Mode)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[11px] text-slate-500 hidden sm:inline">Pikanäppäin: ~ tai Esc</span>
+                        <button onclick="terminal.toggle()" class="text-slate-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded hover:bg-slate-800 transition">✕</button>
+                    </div>
+                </div>
+
+                <!-- Terminaalin tulostusalue -->
+                <div id="terminal-body" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-1.5 text-xs sm:text-sm custom-scrollbar bg-slate-950 text-slate-200">
+                    <div class="text-cyan-400 font-bold">Subnet Architect OS v3.2 [CLI Mode]</div>
+                    <div class="text-slate-400">Verkkoyhteyksien ja aliverkotuksen komentotulkki. Kirjoita <span class="text-white font-bold">'help'</span> nähdäksesi komennot.</div>
+                    <div class="text-slate-500 text-xs">Esimerkkejä: ping gateway, ping 8.8.8.8, traceroute internet, ipconfig, subnetcalc 192.168.1.0/26</div>
+                </div>
+
+                <!-- Komentokehote -->
+                <div class="p-3 sm:p-4 bg-slate-900/80 border-t border-slate-800 flex items-center gap-2">
+                    <span class="text-emerald-400 font-bold text-sm">architect@submask:~$</span>
+                    <input type="text" id="terminal-input" class="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none placeholder-slate-600" placeholder="Kirjoita komento (esim. ping gateway)..." autocomplete="off" spellcheck="false">
+                    <button onclick="const el = document.getElementById('terminal-input'); if(el && el.value.trim()){ terminal.execute(el.value.trim()); el.value=''; }" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition">Aja ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== POKAALIKAAPPI / SAAVUTUKSET MODAALI ===================== -->
+        <div id="achievements-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-3 sm:p-6 pointer-events-auto">
+            <div class="w-full max-w-3xl max-h-[85vh] bg-slate-900/95 border-2 border-amber-500/40 rounded-3xl shadow-2xl shadow-amber-950/60 flex flex-col overflow-hidden">
+                <!-- Yläpalkki -->
+                <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">🏆</span>
+                        <div>
+                            <h3 class="text-lg font-black text-white">Saavutukset & Pokaalikaappi</h3>
+                            <p class="text-xs text-amber-300 font-medium">Suoritetut haasteet ja verkkotutkinnot</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="achievements-unlocked-count" class="px-3 py-1 rounded-full text-xs font-mono font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">0 / 8</span>
+                        <button onclick="closeAchievementsModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition">✕</button>
+                    </div>
+                </div>
+
+                <!-- Saavutusruudukko -->
+                <div id="achievements-grid" class="flex-1 p-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3.5 custom-scrollbar">
+                    <!-- Täytetään dynaamisesti JS:llä -->
+                </div>
+            </div>
+        </div>
+
         <div id="toast-container"></div>
     </div>
 
@@ -645,6 +731,8 @@
     <script src="js/nodes.js?v=20260913_v30"></script>
     <script src="js/cables.js?v=20260913_v30"></script>
     <script src="js/teaching.js?v=20260913_v30"></script>
+    <script src="js/achievements.js?v=20260913_v30"></script>
+    <script src="js/terminal.js?v=20260913_v30"></script>
     <script src="js/ui.js?v=20260913_v30"></script>
     <script src="js/game.js?v=20260913_v30"></script>
 </body>

@@ -2062,6 +2062,21 @@ function updateGoalUI() {
                         masterStarLevels.push(currentLevelConfig.id);
                         localStorage.setItem('subnetArchitect_masterStars', JSON.stringify(masterStarLevels));
                     }
+                    if (typeof unlockAchievement === 'function') {
+                        unlockAchievement('subnet_ninja');
+                    }
+                }
+
+                if (typeof unlockAchievement === 'function') {
+                    if (typeof achievements !== 'undefined' && (Date.now() - achievements.levelStartTime < 60000)) {
+                        unlockAchievement('speed_demon');
+                    }
+                    if (Array.isArray(masterStarLevels) && masterStarLevels.length >= 10) {
+                        unlockAchievement('ccna_hero');
+                    }
+                    if (currentLevelConfig && currentLevelConfig.id >= TOTAL_LEVELS) {
+                        unlockAchievement('network_legend');
+                    }
                 }
 
                 const winBadgeEl = document.getElementById('win-modal-badge');
@@ -2496,12 +2511,14 @@ function runPingTest() {
                     0% pakettihävikki. RTT avg = ${((parseFloat(rtt1) + parseFloat(rtt2)) / 2).toFixed(2)} ms. Aliverkotus ja reititys toimivat!
                 </div>
             `;
+            if (typeof unlockAchievement === 'function') unlockAchievement('ping_master');
         });
     } else {
         if (typeof audio !== 'undefined') audio.playPingSuccess();
         outputEl.innerHTML = `
             <div class="text-emerald-400 font-bold">✅ PING VASTAUS: 64 bytes from ${targetName}: time=1.1 ms [YHTEYS OK]</div>
         `;
+        if (typeof unlockAchievement === 'function') unlockAchievement('ping_master');
     }
 }
 

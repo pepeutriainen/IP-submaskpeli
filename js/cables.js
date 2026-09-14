@@ -144,6 +144,13 @@ function handleCableTool(node) {
                     createSparks(node.mesh.position.clone());
                     if (typeof audio !== 'undefined') audio.playCableConnect();
                     spawnPacket(startNode, node, 0x38bdf8);
+
+                    if (typeof unlockAchievement === 'function') {
+                        unlockAchievement('first_cable');
+                        if (linkType === LINK_TYPES.FIBER_10G && (startNode.userData.type === nodeTypes.CORE_SWITCH || node.userData.type === nodeTypes.CORE_SWITCH)) {
+                            unlockAchievement('core_architect');
+                        }
+                    }
                 }
             }
         } else {

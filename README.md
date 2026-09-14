@@ -103,12 +103,15 @@ IP-submaskpeli/
 │   └── style.css         # Kyber-tyylit, animaatiot ja loader-efektit
 ├── js/
 │   ├── state.js          # Globaalit vakiot, tilanhallinta ja muistinhallinta
+│   ├── audio.js          # Web Audio API Sci-Fi -äänimoottori (syntetisoidut äänet)
 │   ├── network.js        # Aliverkkolaskennan matematiikka ja binääritoiminnot
 │   ├── levels.js         # 61 tason konfiguraatiot, vyöhykkeet ja tavoitteet
-│   ├── scene.js          # Three.js -skenen luonti, kamerat ja valot
+│   ├── scene.js          # Three.js -skenen luonti, kamerat, valot ja pakettianimaatiot
 │   ├── nodes.js          # Laitteiden 3D-renderöinti, LOD ja mallien elinkaari
-│   ├── cables.js         # Kaapelointisäännöt, porttitarkistukset ja vektorikaapelit
+│   ├── cables.js         # Kaapelointisäännöt, porttitarkistukset ja pakettisimulaatio
 │   ├── teaching.js       # Täysi suomenkielinen CCNA-opetusmateriaali ja kaavat
+│   ├── terminal.js       # Cyber Terminal (CLI: ping, traceroute, ipconfig, subnetcalc)
+│   ├── achievements.js   # Saavutusjärjestelmä ja pokaalikaappi
 │   ├── ui.js             # Käyttöliittymä, HUD, laskin, modaalit ja hakujärjestelmä
 │   └── game.js           # Pelisilmukka, tasonlataus ja edistymisen tallennus
 ├── graphify-out/         # Graphify-tietämysgraafi ja arkkitehtuuriraportit
