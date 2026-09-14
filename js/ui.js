@@ -1391,6 +1391,9 @@ if (typeof window !== 'undefined') {
  */
 function openIpModal(node) {
     selectedNodeForIp = node;
+    if (typeof terminal !== 'undefined' && terminal.setTargetNode) {
+        terminal.setTargetNode(node);
+    }
     calcClear();
 
     // Navigoidaan 3D-kamera kohdelaitteen luokse

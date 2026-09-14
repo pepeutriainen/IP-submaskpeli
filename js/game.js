@@ -209,6 +209,9 @@ function loadLevel(levelId) {
     isLoadingLevel = false;
     if (typeof updateAudioButtonState === 'function') updateAudioButtonState();
     checkConnections();
+    if (typeof terminal !== 'undefined' && terminal.setTargetNode) {
+        terminal.setTargetNode(null);
+    }
 }
 
 /**
