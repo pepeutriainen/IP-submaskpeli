@@ -40,6 +40,16 @@ function clearWorld() {
         if (typeof disposeHierarchy === 'function') disposeHierarchy(cableActionState.lineTemp);
     }
     
+    if (typeof activePackets !== 'undefined') {
+        activePackets.forEach(p => {
+            if (p.mesh) {
+                scene.remove(p.mesh);
+                if (typeof disposeHierarchy === 'function') disposeHierarchy(p.mesh);
+            }
+        });
+        activePackets = [];
+    }
+
     cables = [];
     nodes = [];
     zoneMeshes = [];
@@ -196,6 +206,7 @@ function loadLevel(levelId) {
     }, 260);
 
     isLoadingLevel = false;
+    if (typeof updateAudioButtonState === 'function') updateAudioButtonState();
     checkConnections();
 }
 

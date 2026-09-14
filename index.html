@@ -233,6 +233,12 @@
                         WASD / Oikea hiiri = liiku<br>
                         Rullaa = zoom
                     </div>
+                    <div class="flex items-center gap-2 mt-3 w-full justify-end">
+                        <button id="btn-toggle-sound" onclick="toggleAudioMute()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:bg-slate-600 text-xs font-black text-slate-200 border border-slate-700 flex items-center gap-1.5 transition shadow-sm cursor-pointer" title="Kytke peliäänet päälle / pois">
+                            <span id="sound-icon">🔊</span>
+                            <span id="sound-text" class="hidden sm:inline">Äänet</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -479,6 +485,21 @@
                             </div>
                         </div>
 
+                        <!-- Ping- ja vianmääritystesti -->
+                        <div class="mt-3.5 pt-3 border-t border-slate-700/80">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                    <span>📡</span> Diagnostiikka & Ping
+                                </span>
+                                <button type="button" onclick="runPingTest()" class="px-3.5 py-1.5 bg-sky-950/90 hover:bg-sky-900 active:bg-sky-950 text-sky-300 border border-sky-500/60 rounded-xl text-xs font-black flex items-center gap-1.5 transition shadow-sm cursor-pointer" title="Lähetä ICMP-kaikupaketti reitittimelle">
+                                    <span>⚡ Lähetä Ping</span>
+                                </button>
+                            </div>
+                            <div id="ping-console-output" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-[11px] leading-relaxed text-slate-300 min-h-[50px] max-h-[85px] overflow-y-auto custom-scrollbar">
+                                <span class="text-slate-500">Klikkaa "Lähetä Ping" testataksesi yhteyden ja aliverkon reitityksen.</span>
+                            </div>
+                        </div>
+
                         <!-- Painikkeet -->
                         <div class="flex gap-2.5 mt-3.5 pt-2">
                             <button onclick="closeIpModal()" class="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white rounded-xl font-bold transition text-sm sm:text-base shadow-md cursor-pointer">Peruuta (Esc)</button>
@@ -504,6 +525,9 @@
                             <button id="tab-btn-matrix" onclick="switchHelpTab('matrix')" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13.5px] font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800">
                                 📊 Cheat Sheet
                             </button>
+                            <button id="tab-btn-ping" onclick="switchHelpTab('ping')" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13.5px] font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+                                📡 Diagnostiikka
+                            </button>
                         </div>
                         <span id="ip-help-badge" class="hidden sm:inline-block text-xs font-mono font-black text-cyan-300 bg-cyan-950/80 px-2.5 py-1 rounded-lg border border-cyan-600/50">/24</span>
                     </div>
@@ -521,6 +545,9 @@
                         </div>
                         <div id="ip-help-matrix-view" class="space-y-3 hidden">
                             <!-- Täytetään /8 - /32 aliverkkotaulukolla -->
+                        </div>
+                        <div id="ip-help-ping-view" class="space-y-3 hidden">
+                            <!-- Täytetään diagnostiikkaohjeilla -->
                         </div>
                     </div>
                 </div>
@@ -611,6 +638,7 @@
     <script src="assets/models/ap-ceiling.glb.js?v=20260913_v30"></script>
     <script src="assets/models/voip.glb.js?v=20260913_v30"></script>
     <script src="js/state.js?v=20260913_v30"></script>
+    <script src="js/audio.js?v=20260913_v30"></script>
     <script src="js/network.js?v=20260913_v30"></script>
     <script src="js/levels.js?v=20260913_v30"></script>
     <script src="js/scene.js?v=20260913_v30"></script>

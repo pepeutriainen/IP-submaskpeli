@@ -217,3 +217,8 @@ if (typeof window !== 'undefined') {
     window.disposeHierarchy = disposeHierarchy;
     window.disposeMaterial = disposeMaterial;
 }
+
+// Aktiiviset 3D-datapaketit ja valopulssit
+let activePackets = [];
+let lastBackgroundPacketTime = 0;
+

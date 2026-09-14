@@ -142,6 +142,8 @@ function handleCableTool(node) {
                         linkType: linkType 
                     });
                     createSparks(node.mesh.position.clone());
+                    if (typeof audio !== 'undefined') audio.playCableConnect();
+                    spawnPacket(startNode, node, 0x38bdf8);
                 }
             }
         } else {
@@ -192,6 +194,80 @@ function deleteCable(cable) {
         }
     }
     cables = cables.filter(c => c !== cable);
+    if (typeof audio !== 'undefined') audio.playCableCut();
     checkConnections();
 }
+
+/**
+ * =========================================================================
+ * 3D-Pakettisimulaatio & Valopulssit (Packet Simulation)
+ * =========================================================================
+ */
+
+let sharedPacketGeo = null;
+function getPacketGeometry() {
+    if (!sharedPacketGeo) {
+        sharedPacketGeo = new THREE.SphereGeometry(0.24, 8, 8);
+    }
+    return sharedPacketGeo;
+}
+
+/**
+ * Lähettää animoidun valopulssin / datapaketin kahden laitteen välille kaapelia pitkin.
+ * @param {Object} nodeA Lähtösolmu
+ * @param {Object} nodeB Kohdesolmu
+ * @param {number} colorHex Neon-valon väri (oletus syaani 0x38bdf8)
+ * @param {number} duration Kesto sekunteina
+ * @param {Function} onComplete Callback saapumisen jälkeen
+ */
+function spawnPacket(nodeA, nodeB, colorHex = 0x38bdf8, duration = 0.6, onComplete = null) {
+    if (!nodeA || !nodeB || !nodeA.mesh || !nodeB.mesh) return null;
+
+    const startPos = nodeA.mesh.position.clone();
+    const endPos = nodeB.mesh.position.clone();
+    startPos.y = 0.28;
+    endPos.y = 0.28;
+
+    const geo = getPacketGeometry();
+    const mat = new THREE.MeshBasicMaterial({ 
+        color: colorHex,
+        transparent: true,
+        opacity: 0.95
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(startPos);
+    scene.add(mesh);
+
+    const packet = {
+        mesh: mesh,
+        startPos: startPos,
+        endPos: endPos,
+        progress: 0,
+        speed: 1 / Math.max(0.1, duration),
+        onComplete: onComplete
+    };
+
+    activePackets.push(packet);
+    return packet;
+}
+
+/**
+ * Simuloi ICMP Echo Request / Ping -pakettia laitteelta kohti Gatewayta ja takaisin.
+ */
+function simulatePingPacket(startNode, targetNode, onSuccess = null, onError = null) {
+    if (!startNode || !targetNode) return;
+
+    // 1. Matka kohteeseen (Echo Request - oranssi/keltainen pulssi)
+    if (typeof audio !== 'undefined') audio.playUiClick();
+    spawnPacket(startNode, targetNode, 0xfbbf24, 0.45, () => {
+        // 2. Vastaus takaisin (Echo Reply - neon-vihreä pulssi)
+        spawnPacket(targetNode, startNode, 0x34d399, 0.45, () => {
+            if (typeof audio !== 'undefined') audio.playPingSuccess();
+            createSparks(startNode.mesh.position.clone());
+            if (onSuccess) onSuccess();
+        });
+    });
+}
+
 

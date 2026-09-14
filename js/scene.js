@@ -362,6 +362,41 @@ function animate() {
         }
     }
 
+    // Datapakettien / valopulssien päivitys kaapeleissa
+    if (typeof activePackets !== 'undefined') {
+        for (let i = activePackets.length - 1; i >= 0; i--) {
+            const pkt = activePackets[i];
+            pkt.progress += pkt.speed * 0.016; // ~60fps askellus
+            if (pkt.progress >= 1.0) {
+                scene.remove(pkt.mesh);
+                if (pkt.mesh.material) pkt.mesh.material.dispose();
+                activePackets.splice(i, 1);
+                if (typeof pkt.onComplete === 'function') {
+                    pkt.onComplete();
+                }
+            } else {
+                pkt.mesh.position.lerpVectors(pkt.startPos, pkt.endPos, pkt.progress);
+                // Pieni hento sykkivä koko
+                const pulseScale = 1 + Math.sin(pkt.progress * Math.PI) * 0.4;
+                pkt.mesh.scale.setScalar(pulseScale);
+            }
+        }
+    }
+
+    // Taustaliikenteen elävöittäminen (ambient packet traffic toimivissa kaapeleissa)
+    if (mainMenu && mainMenu.classList.contains('hidden') && typeof cables !== 'undefined' && cables.length > 0) {
+        if (now - lastBackgroundPacketTime > 2400) {
+            lastBackgroundPacketTime = now;
+            const liveCables = cables.filter(c => c.nodeA && c.nodeB && (c.nodeA.userData.isConnected || c.nodeB.userData.isConnected));
+            if (liveCables.length > 0) {
+                const randomCable = liveCables[Math.floor(Math.random() * liveCables.length)];
+                if (typeof spawnPacket === 'function') {
+                    spawnPacket(randomCable.nodeA, randomCable.nodeB, 0x06b6d4, 1.1);
+                }
+            }
+        }
+    }
+
     // Pomppivat laitteet & solmuanimaatiot
     const wifiTime = now * 0.002;
     const wifiSine = Math.sin(wifiTime);

@@ -977,6 +977,10 @@ function createNode(type, x, z, isPredefined = false) {
     // Luo tunnistelappu laitteelle (reititin, kytkin, wifi, pc jne.)
     updateNodeLabel(node);
 
+    if (!isPredefined && typeof audio !== 'undefined') {
+        audio.playDevicePlace();
+    }
+
     checkConnections();
     return node;
 }
@@ -995,6 +999,10 @@ function deleteNode(node) {
         }
         return true;
     });
+
+    if (typeof audio !== 'undefined') {
+        audio.playCableCut();
+    }
 
     // Poista myös lappu
     if (node.userData.labelMesh) {

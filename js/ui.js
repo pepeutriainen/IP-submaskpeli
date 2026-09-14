@@ -225,6 +225,7 @@ function setupTools() {
             const targetBtn = e.target.closest('.tool-btn');
             targetBtn.classList.add('active');
             currentTool = targetBtn.dataset.tool;
+            if (typeof audio !== 'undefined') audio.playUiClick();
             if (currentTool !== 'cable' && cableActionState.active) {
                 if (cableActionState.lineTemp) scene.remove(cableActionState.lineTemp);
                 cableActionState = { active: false, startNode: null, lineTemp: null };
@@ -237,6 +238,9 @@ function setupTools() {
  * Näyttää kelluvan toast-ilmoituksen.
  */
 function showToast(msg, type = "info") {
+    if (type === "error" && typeof audio !== 'undefined') {
+        audio.playError();
+    }
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -1034,16 +1038,19 @@ let currentHelpTab = 'steps';
  * - 'matrix': Aliverkkomatriisi / Cheat Sheet (/8 – /32)
  */
 function switchHelpTab(tab) {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     currentHelpTab = tab || 'steps';
     const stepsBtn = document.getElementById('tab-btn-steps');
     const theoryBtn = document.getElementById('tab-btn-theory');
     const binaryBtn = document.getElementById('tab-btn-binary');
     const matrixBtn = document.getElementById('tab-btn-matrix');
+    const pingBtn = document.getElementById('tab-btn-ping');
 
     const stepsView = document.getElementById('ip-help-steps-view');
     const theoryView = document.getElementById('ip-help-theory-view');
     const binaryView = document.getElementById('ip-help-binary-view');
     const matrixView = document.getElementById('ip-help-matrix-view');
+    const pingView = document.getElementById('ip-help-ping-view');
 
     const activeClass = 'px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13.5px] font-black transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
     const inactiveClass = 'px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13.5px] font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800';
@@ -1052,17 +1059,21 @@ function switchHelpTab(tab) {
     if (theoryBtn) theoryBtn.className = currentHelpTab === 'theory' ? activeClass : inactiveClass;
     if (binaryBtn) binaryBtn.className = currentHelpTab === 'binary' ? activeClass : inactiveClass;
     if (matrixBtn) matrixBtn.className = currentHelpTab === 'matrix' ? activeClass : inactiveClass;
+    if (pingBtn) pingBtn.className = currentHelpTab === 'ping' ? activeClass : inactiveClass;
 
     if (stepsView) stepsView.classList.toggle('hidden', currentHelpTab !== 'steps');
     if (theoryView) theoryView.classList.toggle('hidden', currentHelpTab !== 'theory');
     if (binaryView) binaryView.classList.toggle('hidden', currentHelpTab !== 'binary');
     if (matrixView) matrixView.classList.toggle('hidden', currentHelpTab !== 'matrix');
+    if (pingView) pingView.classList.toggle('hidden', currentHelpTab !== 'ping');
 
     if (currentHelpTab === 'binary') {
         renderBinaryVisualizer();
     } else if (currentHelpTab === 'matrix') {
         cheatSheetUsedInCurrentLevel = true;
         renderSubnetMatrix();
+    } else if (currentHelpTab === 'ping') {
+        renderPingHelpView();
     }
 }
 
@@ -1954,9 +1965,17 @@ function submitIp() {
         updateNodeLabel(selectedNodeForIp);
 
         showToast("IP hyväksytty! Laite on verkossa. ✅", "success");
+        if (typeof audio !== 'undefined') audio.playPingSuccess();
         selectedNodeForIp.userData.animating = true;
         selectedNodeForIp.userData.animStart = Date.now();
         createDataConfetti(selectedNodeForIp.mesh.position.clone());
+
+        // Lähetetään valopulssi lähimmälle kytkimelle tai reitittimelle
+        const connCable = cables.find(c => c.nodeA === selectedNodeForIp || c.nodeB === selectedNodeForIp);
+        if (connCable && typeof spawnPacket === 'function') {
+            const neighbor = (connCable.nodeA === selectedNodeForIp) ? connCable.nodeB : connCable.nodeA;
+            spawnPacket(selectedNodeForIp, neighbor, 0x10b981, 0.5);
+        }
 
         closeIpModal();
         checkConnections();
@@ -2032,6 +2051,7 @@ function updateGoalUI() {
         setTimeout(() => {
             const winModal = document.getElementById('win-modal');
             if (winModal) {
+                if (typeof audio !== 'undefined') audio.playVictory();
                 const titleEl = document.getElementById('win-level-title');
                 if (titleEl && currentLevelConfig) {
                     titleEl.innerText = `Taso ${currentLevelConfig.id}: ${currentLevelConfig.name}`;
@@ -2226,6 +2246,7 @@ function calcUpdateScreen() {
 }
 
 function calcNum(digit) {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     if (calcState.resetNext || calcState.current === '0') {
         calcState.current = digit.toString();
         calcState.resetNext = false;
@@ -2238,6 +2259,7 @@ function calcNum(digit) {
 }
 
 function calcDot() {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     if (calcState.resetNext) {
         calcState.current = '0.';
         calcState.resetNext = false;
@@ -2248,12 +2270,14 @@ function calcDot() {
 }
 
 function calcInputQuick(val) {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     calcState.current = val.toString();
     calcState.resetNext = false;
     calcUpdateScreen();
 }
 
 function calcPower2() {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     const val = parseFloat(calcState.current);
     if (isNaN(val)) return;
     const res = Math.pow(2, val);
@@ -2269,6 +2293,7 @@ function calcPower2() {
 }
 
 function calcOp(op) {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     if (calcState.prev !== null && calcState.op && !calcState.resetNext) {
         calcEquals();
     }
@@ -2279,6 +2304,7 @@ function calcOp(op) {
 }
 
 function calcEquals() {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     if (calcState.prev === null || !calcState.op) return;
 
     const a = calcState.prev;
@@ -2310,6 +2336,7 @@ function calcEquals() {
 }
 
 function calcClear() {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     calcState.current = '0';
     calcState.prev = null;
     calcState.op = null;
@@ -2318,6 +2345,7 @@ function calcClear() {
 }
 
 function calcBackspace() {
+    if (typeof audio !== 'undefined') audio.playUiClick();
     if (calcState.resetNext) {
         calcState.current = '0';
         calcState.resetNext = false;
@@ -2328,3 +2356,215 @@ function calcBackspace() {
     }
     calcUpdateScreen();
 }
+
+/**
+ * =========================================================================
+ * Äänenvoimakkuuden ja mykistyksen ohjaus (HUD & Asetukset)
+ * =========================================================================
+ */
+function toggleAudioMute() {
+    if (typeof audio === 'undefined') return;
+    const isNowMuted = audio.toggleMute();
+    updateAudioButtonState();
+    if (isNowMuted) {
+        showToast("Peliäänet mykistetty 🔇", "info");
+    } else {
+        audio.playUiClick();
+        showToast("Peliäänet kytketty päälle 🔊", "success");
+    }
+}
+
+function updateAudioButtonState() {
+    const iconEl = document.getElementById('sound-icon');
+    const textEl = document.getElementById('sound-text');
+    if (typeof audio === 'undefined' || !iconEl) return;
+
+    if (audio.isMuted()) {
+        iconEl.innerText = "🔇";
+        if (textEl) textEl.innerText = "Mykistetty";
+    } else {
+        iconEl.innerText = "🔊";
+        if (textEl) textEl.innerText = "Äänet";
+    }
+}
+
+// Alustetaan äänenpainike latauksen yhteydessä
+if (typeof window !== 'undefined') {
+    window.addEventListener('DOMContentLoaded', () => {
+        updateAudioButtonState();
+    });
+}
+
+/**
+ * =========================================================================
+ * CCNA-Vianmääritys & Ping-diagnostiikkatyökalu
+ * =========================================================================
+ */
+
+/**
+ * Suorittaa interaktiivisen ICMP Ping -testin valitulta laitteelta Default Gatewaylle.
+ */
+function runPingTest() {
+    const outputEl = document.getElementById('ping-console-output');
+    if (!outputEl) return;
+
+    if (!selectedNodeForIp) {
+        outputEl.innerHTML = `<span class="text-rose-400 font-bold">❌ VIRHE:</span> Valitse ensin laite vasemmalta laitelistasta!`;
+        if (typeof audio !== 'undefined') audio.playError();
+        return;
+    }
+
+    const node = selectedNodeForIp;
+    const ipParts = Array.from(document.querySelectorAll('.ip-octet')).map(el => el.value.trim());
+    const maskParts = Array.from(document.querySelectorAll('.mask-octet')).map(el => el.value.trim());
+
+    const hasInputIp = (ipParts.length === 4 && ipParts.every(p => p !== ''));
+    const hasInputMask = (maskParts.length === 4 && maskParts.every(p => p !== ''));
+
+    const currentIp = hasInputIp ? ipParts.join('.') : (node.userData.ip || null);
+    const currentMask = hasInputMask ? maskParts.join('.') : (node.userData.mask || null);
+
+    // Etsitään tason Gateway tai Reititin
+    const gatewayNode = nodes.find(n => n.userData.type === nodeTypes.GATEWAY || n.userData.type === nodeTypes.ROUTER || n.userData.type === nodeTypes.CLOUD);
+    const targetName = gatewayNode ? (gatewayNode.userData.type === nodeTypes.GATEWAY ? "Default Gateway" : "Reititin") : "Gateway";
+
+    // 1. Fyysinen tarkistus (Layer 1)
+    const hasCable = cables.some(c => c.nodeA === node || c.nodeB === node);
+    if (!hasCable) {
+        outputEl.innerHTML = `
+            <div class="text-rose-400 font-bold mb-1">❌ PING VIRHE: Link Down (Layer 1)</div>
+            <div class="text-slate-300">Laitteella ei ole fyysistä kaapeliyhteyttä kytkimeen tai reitittimeen!</div>
+            <div class="text-sky-300 mt-1 font-semibold">Korjaus: Sulje tämä ikkuna, valitse Kaapeli-työkalu ja vedä 1G-kupari laitteesta kytkimeen.</div>
+        `;
+        if (typeof audio !== 'undefined') audio.playError();
+        return;
+    }
+
+    // 2. IP-osoitteen tarkistus (Layer 3)
+    if (!currentIp || !currentMask) {
+        outputEl.innerHTML = `
+            <div class="text-amber-400 font-bold mb-1">⚠️ PING VIRHE: IP/Mask Missing (Layer 3)</div>
+            <div class="text-slate-300">Syötä laitteelle kelvollinen IP-osoite ja aliverkon peite yläpuolelle ennen ping-testiä.</div>
+        `;
+        if (typeof audio !== 'undefined') audio.playError();
+        return;
+    }
+
+    const scope = getNodeSubnetScope(node);
+    const details = scope.details;
+    const cidr = scope.cidr;
+
+    // Tarkistetaan kuuluuko IP aliverkkoon
+    const ipL = ip2long(currentIp);
+    const firstL = ip2long(details.firstHost);
+    const lastL = ip2long(details.lastHost);
+    const isIpInRange = (ipL >= firstL && ipL <= lastL);
+    const isMaskCorrect = (currentMask === details.mask);
+
+    if (!isMaskCorrect || !isIpInRange) {
+        outputEl.innerHTML = `
+            <div class="text-rose-400 font-bold mb-1">❌ PING VIRHE: Destination Host Unreachable</div>
+            <div class="text-slate-300 font-mono text-[11px]">From ${currentIp}: Destination Host Unreachable (Subnet Mismatch)</div>
+            <div class="text-amber-300 mt-1 font-semibold">
+                ${!isMaskCorrect ? `• Peite ${currentMask} on väärä (oikea /${cidr}: ${details.mask}).` : ''}
+                ${!isIpInRange ? `• IP ${currentIp} ei kuulu aliverkkoon ${details.network}/${cidr} (sallittu: ${details.firstHost}–${details.lastHost}).` : ''}
+            </div>
+        `;
+        if (typeof audio !== 'undefined') audio.playError();
+        return;
+    }
+
+    // 3. Onnistunut yhteys -> Simuloidaan ping-pulssi ja terminaalituloste
+    outputEl.innerHTML = `
+        <div class="text-sky-400 font-bold flex items-center gap-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            Lähetetään 2 kpl ICMP Echo Request -paketteja kohteeseen ${targetName}...
+        </div>
+    `;
+
+    if (typeof simulatePingPacket === 'function' && gatewayNode) {
+        simulatePingPacket(node, gatewayNode, () => {
+            const rtt1 = (0.8 + Math.random() * 0.7).toFixed(2);
+            const rtt2 = (0.7 + Math.random() * 0.6).toFixed(2);
+            outputEl.innerHTML = `
+                <div class="text-emerald-400 font-bold mb-0.5">✅ PING VASTAUS VASTAANOTETTU (2/2 OK):</div>
+                <div class="text-slate-200 font-mono text-[11px] leading-relaxed">
+                    64 bytes from ${targetName}: icmp_seq=1 ttl=64 time=${rtt1} ms<br>
+                    64 bytes from ${targetName}: icmp_seq=2 ttl=64 time=${rtt2} ms
+                </div>
+                <div class="text-cyan-300 text-[11px] font-bold mt-1">
+                    0% pakettihävikki. RTT avg = ${((parseFloat(rtt1) + parseFloat(rtt2)) / 2).toFixed(2)} ms. Aliverkotus ja reititys toimivat!
+                </div>
+            `;
+        });
+    } else {
+        if (typeof audio !== 'undefined') audio.playPingSuccess();
+        outputEl.innerHTML = `
+            <div class="text-emerald-400 font-bold">✅ PING VASTAUS: 64 bytes from ${targetName}: time=1.1 ms [YHTEYS OK]</div>
+        `;
+    }
+}
+
+/**
+ * Renderöi CCNA-Vianmääritysopas -välilehden
+ */
+function renderPingHelpView() {
+    const container = document.getElementById('ip-help-ping-view');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="p-4 bg-slate-950/90 rounded-2xl border border-sky-500/40 space-y-4">
+            <div class="flex items-center gap-2.5 pb-2.5 border-b border-slate-800">
+                <span class="text-2xl">📡</span>
+                <div>
+                    <h4 class="text-sm font-black text-sky-300 uppercase tracking-wider">CCNA-Vianmäärityksen Työnkulku (OSI 1–3)</h4>
+                    <p class="text-xs text-slate-400 font-medium">Miten ratkaista verkkoyhteyden ongelmat ammattilaisena</p>
+                </div>
+            </div>
+
+            <!-- Kerros 1: Fyysinen yhteys -->
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black text-amber-400 uppercase tracking-wide">1. Kerros 1: Fyysinen Linkki (Physical)</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Link Down?</span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Tarkista kaapelit: Päätelaitteille <strong>1G Kupari</strong> (max 100m). Rungolle ja palvelimille <strong>10G Kuitu</strong>. Varmista ettei porttiraja (maxPorts) ole täyttynyt.
+                </p>
+            </div>
+
+            <!-- Kerros 2: Kytkintaso -->
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black text-cyan-400 uppercase tracking-wide">2. Kerros 2: Topologia (Data Link)</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Hierarkia</span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Yritysverkossa PC:tä ei saa kytkeä suoraan Core Switchiin, vaan aina osaston LAN-kytkimeen! Kytkinten ketjutus (daisy-chain) on kielletty yritystasolla.
+                </p>
+            </div>
+
+            <!-- Kerros 3: IP ja Aliverkotus -->
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black text-emerald-400 uppercase tracking-wide">3. Kerros 3: Aliverkotus (Network & IP)</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Subnetting</span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    1. Onko <strong>aliverkon peite</strong> oikein suhteessa CIDR-prefiksiin?<br>
+                    2. Kuuluuko laitteen IP huoneen aliverkon ensimmäisen ja viimeisen isäntäosoitteen väliin?<br>
+                    3. Onko jokin muu laite jo varannut saman IP:n (IP-konflikti)?
+                </p>
+            </div>
+
+            <!-- Vianmäärityksen pikatesti -->
+            <div class="p-3 bg-blue-950/40 rounded-xl border border-blue-600/40 flex items-center justify-between">
+                <span class="text-xs text-blue-200 font-bold">Kokeile heti:</span>
+                <button onclick="runPingTest()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-black shadow-md cursor-pointer transition">
+                    ⚡ Suorita Ping-testi
+                </button>
+            </div>
+        </div>
+    `;
+}
+

@@ -139,12 +139,12 @@ Projekti ei vaadi monimutkaista asennusta tai Node.js-käännösvaihetta:
 
 ## 🚀 Jatkokehityssuunnitelma (Roadmap)
 
-Seuraavat suunnitellut ominaisuudet tulevissa päivityksissä:
+Seuraavat ominaisuudet ja niiden tila:
 
-- [ ] **Pakettianimaatiot (Packet Simulation)**: Visuaaliset data-valopulssit kaapeleissa pingatessa ja reititettäessä.
+- [x] **Pakettianimaatiot (Packet Simulation)**: Visuaaliset data-valopulssit kaapeleissa ja reaaliaikainen taustaliikenne.
+- [x] **Äänimaailma (Sci-Fi Audio Engine)**: Natiivi Web Audio API -äänimoottori (kaapelit, virheet, ping, voittofanfaari) + HUD-mykistyskytkin.
+- [x] **Vianmääritystila (Troubleshooting & Ping)**: Interaktiivinen ICMP Echo Ping -testaustyökalu, RTT-mittaus ja kerros 1–3 -vianmääritysopas.
 - [ ] **IPv6-tuki (Vaihe 7)**: 128-bittiset heksadesimaaliosoitteet ja SLAAC-autokonfiguraatio.
-- [ ] **Äänimaailma (Sci-Fi Audio Engine)**: Releiden naksahdukset, kaapelin kytkentä-äänet ja konesalin tasainen humina.
-- [ ] **Vianmääritystila (Troubleshooting Mode)**: Rikkoutuneiden kaapeleiden, IP-konfliktien ja väärien peitteiden etsintä diagnostiikkatyökaluilla.
 - [ ] **Moninpeli / Opettajan hallintapaneeli**: Opettaja voi luoda omia aliverkkotehtäviä ja seurata luokan edistymistä reaaliajassa.
 
 ---
