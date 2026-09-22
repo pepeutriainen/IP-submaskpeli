@@ -406,7 +406,7 @@ function getOrLoadModel(modelUrl) {
         return Promise.resolve(modelCache[modelUrl].clone(true));
     }
     if (!modelPromiseCache.has(modelUrl)) {
-        const isFbx = typeof modelUrl === 'string' && modelUrl.toLowerCase().endsWith('.fbx');
+        const isFbx = typeof modelUrl === 'string' && !modelUrl.startsWith('data:') && modelUrl.toLowerCase().endsWith('.fbx');
         const loader = isFbx ? getFbxLoader() : getGltfLoader();
         if (!loader) return Promise.resolve(null);
 
