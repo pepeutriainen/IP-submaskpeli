@@ -17,6 +17,73 @@
 </head>
 <body>
 
+    <!-- Floating Background Music Player -->
+    <div id="bgm-player" class="fixed top-4 right-4 z-[9999] bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl p-2.5 flex items-center gap-3 shadow-lg hover:border-cyan-500/50 transition-all opacity-80 hover:opacity-100">
+        <audio id="bgm-audio" src="assets/audio/Pecodex_musiikki_1h_loop.mp3" loop preload="auto"></audio>
+        <button id="bgm-toggle" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-cyan-400 hover:text-cyan-300 transition" title="Toista / Keskeytä Musiikki">
+            <svg id="bgm-icon-play" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="bgm-icon-pause" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <div class="flex items-center gap-2 group">
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <input type="range" id="bgm-volume" min="0" max="1" step="0.01" value="0.05" class="w-20 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('bgm-audio');
+            const toggleBtn = document.getElementById('bgm-toggle');
+            const volumeSlider = document.getElementById('bgm-volume');
+            const iconPlay = document.getElementById('bgm-icon-play');
+            const iconPause = document.getElementById('bgm-icon-pause');
+            
+            audio.volume = volumeSlider.value;
+            let hasInteracted = false;
+
+            const updateIcons = () => {
+                if (audio.paused) {
+                    iconPlay.classList.remove('hidden');
+                    iconPause.classList.add('hidden');
+                } else {
+                    iconPlay.classList.add('hidden');
+                    iconPause.classList.remove('hidden');
+                }
+            };
+
+            const tryPlay = () => {
+                audio.play().then(() => updateIcons()).catch(() => {
+                    // Autoplay blocked
+                });
+            };
+
+            // First interaction autoplay
+            const initAudio = () => {
+                if (!hasInteracted) {
+                    hasInteracted = true;
+                    tryPlay();
+                }
+            };
+            document.body.addEventListener('click', initAudio, { once: true });
+            document.body.addEventListener('keydown', initAudio, { once: true });
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // don't trigger initAudio if not yet
+                if (audio.paused) {
+                    audio.play().then(() => updateIcons());
+                } else {
+                    audio.pause();
+                    updateIcons();
+                }
+            });
+
+            volumeSlider.addEventListener('input', (e) => {
+                audio.volume = e.target.value;
+            });
+            volumeSlider.addEventListener('click', (e) => e.stopPropagation());
+        });
+    </script>
+
     <!-- IT Studio Cyberpunk Cold-Start Boot Loader -->
     <div id="app-boot-loader">
         <div class="flex flex-col items-center gap-4 p-6 text-center max-w-md">
