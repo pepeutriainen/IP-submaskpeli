@@ -18,8 +18,8 @@
 <body>
 
     <!-- Floating Background Music Player -->
-    <div id="bgm-player" style="z-index: 99999;" class="fixed top-20 right-4 sm:right-5 bg-slate-900/90 backdrop-blur-md border border-cyan-500/50 rounded-xl p-2.5 flex items-center gap-3 shadow-lg hover:border-cyan-400 transition-all pointer-events-auto">
-        <audio id="bgm-audio" src="assets/audio/Pecodex_musiikki_1h_loop.mp3" loop preload="auto"></audio>
+    <div id="bgm-player" style="z-index: 99999;" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-slate-900/90 backdrop-blur-md border border-cyan-500/50 rounded-xl p-2.5 flex items-center gap-3 shadow-lg hover:border-cyan-400 transition-all pointer-events-auto">
+        <audio id="bgm-audio" src="assets/audio/Pecodex_musiikki_1h_loop.mp3" loop preload="auto" autoplay></audio>
         <button id="bgm-toggle" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-cyan-400 hover:text-cyan-300 transition" title="Toista / Keskeytä Musiikki">
             <svg id="bgm-icon-play" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             <svg id="bgm-icon-pause" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
@@ -50,6 +50,11 @@
                     iconPause.classList.remove('hidden');
                 }
             };
+            
+            // Check initial state due to autoplay
+            updateIcons();
+            audio.addEventListener('play', updateIcons);
+            audio.addEventListener('pause', updateIcons);
 
             const tryPlay = () => {
                 audio.play().then(() => updateIcons()).catch(() => {
