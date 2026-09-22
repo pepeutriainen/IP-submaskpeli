@@ -129,7 +129,7 @@ const DEVICE_RULES = {
     },
     [nodeTypes.SERVER]: {
         maxPorts: 4,
-        canConnectTo: [nodeTypes.SWITCH, nodeTypes.CORE_SWITCH],
+        canConnectTo: [nodeTypes.SWITCH, nodeTypes.CORE_SWITCH, nodeTypes.ROUTER],
         label: 'Palvelin',
         ipRangeHint: 'palvelinalue (.1–.19)'
     },
