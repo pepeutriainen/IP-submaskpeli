@@ -38,8 +38,11 @@
             const iconPlay = document.getElementById('bgm-icon-play');
             const iconPause = document.getElementById('bgm-icon-pause');
             
-            audio.volume = volumeSlider.value;
-            let hasInteracted = false;
+            if (volumeSlider) {
+                audio.volume = volumeSlider.value;
+            }
+            let userPaused = false;
+            let autoPlaySuccess = !audio.paused;
 
             const updateIcons = () => {
                 if (audio.paused) {
@@ -51,32 +54,44 @@
                 }
             };
             
-            // Check initial state due to autoplay
             updateIcons();
             audio.addEventListener('play', updateIcons);
             audio.addEventListener('pause', updateIcons);
 
-            const tryPlay = () => {
-                audio.play().then(() => updateIcons()).catch(() => {
-                    // Autoplay blocked
-                });
-            };
-
-            // First interaction autoplay
-            const initAudio = () => {
-                if (!hasInteracted) {
-                    hasInteracted = true;
-                    tryPlay();
+            const robustPlay = () => {
+                try {
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            autoPlaySuccess = true;
+                            updateIcons();
+                        }).catch(err => {
+                            // Autoplay blocked by browser
+                        });
+                    } else {
+                        autoPlaySuccess = true;
+                        updateIcons();
+                    }
+                } catch (e) {
+                    // Ignore play errors
                 }
             };
-            document.body.addEventListener('click', initAudio, { once: true });
-            document.body.addEventListener('keydown', initAudio, { once: true });
+
+            const initAudio = () => {
+                if (!autoPlaySuccess && !userPaused && audio.paused) {
+                    robustPlay();
+                }
+            };
+            document.body.addEventListener('click', initAudio);
+            document.body.addEventListener('keydown', initAudio);
 
             toggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // don't trigger initAudio if not yet
+                e.stopPropagation();
                 if (audio.paused) {
-                    audio.play().then(() => updateIcons());
+                    userPaused = false;
+                    robustPlay();
                 } else {
+                    userPaused = true;
                     audio.pause();
                     updateIcons();
                 }
