@@ -1,7 +1,4 @@
-*.glb filter=lfs diff=lfs merge=lfs -text
-*.glb.js filter=lfs diff=lfs merge=lfs -text
 *.obj filter=lfs diff=lfs merge=lfs -text
 *.fbx filter=lfs diff=lfs merge=lfs -text
 *.skp filter=lfs diff=lfs merge=lfs -text
 graphify-out/graph.json merge=graphify
-*.mp3 filter=lfs diff=lfs merge=lfs -text

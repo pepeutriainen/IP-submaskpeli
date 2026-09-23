@@ -434,40 +434,10 @@ function getOrLoadModel(modelUrl) {
  * Palauttaa laitteelle oikean 3D-mallin URL:n (joko base64-data tai tiedostopolku).
  */
 function getNodeModelUrl(type) {
-    if ((type === nodeTypes.CORE_SWITCH || type === nodeTypes.SWITCH) && typeof window !== 'undefined' && window.JUNIPER_9204_MODEL) {
-        return window.JUNIPER_9204_MODEL;
+    if (customModels && customModels[type]) {
+        return customModels[type];
     }
-    if (type === nodeTypes.GATEWAY && typeof window !== 'undefined' && window.GATEWAY_EDGE_MODEL) {
-        return window.GATEWAY_EDGE_MODEL;
-    }
-    if (type === nodeTypes.ROUTER && typeof window !== 'undefined' && window.WIFI_AP_MODEL) {
-        return window.WIFI_AP_MODEL;
-    }
-    if (type === nodeTypes.SERVER && typeof window !== 'undefined' && window.SERVER_4002_MODEL) {
-        return window.SERVER_4002_MODEL;
-    }
-    if (type === nodeTypes.OFFICE && typeof window !== 'undefined' && window.TOIMISTO_MODEL) {
-        return window.TOIMISTO_MODEL;
-    }
-    if (type === nodeTypes.LAPTOP && typeof window !== 'undefined' && window.KANNETTAVA_MODEL) {
-        return window.KANNETTAVA_MODEL;
-    }
-    if (type === nodeTypes.PC && typeof window !== 'undefined' && window.PC_MODEL) {
-        return window.PC_MODEL;
-    }
-    if (type === nodeTypes.PRINTER && typeof window !== 'undefined' && window.PRINTER_MODEL) {
-        return window.PRINTER_MODEL;
-    }
-    if (type === nodeTypes.WIFI && typeof window !== 'undefined' && window.CEILING_AP_MODEL) {
-        return window.CEILING_AP_MODEL;
-    }
-    if (type === nodeTypes.FIREWALL && typeof window !== 'undefined' && window.FIREWALL_MODEL) {
-        return window.FIREWALL_MODEL;
-    }
-    if (type === nodeTypes.VOIP && typeof window !== 'undefined' && window.VOIP_MODEL) {
-        return window.VOIP_MODEL;
-    }
-    return customModels[type] || null;
+    return null;
 }
 
 /**

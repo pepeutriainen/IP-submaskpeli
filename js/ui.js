@@ -716,6 +716,11 @@ function renderLevelMenu() {
             }
         }
         renderStep();
+        setTimeout(() => {
+            if (preview3DRenderer && preview3DScene === currentScene) {
+                preview3DRenderer.render(currentScene, currentCamera);
+            }
+        }, 1200);
     }
 
     /**
