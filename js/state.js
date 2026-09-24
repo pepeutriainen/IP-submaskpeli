@@ -1,11 +1,60 @@
 // --- Pelin globaalit vakiot ja tila ---
+const GAME_BUILD_VERSION = '20260924_v32';
 const TOTAL_LEVELS = 61;
-let unlockedLevels = parseInt(localStorage.getItem('subnetArchitect_unlocked')) || 1;
-let masterStarLevels = JSON.parse(localStorage.getItem('subnetArchitect_masterStars') || '[]');
+let rawSavedUnlocked = typeof localStorage !== 'undefined' ? localStorage.getItem('subnetArchitect_unlocked') : null;
+let unlockedLevels = parseInt(rawSavedUnlocked) || 1;
+let masterStarLevels = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('subnetArchitect_masterStars')) || '[]');
 let cheatSheetUsedInCurrentLevel = false;
 let currentLevel = 1;
 let levels = [];
 let isLoadingLevel = false;
+
+if (typeof console !== 'undefined') {
+    console.group(`%c[SUBNET ARCHITECT ENGINE v3.2]%c Build: ${GAME_BUILD_VERSION}`, 'background: #0284c7; color: white; font-weight: bold; padding: 2px 6px; border-radius: 4px;', 'color: #38bdf8; font-weight: bold;');
+    console.log(`%c[HOST INFO]%c ${typeof window !== 'undefined' ? window.location.href : 'CLI/Node'}`, 'background: #475569; color: white; padding: 2px 4px;', 'color: #94a3b8;');
+    console.log(`%c[STORAGE INIT]%c Raw subnetArchitect_unlocked in localStorage: %c"${rawSavedUnlocked}"%c => Alustettu unlockedLevels: %c${unlockedLevels} / ${TOTAL_LEVELS}`, 'background: #334155; color: white; padding: 2px 4px;', 'color: #cbd5e1;', 'color: #fbbf24; font-weight: bold;', 'color: #cbd5e1;', 'color: #4ade80; font-weight: bold;');
+    console.log(`%c[DEBUG TIP]%c Voit ajaa selaimen konsolissa komennot: %cdebugStatus()%c tai %cdebugReset()`, 'background: #065f46; color: white; padding: 2px 4px;', 'color: #34d399;', 'color: #fef08a; font-weight: bold;', 'color: #34d399;', 'color: #fef08a; font-weight: bold;');
+    console.groupEnd();
+}
+
+if (typeof window !== 'undefined') {
+    window.GAME_BUILD_VERSION = GAME_BUILD_VERSION;
+    window.debugStatus = function() {
+        console.group('%c[DIAGNOSTIIKKARAPORTTI]', 'color: #38bdf8; font-weight: bold; font-size: 13px;');
+        console.log('Build-versio:', GAME_BUILD_VERSION);
+        console.log('Sivun URL:', window.location.href);
+        console.log('Nykyinen pelitaso (currentLevel):', currentLevel);
+        console.log('Avattujen tasojen määrä (unlockedLevels):', unlockedLevels);
+        console.log('LocalStorage subnetArchitect_unlocked:', localStorage.getItem('subnetArchitect_unlocked'));
+        console.log('Admin-modal löydetty DOMista:', !!document.getElementById('admin-modal'));
+        console.log('Admin-modal classList:', document.getElementById('admin-modal')?.className);
+        console.groupEnd();
+        return {
+            version: GAME_BUILD_VERSION,
+            currentLevel,
+            unlockedLevels,
+            localStorageRaw: localStorage.getItem('subnetArchitect_unlocked')
+        };
+    };
+
+    window.debugReset = function() {
+        console.warn('%c[DEBUG RESET]%c Kaikki edistyminen nollataan selaimen muistista...', 'background: #dc2626; color: white; padding: 2px 4px;', 'color: #fca5a5;');
+        localStorage.clear();
+        unlockedLevels = 1;
+        if (typeof renderLevelMenu === 'function') renderLevelMenu();
+        if (typeof showToast === 'function') showToast("🧹 Kaikki edistyminen nollattu! Vain taso 1 on auki.", "info");
+        return "Nollaus suoritettu: unlockedLevels = 1";
+    };
+
+    window.debugUnlockAll = function() {
+        console.warn('%c[DEBUG UNLOCK]%c Avaa kaikki tasot (kehittäjätila)...', 'background: #059669; color: white; padding: 2px 4px;', 'color: #86efac;');
+        unlockedLevels = TOTAL_LEVELS;
+        localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
+        if (typeof renderLevelMenu === 'function') renderLevelMenu();
+        if (typeof showToast === 'function') showToast("🔓 Debug: Kaikki tasot avattu.", "success");
+        return "Kaikki tasot avattu: unlockedLevels = 61";
+    };
+}
 
 // Verkkojen laitteiden tyypit – kaikki tuetut laiteryhmät
 const nodeTypes = {

@@ -65,6 +65,16 @@ function clearWorld() {
  * @param {number} levelId Tason numero (1-61)
  */
 function loadLevel(levelId) {
+    console.log(`%c[LOAD-LEVEL]%c Yritetään ladata tasoa ${levelId} (Pelaajan avattu taso: ${unlockedLevels})`, 'background: #1d4ed8; color: white; padding: 2px 5px; border-radius: 3px;', 'color: #93c5fd; font-weight: bold;');
+
+    if (levelId > unlockedLevels) {
+        console.warn(`%c[SECURITY REJECT]%c Taso ${levelId} on lukittu! Pelaajan korkein avattu taso on ${unlockedLevels}.`, 'background: #b91c1c; color: white; padding: 2px 5px; border-radius: 3px;', 'color: #fca5a5; font-weight: bold;');
+        if (typeof showToast === 'function') {
+            showToast(`🔒 Taso ${levelId} on lukittu! Suorita edeltävät tasot ensin.`, "warning");
+        }
+        return;
+    }
+
     isLoadingLevel = true;
     currentLevel = levelId;
     cheatSheetUsedInCurrentLevel = false;
@@ -344,12 +354,19 @@ async function hashAdminCredentials(username, password) {
  * @param {'unlock'|'reset'} [action='unlock']
  */
 function openAdminModal(action = 'unlock') {
+    console.log(`%c[ADMIN-MODAL]%c Kutsuttu openAdminModal("${action}")...`, 'background: #0d9488; color: white; padding: 2px 5px; border-radius: 3px;', 'color: #5eead4; font-weight: bold;');
     pendingAdminAction = action;
     const modal = document.getElementById('admin-modal');
     const desc = document.getElementById('admin-modal-desc');
     const userInp = document.getElementById('admin-username-input');
     const passInp = document.getElementById('admin-password-input');
     const submitBtn = document.getElementById('btn-admin-submit');
+
+    if (!modal) {
+        console.error('[ADMIN-MODAL ERROR] #admin-modal elementtiä ei löydy DOMista!');
+        alert("Virhe: Hallintamodaalia (#admin-modal) ei löydy sivulta.");
+        return;
+    }
 
     if (desc) {
         desc.innerText = (action === 'reset')
@@ -362,16 +379,16 @@ function openAdminModal(action = 'unlock') {
     if (userInp) userInp.value = '';
     if (passInp) passInp.value = '';
 
-    if (modal) {
-        modal.classList.remove('hidden');
-        setTimeout(() => userInp?.focus(), 50);
-    }
+    modal.classList.remove('hidden');
+    console.log('[ADMIN-MODAL] Modaali avattu ruudulle. Luokat:', modal.className);
+    setTimeout(() => userInp?.focus(), 50);
 }
 
 /**
  * Sulkee pääkäyttäjän todennusikkunan ja tyhjentää salasanan muistista.
  */
 function closeAdminModal() {
+    console.log('[ADMIN-MODAL] Suljetaan admin-modal...');
     const modal = document.getElementById('admin-modal');
     if (modal) modal.classList.add('hidden');
     const passInp = document.getElementById('admin-password-input');
@@ -383,6 +400,7 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const modal = document.getElementById('admin-modal');
         if (modal && !modal.classList.contains('hidden')) {
+            console.log('[DEBUG-INPUT] Esc painettu -> suljetaan admin-modal');
             closeAdminModal();
         }
     }
@@ -394,31 +412,46 @@ window.addEventListener('keydown', (e) => {
 async function submitAdminAuth() {
     const userInp = document.getElementById('admin-username-input');
     const passInp = document.getElementById('admin-password-input');
-    const username = userInp ? userInp.value : '';
+    const username = userInp ? userInp.value.trim() : '';
     const password = passInp ? passInp.value : '';
 
+    console.group('%c[ADMIN-AUTH]%c Todennusprosessi aloitettu', 'background: #7c3aed; color: white; padding: 2px 5px; border-radius: 3px;', 'color: #c084fc; font-weight: bold;');
+    console.log('Toimenpide (action):', pendingAdminAction);
+    console.log('Syötetty käyttäjätunnus:', `"${username}"`);
+    console.log('Salasanan pituus:', password.length, 'merkkiä');
+
     if (!username || !password) {
+        console.warn('[ADMIN-AUTH] Hylätty: Tunnus tai salasana puuttuu.');
+        console.groupEnd();
         showToast("Syötä sekä käyttäjätunnus että salasana!", "error");
         return;
     }
 
     try {
         const computedHash = await hashAdminCredentials(username, password);
-        if (computedHash === ADMIN_CREDENTIALS_HASH) {
-            // Pääkäyttäjä todennettu onnistuneesti!
+        console.log('Laskettu SHA-256 tiiviste:', computedHash);
+        console.log('Odotettu SHA-256 tiiviste:', ADMIN_CREDENTIALS_HASH);
+        const matches = (computedHash === ADMIN_CREDENTIALS_HASH);
+        console.log('Tiivisteet vastaavat toisiaan:', matches);
+
+        if (matches) {
+            console.log('%c[ADMIN-AUTH] VAHVISTETTU: Pääsy myönnetty!', 'color: #10b981; font-weight: bold;');
             if (pendingAdminAction === 'unlock') {
                 unlockedLevels = TOTAL_LEVELS;
                 localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
+                console.log('[ADMIN-AUTH] Tallennettu localStorageen unlockedLevels =', TOTAL_LEVELS);
                 renderLevelMenu();
                 showToast("🔓 Pääkäyttäjä todennettu! Kaikki 61 tasoa avattu.", "success");
             } else if (pendingAdminAction === 'reset') {
                 localStorage.clear();
                 unlockedLevels = 1;
+                console.log('[ADMIN-AUTH] LocalStorage tyhjennetty, unlockedLevels = 1');
                 renderLevelMenu();
                 showToast("Pääkäyttäjä todennettu: Kaikki edistyminen nollattu.", "info");
             }
             closeAdminModal();
         } else {
+            console.warn('%c[ADMIN-AUTH] EVÄTTY: Virheelliset kirjautumistiedot!', 'color: #ef4444; font-weight: bold;');
             showToast("Pääsy evätty: Virheellinen pääkäyttäjätunnus tai salasana!", "error");
             if (passInp) {
                 passInp.value = '';
@@ -430,8 +463,10 @@ async function submitAdminAuth() {
                 setTimeout(() => box.classList.remove('scale-105'), 200);
             }
         }
+        console.groupEnd();
     } catch (e) {
-        console.error("Todennusvirhe:", e);
+        console.error("[ADMIN-AUTH] Kryptografinen poikkeus:", e);
+        console.groupEnd();
         showToast("Kryptografinen todennus epäonnistui selaimessa.", "error");
     }
 }

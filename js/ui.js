@@ -285,6 +285,8 @@ function renderLevelMenu() {
     const completedLevels = Math.min(Math.max(0, unlockedLevels - 1), totalLevels);
     const percent = totalLevels > 0 ? Math.round((completedLevels / totalLevels) * 100) : 0;
 
+    console.log(`%c[DEBUG-UI]%c renderLevelMenu: unlockedLevels = ${unlockedLevels} / ${totalLevels}, suoritettu = ${completedLevels}`, 'background: #047857; color: white; padding: 2px 4px; border-radius: 3px;', 'color: #6ee7b7;');
+
     // 1. Päivitä edistymispalkki
     if (progressText) progressText.innerText = `${completedLevels} / ${totalLevels}`;
     if (progressPercent) progressPercent.innerText = `${percent}%`;
@@ -477,6 +479,7 @@ function renderLevelMenu() {
 
             // Klikkaus valitsee esikatseluun
             row.onclick = () => {
+                console.log(`[DEBUG-MENU] Valittu taso ${lvl.id} (${lvl.name}) | isLocked: ${isLocked} | unlockedLevels: ${unlockedLevels}`);
                 selectedMenuLevelId = lvl.id;
                 document.querySelectorAll('.mission-row').forEach(r => r.classList.remove('row-selected'));
                 row.classList.add('row-selected');
@@ -485,7 +488,15 @@ function renderLevelMenu() {
 
             // Tuplaklikkaus tai klikkaus avoimeen tasoon käynnistää suoraan
             row.ondblclick = () => {
-                if (!isLocked) loadLevel(lvl.id);
+                console.log(`[DEBUG-MENU] Tuplaklikattu tasoa ${lvl.id} | isLocked: ${isLocked}`);
+                if (!isLocked) {
+                    loadLevel(lvl.id);
+                } else {
+                    console.warn(`[DEBUG-MENU] Estetty: Taso ${lvl.id} on lukittu!`);
+                    if (typeof showToast === 'function') {
+                        showToast(`🔒 Taso ${lvl.id} on lukittu! Suorita edeltävät tasot ensin.`, "warning");
+                    }
+                }
             };
 
             fragment.appendChild(row);
@@ -862,7 +873,10 @@ function renderLevelMenu() {
 
         const startBtn = document.getElementById('btn-start-preview-mission');
         if (startBtn && !actionBtnDisabled) {
-            startBtn.onclick = () => loadLevel(lvl.id);
+            startBtn.onclick = () => {
+                console.log(`[DEBUG-MENU] Klikattu Aloita/Pelaa uudelleen tasolle ${lvl.id}`);
+                loadLevel(lvl.id);
+            };
         }
     }
 }
