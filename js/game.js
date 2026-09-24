@@ -323,7 +323,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const resetBtn = document.getElementById('btn-reset-progress');
     if (resetBtn && !resetBtn.hasAttribute('onclick')) {
-        resetBtn.addEventListener('click', () => openAdminModal('reset'));
+        resetBtn.addEventListener('click', resetPlayerProgress);
     }
 
     document.getElementById('btn-hint')?.addEventListener('click', toggleHint);
@@ -350,8 +350,22 @@ async function hashAdminCredentials(username, password) {
 }
 
 /**
- * Avaa pääkäyttäjän todennusikkunan.
- * @param {'unlock'|'reset'} [action='unlock']
+ * Nollaa pelaajan edistymisen tasoon 1 ilman salasanaa (kaikille vapaa toiminto vahvistuksella).
+ */
+function resetPlayerProgress() {
+    console.log('[DEBUG-RESET] resetPlayerProgress kutsuttu...');
+    if (confirm("Haluatko varmasti nollata kaiken edistymisesi? Tämä palauttaa pelin tasoon 1 ja tyhjentää tallennetut verkot.")) {
+        console.log('[DEBUG-RESET] Edistyminen nollattu vahvistuksella.');
+        localStorage.clear();
+        unlockedLevels = 1;
+        renderLevelMenu();
+        showToast("🔄 Kaikki edistyminen nollattu. Aloitetaan tasosta 1!", "info");
+    }
+}
+
+/**
+ * Avaa pääkäyttäjän todennusikkunan (vain tasojen avaamista varten).
+ * @param {'unlock'} [action='unlock']
  */
 function openAdminModal(action = 'unlock') {
     console.log(`%c[ADMIN-MODAL]%c Kutsuttu openAdminModal("${action}")...`, 'background: #0d9488; color: white; padding: 2px 5px; border-radius: 3px;', 'color: #5eead4; font-weight: bold;');
@@ -369,12 +383,10 @@ function openAdminModal(action = 'unlock') {
     }
 
     if (desc) {
-        desc.innerText = (action === 'reset')
-            ? "Pääkäyttäjän vahvistus: Kaiken edistymisen nollaaminen poistaa kaikki tallennetut verkot ja palauttaa tason 1."
-            : "Pääkäyttäjän vahvistus: Kaikkien 61 tason avaaminen vaatii järjestelmänvalvojan oikeudet.";
+        desc.innerText = "Pääkäyttäjän vahvistus: Kaikkien 61 tason avaaminen vaatii järjestelmänvalvojan oikeudet.";
     }
     if (submitBtn) {
-        submitBtn.innerHTML = (action === 'reset') ? "⚠️ Vahvista nollaus" : "🔓 Avaa kaikki tasot";
+        submitBtn.innerHTML = "🔓 Avaa kaikki tasot";
     }
     if (userInp) userInp.value = '';
     if (passInp) {
@@ -467,19 +479,11 @@ async function submitAdminAuth() {
 
         if (matches) {
             console.log('%c[ADMIN-AUTH] VAHVISTETTU: Pääsy myönnetty!', 'color: #10b981; font-weight: bold;');
-            if (pendingAdminAction === 'unlock') {
-                unlockedLevels = TOTAL_LEVELS;
-                localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
-                console.log('[ADMIN-AUTH] Tallennettu localStorageen unlockedLevels =', TOTAL_LEVELS);
-                renderLevelMenu();
-                showToast("🔓 Pääkäyttäjä todennettu! Kaikki 61 tasoa avattu.", "success");
-            } else if (pendingAdminAction === 'reset') {
-                localStorage.clear();
-                unlockedLevels = 1;
-                console.log('[ADMIN-AUTH] LocalStorage tyhjennetty, unlockedLevels = 1');
-                renderLevelMenu();
-                showToast("Pääkäyttäjä todennettu: Kaikki edistyminen nollattu.", "info");
-            }
+            unlockedLevels = TOTAL_LEVELS;
+            localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
+            console.log('[ADMIN-AUTH] Tallennettu localStorageen unlockedLevels =', TOTAL_LEVELS);
+            renderLevelMenu();
+            showToast("🔓 Pääkäyttäjä todennettu! Kaikki 61 tasoa avattu.", "success");
             closeAdminModal();
         } else {
             console.warn('%c[ADMIN-AUTH] EVÄTTY: Virheelliset kirjautumistiedot!', 'color: #ef4444; font-weight: bold;');
@@ -507,4 +511,5 @@ if (typeof window !== 'undefined') {
     window.closeAdminModal = closeAdminModal;
     window.submitAdminAuth = submitAdminAuth;
     window.toggleAdminPasswordVisibility = toggleAdminPasswordVisibility;
+    window.resetPlayerProgress = resetPlayerProgress;
 }
