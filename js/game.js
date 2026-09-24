@@ -306,13 +306,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-back-menu')?.addEventListener('click', goToMenu);
 
-    document.getElementById('btn-unlock-all')?.addEventListener('click', () => {
-        openAdminModal('unlock');
-    });
+    const unlockBtn = document.getElementById('btn-unlock-all');
+    if (unlockBtn && !unlockBtn.hasAttribute('onclick')) {
+        unlockBtn.addEventListener('click', () => openAdminModal('unlock'));
+    }
 
-    document.getElementById('btn-reset-progress')?.addEventListener('click', () => {
-        openAdminModal('reset');
-    });
+    const resetBtn = document.getElementById('btn-reset-progress');
+    if (resetBtn && !resetBtn.hasAttribute('onclick')) {
+        resetBtn.addEventListener('click', () => openAdminModal('reset'));
+    }
 
     document.getElementById('btn-hint')?.addEventListener('click', toggleHint);
     document.getElementById('btn-rules')?.addEventListener('click', toggleRules);
@@ -376,6 +378,15 @@ function closeAdminModal() {
     if (passInp) passInp.value = '';
     pendingAdminAction = null;
 }
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('admin-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeAdminModal();
+        }
+    }
+});
 
 /**
  * Tarkistaa syötetyt pääkäyttäjätunnukset ja suorittaa toimenpiteen.
