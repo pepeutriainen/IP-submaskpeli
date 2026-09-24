@@ -377,11 +377,39 @@ function openAdminModal(action = 'unlock') {
         submitBtn.innerHTML = (action === 'reset') ? "⚠️ Vahvista nollaus" : "🔓 Avaa kaikki tasot";
     }
     if (userInp) userInp.value = '';
-    if (passInp) passInp.value = '';
+    if (passInp) {
+        passInp.value = '';
+        passInp.type = 'password';
+        const eyeIcon = document.getElementById('admin-pass-eye-icon');
+        const eyeText = document.getElementById('admin-pass-eye-text');
+        const eyeInner = document.getElementById('admin-pass-eye-icon-inner');
+        if (eyeIcon) eyeIcon.innerText = '👁️';
+        if (eyeText) eyeText.innerText = 'Näytä salasana';
+        if (eyeInner) eyeInner.innerText = '👁️';
+    }
 
     modal.classList.remove('hidden');
     console.log('[ADMIN-MODAL] Modaali avattu ruudulle. Luokat:', modal.className);
     setTimeout(() => userInp?.focus(), 50);
+}
+
+/**
+ * Vaihtaa salasanakentän näkyvyyden (type text <-> password).
+ */
+function toggleAdminPasswordVisibility() {
+    const input = document.getElementById('admin-password-input');
+    const eyeIcon = document.getElementById('admin-pass-eye-icon');
+    const eyeText = document.getElementById('admin-pass-eye-text');
+    const eyeInner = document.getElementById('admin-pass-eye-icon-inner');
+    if (!input) return;
+
+    const isPassword = (input.type === 'password');
+    input.type = isPassword ? 'text' : 'password';
+    if (eyeIcon) eyeIcon.innerText = isPassword ? '🙈' : '👁️';
+    if (eyeText) eyeText.innerText = isPassword ? 'Piilota salasana' : 'Näytä salasana';
+    if (eyeInner) eyeInner.innerText = isPassword ? '🙈' : '👁️';
+    console.log('[DEBUG-INPUT] Salasanan näkyvyys vaihdettu:', input.type);
+    input.focus();
 }
 
 /**
@@ -392,7 +420,10 @@ function closeAdminModal() {
     const modal = document.getElementById('admin-modal');
     if (modal) modal.classList.add('hidden');
     const passInp = document.getElementById('admin-password-input');
-    if (passInp) passInp.value = '';
+    if (passInp) {
+        passInp.value = '';
+        passInp.type = 'password';
+    }
     pendingAdminAction = null;
 }
 
@@ -475,4 +506,5 @@ if (typeof window !== 'undefined') {
     window.openAdminModal = openAdminModal;
     window.closeAdminModal = closeAdminModal;
     window.submitAdminAuth = submitAdminAuth;
+    window.toggleAdminPasswordVisibility = toggleAdminPasswordVisibility;
 }

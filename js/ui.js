@@ -1468,10 +1468,42 @@ function selectNodeInModal(index) {
     openIpModal(targetNode);
 }
 
+function isAutoFillEnabled() {
+    return localStorage.getItem('subnetArchitect_autofill_enabled') !== 'false';
+}
+
+function toggleIpModalAutoFill() {
+    const nextState = !isAutoFillEnabled();
+    localStorage.setItem('subnetArchitect_autofill_enabled', nextState ? 'true' : 'false');
+    updateAutoFillToggleUI(nextState);
+    if (selectedNodeForIp) {
+        openIpModal(selectedNodeForIp);
+    }
+    console.log('[DEBUG-INPUT] Esitäytön tila vaihdettu:', nextState ? 'PÄÄLLÄ' : 'POIS');
+    showToast(nextState ? "⚡ Esitäyttö: PÄÄLLÄ (Suositukset & peite täytetään)" : "✍️ Esitäyttö: POIS (Syötä kaikki arvot itse)", "info");
+}
+
+function updateAutoFillToggleUI(enabled = isAutoFillEnabled()) {
+    const btn = document.getElementById('btn-toggle-autofill');
+    const icon = document.getElementById('autofill-toggle-icon');
+    const text = document.getElementById('autofill-toggle-text');
+    if (!btn) return;
+    if (enabled) {
+        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-cyan-950/80 text-cyan-300 border-cyan-500/50 hover:bg-cyan-900/80 shadow-sm";
+        if (icon) icon.innerText = "⚡";
+        if (text) text.innerText = "Esitäyttö: PÄÄLLÄ";
+    } else {
+        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-slate-800/90 text-slate-400 border-slate-700 hover:bg-slate-700/80";
+        if (icon) icon.innerText = "✍️";
+        if (text) text.innerText = "Esitäyttö: POIS";
+    }
+}
+
 if (typeof window !== 'undefined') {
     window.selectNodeInModal = selectNodeInModal;
     window.updateModalDeviceList = updateModalDeviceList;
     window.switchHelpTab = switchHelpTab;
+    window.toggleIpModalAutoFill = toggleIpModalAutoFill;
 }
 
 /**
@@ -1496,6 +1528,10 @@ function openIpModal(node) {
         if (content) content.classList.remove('scale-95', 'opacity-0');
     }, 10);
 
+    // Päivitetään esitäyttö-kytkimen tila UI:ssa
+    const autoFill = isAutoFillEnabled();
+    updateAutoFillToggleUI(autoFill);
+
     // Päivitetään vasemman sarakkeen laitelista reaaliaikaisesti
     updateModalDeviceList(node);
 
@@ -1516,7 +1552,7 @@ function openIpModal(node) {
     const batchContainer = document.getElementById('batch-assign-container');
     if (batchContainer) {
         const unconfiguredInZone = zoneNodes.filter(n => (!n.userData || !n.userData.correctIp) && IP_REQUIRED_TYPES.includes(n.userData.type));
-        if (zoneHasValidatedDevice && unconfiguredInZone.length > 0) {
+        if (zoneHasValidatedDevice && unconfiguredInZone.length > 0 && autoFill) {
             batchContainer.classList.remove('hidden');
         } else {
             batchContainer.classList.add('hidden');
@@ -1529,17 +1565,19 @@ function openIpModal(node) {
     let maskParts = ['', '', '', ''];
     if (node.userData && node.userData.mask) {
         maskParts = node.userData.mask.split('.');
-    } else if (savedMaskStr) {
-        try {
-            maskParts = savedMaskStr.startsWith('[') ? JSON.parse(savedMaskStr) : savedMaskStr.split('.');
-        } catch (e) {
-            maskParts = savedMaskStr.split('.');
-        }
-    } else {
-        const key = `subnetArchitect_lastInput_level_${currentLevel}_${node.userData.type}`;
-        const lastInput = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : null;
-        if (lastInput && lastInput.mask && lastInput.mask.some(p => p !== '')) {
-            maskParts = lastInput.mask;
+    } else if (autoFill) {
+        if (savedMaskStr) {
+            try {
+                maskParts = savedMaskStr.startsWith('[') ? JSON.parse(savedMaskStr) : savedMaskStr.split('.');
+            } catch (e) {
+                maskParts = savedMaskStr.split('.');
+            }
+        } else {
+            const key = `subnetArchitect_lastInput_level_${currentLevel}_${node.userData.type}`;
+            const lastInput = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : null;
+            if (lastInput && lastInput.mask && lastInput.mask.some(p => p !== '')) {
+                maskParts = lastInput.mask;
+            }
         }
     }
     document.querySelectorAll('.mask-octet').forEach((el, i) => { el.value = maskParts[i] || ''; });
@@ -1548,7 +1586,7 @@ function openIpModal(node) {
     let ipParts = ['', '', '', ''];
     if (node.userData && node.userData.ip) {
         ipParts = node.userData.ip.split('.');
-    } else {
+    } else if (autoFill) {
         const nextIp = getRecommendedNextIp(node, scope);
         if (nextIp && (zoneHasValidatedDevice || savedMaskStr)) {
             // Jos huoneessa on jo validoitu peite tai laite, tarjotaan suoraan seuraavaa vapaata IP:tä!

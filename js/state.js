@@ -1,5 +1,5 @@
 // --- Pelin globaalit vakiot ja tila ---
-const GAME_BUILD_VERSION = '20260924_v32';
+const GAME_BUILD_VERSION = '20260924_v33';
 const TOTAL_LEVELS = 61;
 let rawSavedUnlocked = typeof localStorage !== 'undefined' ? localStorage.getItem('subnetArchitect_unlocked') : null;
 let unlockedLevels = parseInt(rawSavedUnlocked) || 1;
