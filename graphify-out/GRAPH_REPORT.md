@@ -1,17 +1,17 @@
 # Graph Report - IP-submaskpeli  (2026-09-24)
 
 ## Corpus Check
-- 32 files · ~496,460 words
+- 32 files · ~496,464 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 27 file(s) not represented in the graph (top: .glb 11, .obj 5, .mtl 4)
 
 ## Summary
-- 2012 nodes · 3928 edges · 144 communities (52 shown, 92 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 93 edges (avg confidence: 0.62)
+- 2013 nodes · 3929 edges · 153 communities (48 shown, 105 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 94 edges (avg confidence: 0.62)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `63602bee`
+- Built from commit: `b9427a59`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -29,9 +29,9 @@
 - GEMINI.md
 - i
 - three.min.js
-- .normalize
+- ml
 - vt
-- update
+- zl
 - St
 - tn
 - Lt
@@ -39,7 +39,6 @@
 - rules/graphify.md
 - studio_standards.md
 - workflows/graphify.md
-- copy
 - Lc
 - FBXTreeParser
 - CyberTerminal
@@ -55,18 +54,18 @@
 - jt
 - Ce
 - .updateProjectionMatrix
-- fflate.min.js
+- ws
 - GLTFLoader.js
 - eh
 - pt
 - yt
-- ws
+- .test
 - nl
-- .constructor
+- .distanceTo
 - .loadMaterial
 - GLTFParser
 - yc
-- .x
+- _fromTexture
 - nc
 - ec
 - yo
@@ -78,28 +77,28 @@
 - GeometryParser
 - .toJSON
 - .applyMatrix4
-- ti
-- .fromArray
+- .apply
+- .toArray
 - ls
-- rh
+- ia
 - SoundEngine
+- .isEmpty
 - AchievementSystem
 - .fromJSON
-- dl
+- .fromArray
 - .setAttribute
 - .loadTextureImage
-- fa
-- clone
+- ta
+- copy
 - 🌐 Subnet Architect – Verkkoarkkitehti
 - GLTFLoader
 - Al
-- .constructor
 - ._update
-- constructor
+- en
 - At
-- .invert
+- .constructor
+- vl
 - cl
-- wo
 - GLTFLightsExtension
 - OBJLoader
 - Kh
@@ -109,37 +108,44 @@
 - dn
 - pl
 - GLTFMeshStandardSGMaterial
-- pi
-- sc
+- dispose
+- Ba
 - GLTFCubicSplineInterpolant
 - GLTFMaterialsUnlitExtension
 - GLTFMeshoptCompression
 - Aa
-- $c
+- fn
 - mn
 - ms
 - ss
+- fs
 - Ah
 - ca
 - cs
 - Do
 - Et
 - hs
+- gl
 - qo
 - Rs
 - uo
 - Zc
 - zo
 - temp.js
+- hn
+- ln
+- oc
 - gs
-- ii
+- Ql
+- an
 - $l
+- sh
 - .subVectors
-- on
+- vc
+- Yl
 - pn
-- Ra
 - un
-- .y
+- .fromBufferAttribute
 - ol
 - ic
 - uc
@@ -161,19 +167,19 @@
 ## Surprising Connections (you probably didn't know these)
 - `ParserState()` --indirect_call--> `mi()`  [INFERRED]
   js/three/OBJLoader.js → js/three/three.min.js
+- `t()` --indirect_call--> `i()`  [INFERRED]
+  js/three/fflate.min.js → js/three/three.min.js
 - `ws()` --indirect_call--> `wt()`  [INFERRED]
   js/three/three.min.js → js/three/fflate.min.js
 - `constructor()` --indirect_call--> `t()`  [INFERRED]
   js/three/three.min.js → js/three/fflate.min.js
 - `ws()` --indirect_call--> `Mt()`  [INFERRED]
   js/three/three.min.js → js/three/fflate.min.js
-- `ws()` --indirect_call--> `xt()`  [INFERRED]
-  js/three/three.min.js → js/three/fflate.min.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (144 total, 92 thin omitted)
+## Communities (153 total, 105 thin omitted)
 
 ### Community 0 - "nodes.js"
 Cohesion: 0.17
@@ -188,7 +194,7 @@ Cohesion: 0.08
 Nodes (42): batchAssignZoneIps(), calcBackspace(), calcClear(), calcDot(), calcEquals(), calcInputQuick(), calcNum(), calcOp() (+34 more)
 
 ### Community 3 - "game.js"
-Cohesion: 0.21
+Cohesion: 0.19
 Nodes (7): clearWorld(), closeAdminModal(), goToMenu(), hashAdminCredentials(), loadLevel(), nextLevel(), submitAdminAuth()
 
 ### Community 4 - "scene.js"
@@ -220,24 +226,16 @@ Cohesion: 0.40
 Nodes (4): 1. Kieli & Kommunikaatio (Token-Optimointi), 2. IT Studio -laatustandardit (Professional Engineering), 3. Graphify Look Out (Arkkitehtuurikartoitus & Vertailu), 4. Git & Versiohallinta
 
 ### Community 12 - "i"
-Cohesion: 0.16
-Nodes (7): t(), ei, gn(), hl, i(), ps(), rt
+Cohesion: 0.18
+Nodes (6): ei, gn(), hl, i(), ps(), rt
 
 ### Community 13 - "three.min.js"
 Cohesion: 0.03
-Nodes (15): an, Ba, br(), bs, fn, gl, hn, mr() (+7 more)
-
-### Community 16 - "update"
-Cohesion: 0.18
-Nodes (5): fi(), Ga, Mh, update(), wh()
+Nodes (16): br(), bs, ci, Da, fi(), li(), mr(), Na (+8 more)
 
 ### Community 18 - "tn"
 Cohesion: 0.07
 Nodes (5): dt(), $e(), Qe(), tn, ut()
-
-### Community 24 - "copy"
-Cohesion: 0.17
-Nodes (3): as(), copy(), go
 
 ### Community 25 - "Lc"
 Cohesion: 0.08
@@ -249,50 +247,38 @@ Nodes (4): FBXTree, FBXTreeParser, generateTransform(), getEulerOrder()
 
 ### Community 28 - "no"
 Cohesion: 0.11
-Nodes (17): co(), eo(), ho(), io(), ja(), ka(), lo(), no() (+9 more)
+Nodes (18): ao(), co(), eo(), ho(), io(), ja(), ka(), lo() (+10 more)
 
 ### Community 29 - "ct"
 Cohesion: 0.07
 Nodes (5): bt, ct(), es(), qc, Xe()
 
 ### Community 38 - "bl"
-Cohesion: 0.07
-Nodes (5): bl, dc, mc(), pc, zl
-
-### Community 41 - ".updateProjectionMatrix"
 Cohesion: 0.12
-Nodes (3): Jl, Kn, vl()
+Nodes (4): bl, dc, mc(), pc
 
-### Community 42 - "fflate.min.js"
-Cohesion: 0.18
-Nodes (18): At(), bt(), Ct(), Gt(), Ht(), It(), Kt(), Lt() (+10 more)
+### Community 42 - "ws"
+Cohesion: 0.05
+Nodes (26): At(), bn(), bt(), Ct(), Gt(), Ht(), It(), Kt() (+18 more)
 
 ### Community 43 - "GLTFLoader.js"
 Cohesion: 0.14
 Nodes (13): addMorphTargets(), addPrimitiveAttributes(), assignExtrasToUserData(), computeBounds(), createAttributesKey(), createDefaultMaterial(), createPrimitiveKey(), getNormalizedComponentScale() (+5 more)
 
-### Community 47 - "ws"
-Cohesion: 0.08
-Nodes (8): _a, ft(), mt(), sl, _t, Tt, uh(), ws()
-
-### Community 48 - "nl"
-Cohesion: 0.06
-Nodes (5): il(), Ll, ml, nl, Rl
-
-### Community 49 - ".constructor"
-Cohesion: 0.10
-Nodes (3): parseObject(), xs, ys
+### Community 47 - ".test"
+Cohesion: 0.22
+Nodes (7): $c(), intersectObject(), intersectObjects(), Kc(), mt(), sl, _t
 
 ### Community 50 - ".loadMaterial"
 Cohesion: 0.12
 Nodes (4): GLTFMaterialsClearcoatExtension, GLTFMaterialsPbrSpecularGlossinessExtension, GLTFMaterialsTransmissionExtension, GLTFTextureTransformExtension
 
 ### Community 52 - "GLTFParser"
-Cohesion: 0.23
+Cohesion: 0.25
 Nodes (3): addUnknownExtensionsToUserData(), buildNodeHierachy(), GLTFParser
 
-### Community 54 - ".x"
-Cohesion: 0.15
+### Community 54 - "_fromTexture"
+Cohesion: 0.16
 Nodes (15): _allocateTargets(), _applyPMREM(), _blur(), _cleanup(), fromCubemap(), fromEquirectangular(), fromScene(), _fromTexture() (+7 more)
 
 ### Community 60 - "Hi"
@@ -308,95 +294,99 @@ Cohesion: 0.28
 Nodes (3): append(), parseNumberArray(), TextParser
 
 ### Community 64 - ".toJSON"
-Cohesion: 0.13
-Nodes (3): ac, tc, ts()
-
-### Community 66 - "ti"
-Cohesion: 0.22
-Nodes (5): bind(), getValue(), setValue(), Si(), ti
-
-### Community 67 - ".fromArray"
 Cohesion: 0.10
-Nodes (5): fh, ia, la, oi(), parseTextures()
+Nodes (4): ac, go, sc, tc
+
+### Community 65 - ".applyMatrix4"
+Cohesion: 0.14
+Nodes (4): ai, Ea(), fa, Wn
+
+### Community 66 - ".apply"
+Cohesion: 0.15
+Nodes (7): bind(), bindSkeletons(), getValue(), hh, parseSkeletons(), setValue(), uh()
+
+### Community 67 - ".toArray"
+Cohesion: 0.15
+Nodes (3): fh, la, oi()
 
 ### Community 72 - "AchievementSystem"
 Cohesion: 0.23
 Nodes (6): achievements, ACHIEVEMENTS_DATA, AchievementSystem, closeAchievementsModal(), openAchievementsModal(), unlockAchievement()
 
 ### Community 73 - ".fromJSON"
-Cohesion: 0.31
-Nodes (6): bindSkeletons(), parse(), parseAnimations(), parseGeometries(), parseShapes(), parseSkeletons()
+Cohesion: 0.13
+Nodes (4): Ll, parseGeometries(), parseShapes(), Rl
 
 ### Community 75 - ".setAttribute"
-Cohesion: 0.11
-Nodes (7): ao(), bo, ci, Da, en, Pa, Yh()
+Cohesion: 0.12
+Nodes (6): t(), constructor(), ht(), mo(), po, setDirection()
 
 ### Community 76 - ".loadTextureImage"
 Cohesion: 0.21
 Nodes (3): GLTFTextureBasisUExtension, GLTFTextureWebPExtension, resolveURL()
 
-### Community 78 - "clone"
-Cohesion: 0.13
-Nodes (4): clone(), kl, us(), Wl
+### Community 78 - "copy"
+Cohesion: 0.11
+Nodes (7): bo, clone(), copy(), fo(), qn, Xn(), yn()
 
 ### Community 79 - "🌐 Subnet Architect – Verkkoarkkitehti"
 Cohesion: 0.17
 Nodes (11): 💻 Asennus ja paikallinen käynnistys, 🎯 Esittely, 🚀 Jatkokehityssuunnitelma (Roadmap), 🖲️ Laitteet ja 3D-mallit, 📄 Lisenssi, 🎓 Pedagogiikka & CCNA Pro Master, ✨ Pääominaisuudet, 📖 Sisällysluettelo (+3 more)
 
-### Community 82 - ".constructor"
-Cohesion: 0.27
-Nodes (3): fo(), mo(), po
+### Community 83 - "._update"
+Cohesion: 0.15
+Nodes (3): jo, wo, xo
 
-### Community 84 - "constructor"
-Cohesion: 0.22
-Nodes (4): bn(), constructor(), setDirection(), setLength()
-
-### Community 86 - ".invert"
+### Community 84 - "en"
 Cohesion: 0.10
-Nodes (4): hh, qn, _s(), updateMatrixWorld()
+Nodes (3): en, Si(), ti
+
+### Community 85 - "At"
+Cohesion: 0.05
+Nodes (4): At, ds(), fe, ge
+
+### Community 86 - ".constructor"
+Cohesion: 0.08
+Nodes (10): as(), kl, mi(), pi(), _s(), setFromCamera(), update(), updateMatrixWorld() (+2 more)
 
 ### Community 93 - "Kh"
 Cohesion: 0.33
 Nodes (7): compileCubemapShader(), compileEquirectangularShader(), _compileMaterial(), $h(), Kh(), qh(), tu()
 
 ### Community 95 - "load"
-Cohesion: 0.21
-Nodes (5): load(), oc, parseImages(), ul, vc
+Cohesion: 0.40
+Nodes (4): load(), parse(), parseAnimations(), parseImages()
 
-### Community 97 - "dn"
-Cohesion: 0.14
-Nodes (4): dn, fs, li(), ln
+### Community 100 - "dispose"
+Cohesion: 0.50
+Nodes (3): dispose(), ni, yi()
 
-### Community 100 - "pi"
-Cohesion: 0.22
-Nodes (6): dispose(), ni, pi(), Xn(), yi(), yn()
-
-### Community 107 - "$c"
-Cohesion: 0.67
-Nodes (4): $c(), intersectObject(), intersectObjects(), Kc()
+### Community 133 - "an"
+Cohesion: 0.20
+Nodes (3): an, ii, Ra
 
 ### Community 136 - ".subVectors"
 Cohesion: 0.10
 Nodes (3): je, jn(), Vs
 
-### Community 151 - ".y"
-Cohesion: 0.16
-Nodes (4): ds(), ge, gi(), mi()
+### Community 154 - "ol"
+Cohesion: 0.18
+Nodes (3): ol, setTexturePath(), ul
 
 ## Knowledge Gaps
 - **67 isolated node(s):** `masterStarLevels`, `levels`, `nodeTypes`, `IP_REQUIRED_TYPES`, `LINK_TYPES` (+62 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 650 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **92 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 651 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **105 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ls()` connect `ls` to `GLTFMeshoptCompression`, `i`, `three.min.js`, `.getX`, `GLTFParser`, `.computeVertexNormals`?**
-  _High betweenness centrality (0.125) - this node is a cross-community bridge._
-- **Why does `i()` connect `i` to `ls`, `bl`, `ol`, `.subVectors`, `.setAttribute`, `three.min.js`, `Hi`, `update`, `.constructor`, `constructor`, `.invert`, `.y`, `copy`, `FBXTreeParser`, `no`, `uc`, `load`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
-- **Why does `copy()` connect `copy` to `.subVectors`, `three.min.js`, `.normalize`, `update`, `tn`, `.y`, `no`, `ct`, `se`, `Ne`, `jc`, `.copy`, `sn`, `bl`, `jt`, `Ce`, `.updateProjectionMatrix`, `eh`, `pt`, `yt`, `ws`, `nl`, `.constructor`, `.x`, `nc`, `ec`, `re`, `.toJSON`, `.applyMatrix4`, `.fromArray`, `rh`, `dl`, `.setAttribute`, `fa`, `clone`, `Al`, `.constructor`, `.invert`, `fl`, `el`, `pl`, `pi`, `sc`, `Aa`, `ca`, `cs`, `Do`, `hs`, `Rs`, `uo`, `zo`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+- **Why does `i()` connect `i` to `ls`, `bl`, `ol`, `.subVectors`, `.setAttribute`, `three.min.js`, `Hi`, `.constructor`, `FBXTreeParser`, `no`, `uc`, `load`?**
+  _High betweenness centrality (0.128) - this node is a cross-community bridge._
+- **Why does `FBXTreeParser` connect `FBXTreeParser` to `FBXLoader.js`?**
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._
+- **Why does `ls()` connect `ls` to `GLTFMeshoptCompression`, `i`, `three.min.js`, `.getX`, `.fromBufferAttribute`?**
+  _High betweenness centrality (0.081) - this node is a cross-community bridge._
 - **What connects `masterStarLevels`, `levels`, `nodeTypes` to the rest of the system?**
   _67 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `state.js` be split into smaller, more focused modules?**
@@ -404,4 +394,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `ui.js` be split into smaller, more focused modules?**
   _Cohesion score 0.08144796380090498 - nodes in this community are weakly interconnected._
 - **Should `three.min.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.03221153846153846 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03442622950819672 - nodes in this community are weakly interconnected._
