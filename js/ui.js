@@ -195,6 +195,15 @@ function setupOctetInputs() {
 
     const handleKeyDown = (e) => {
         const target = e.target;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (e.ctrlKey || e.shiftKey) {
+                if (typeof submitIpAndNext === 'function') submitIpAndNext();
+            } else {
+                if (typeof submitIp === 'function') submitIp();
+            }
+            return;
+        }
         if ((e.key === '.' || e.key === ' ' || e.key === 'ArrowRight') && target.value !== '') {
             e.preventDefault();
             const next = target.nextElementSibling?.nextElementSibling;
@@ -209,7 +218,7 @@ function setupOctetInputs() {
         }
     };
 
-    document.querySelectorAll('.ip-octet, .mask-octet').forEach(input => {
+    document.querySelectorAll('.ip-octet, .mask-octet, .net-octet, .bcast-octet').forEach(input => {
         input.addEventListener('input', handleInput);
         input.addEventListener('keydown', handleKeyDown);
     });
@@ -891,8 +900,65 @@ function getNodeSubnetScope(node) {
 }
 
 /**
+ * Laskee ja ehdottaa laitteelle seuraavan vapaan ja sääntöjen mukaisen IP-osoitteen aliverkossa.
+ * Huomioi palvelinten (.start), tulostimien (.end) ja työasemien (.mid) alueet.
+ */
+function getRecommendedNextIp(node, scope) {
+    if (!scope || !scope.details || typeof ip2long !== 'function' || typeof long2ip !== 'function') return null;
+    const details = scope.details;
+    const firstL = ip2long(details.firstHost);
+    const lastL = ip2long(details.lastHost);
+    const totalHosts = lastL - firstL + 1;
+    const nodeType = (node && node.userData) ? node.userData.type : null;
+
+    // Haetaan kaikki jo varatut IP-osoitteet koko tasolla
+    const usedLongs = new Set(
+        nodes
+            .filter(n => n.userData && n.userData.correctIp && n.userData.ip)
+            .map(n => ip2long(n.userData.ip))
+    );
+
+    // Määritetään suositeltu etsintäalue laitetyypin ja tason mukaan
+    let startL = firstL;
+    let endL = lastL;
+
+    if (currentLevelConfig && currentLevelConfig.id >= 11 && totalHosts >= 16) {
+        const serverLimit = firstL + Math.max(3, Math.floor(totalHosts * 0.15));
+        const printerLimit = lastL - Math.max(3, Math.floor(totalHosts * 0.15));
+
+        if (nodeType === nodeTypes.SERVER) {
+            startL = firstL;
+            endL = serverLimit;
+        } else if (nodeType === nodeTypes.PRINTER) {
+            startL = printerLimit;
+            endL = lastL;
+        } else {
+            // PC, Läppäri, Toimisto
+            startL = (totalHosts >= 30) ? serverLimit + 1 : firstL;
+            endL = printerLimit - 1;
+        }
+    }
+
+    // Etsi ensimmäinen vapaa IP kyseiseltä sallitulta alueelta
+    for (let currentL = startL; currentL <= endL; currentL++) {
+        if (!usedLongs.has(currentL)) {
+            return long2ip(currentL);
+        }
+    }
+
+    // Fallback: mikä tahansa vapaa isäntäalueelta
+    for (let currentL = firstL; currentL <= lastL; currentL++) {
+        if (!usedLongs.has(currentL)) {
+            return long2ip(currentL);
+        }
+    }
+
+    return null;
+}
+
+/**
  * Tallentaa modulaarisen IP- ja peitesyötteen selaimen muistiin väliaikaisesti.
- * Muisti on nyt tasokohtainen ja laitetyyppikohtainen!
+ * Muisti on nyt sekä aliverkkokohtainen että laitetyyppikohtainen!
  */
 function saveIpInputsToMemory() {
     if (!selectedNodeForIp) return;
@@ -904,6 +970,9 @@ function saveIpInputsToMemory() {
 
     const scope = getNodeSubnetScope(selectedNodeForIp);
     if (scope && scope.details) {
+        if (maskParts.some(p => p !== '')) {
+            localStorage.setItem(`subnetArchitect_lastInput_mask_${currentLevel}_${scope.details.network}`, JSON.stringify(maskParts));
+        }
         const netParts = Array.from(document.querySelectorAll('.net-octet')).map(el => el.value);
         const bcastParts = Array.from(document.querySelectorAll('.bcast-octet')).map(el => el.value);
         if (netParts.some(p => p !== '')) {
@@ -1416,24 +1485,72 @@ function openIpModal(node) {
     // Päivitetään vasemman sarakkeen laitelista reaaliaikaisesti
     updateModalDeviceList(node);
 
-    // Hae viimeksi syötetyt arvot (tasokohtainen ja laitetyyppikohtainen muisti)
-    const key = `subnetArchitect_lastInput_level_${currentLevel}_${node.userData.type}`;
-    const lastInputStr = localStorage.getItem(key);
-    const lastInput = lastInputStr ? JSON.parse(lastInputStr) : { ip: ['', '', '', ''], mask: ['', '', '', ''] };
-
-    // Täytä laitteen oikeat arvot JOS ne on asetettu, MUUTEN käytä viimeksi kirjoitettuja
-    const ipParts = node.userData.ip ? node.userData.ip.split('.') : lastInput.ip;
-    document.querySelectorAll('.ip-octet').forEach((el, i) => { el.value = ipParts[i] || ''; });
-    
-    const maskParts = node.userData.mask ? node.userData.mask.split('.') : lastInput.mask;
-    document.querySelectorAll('.mask-octet').forEach((el, i) => { el.value = maskParts[i] || ''; });
-
     // Haetaan laitteen oikea aliverkko (huomioi laitteen sijaintivyöhyke!)
     const scope = getNodeSubnetScope(node);
     const details = scope.details;
     const cidr = scope.cidr;
+    const subnetKey = `${currentLevel}_${details.network}_${cidr}`;
 
-    // Verkon rajat (Verkko-ID ja Broadcast) -vaatimus vaativammilla tasoilla
+    // Tarkistetaan onko kyseisessä aliverkossa jo vähintään yksi onnistuneesti validoitu laite
+    const zoneNodes = nodes.filter(n => {
+        const s = getNodeSubnetScope(n);
+        return s && s.details && s.details.network === details.network && s.cidr === cidr;
+    });
+    const zoneHasValidatedDevice = zoneNodes.some(n => n.userData && n.userData.correctIp);
+
+    // Näytetään tai piilotetaan huonekohtainen pikamäärityspainike
+    const batchContainer = document.getElementById('batch-assign-container');
+    if (batchContainer) {
+        const unconfiguredInZone = zoneNodes.filter(n => (!n.userData || !n.userData.correctIp) && IP_REQUIRED_TYPES.includes(n.userData.type));
+        if (zoneHasValidatedDevice && unconfiguredInZone.length > 0) {
+            batchContainer.classList.remove('hidden');
+        } else {
+            batchContainer.classList.add('hidden');
+        }
+    }
+
+    // 1. Aliverkon peite: Laitteen oma -> Aliverkon validoitu peite -> Muisti
+    const savedMaskStr = localStorage.getItem(`subnetArchitect_validated_mask_${subnetKey}`) ||
+                         localStorage.getItem(`subnetArchitect_lastInput_mask_${currentLevel}_${details.network}`);
+    let maskParts = ['', '', '', ''];
+    if (node.userData && node.userData.mask) {
+        maskParts = node.userData.mask.split('.');
+    } else if (savedMaskStr) {
+        try {
+            maskParts = savedMaskStr.startsWith('[') ? JSON.parse(savedMaskStr) : savedMaskStr.split('.');
+        } catch (e) {
+            maskParts = savedMaskStr.split('.');
+        }
+    } else {
+        const key = `subnetArchitect_lastInput_level_${currentLevel}_${node.userData.type}`;
+        const lastInput = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : null;
+        if (lastInput && lastInput.mask && lastInput.mask.some(p => p !== '')) {
+            maskParts = lastInput.mask;
+        }
+    }
+    document.querySelectorAll('.mask-octet').forEach((el, i) => { el.value = maskParts[i] || ''; });
+
+    // 2. IP-osoite: Laitteen oma -> Suositeltu seuraava vapaa IP -> Verkko-osan esitäyttö
+    let ipParts = ['', '', '', ''];
+    if (node.userData && node.userData.ip) {
+        ipParts = node.userData.ip.split('.');
+    } else {
+        const nextIp = getRecommendedNextIp(node, scope);
+        if (nextIp && (zoneHasValidatedDevice || savedMaskStr)) {
+            // Jos huoneessa on jo validoitu peite tai laite, tarjotaan suoraan seuraavaa vapaata IP:tä!
+            ipParts = nextIp.split('.');
+        } else if (nextIp) {
+            // Esitäytetään verkko-osa (esim. 10.20.0.), jotta käyttäjä syöttää vain isäntäosan
+            const netOctets = details.network.split('.');
+            const fullNetOctets = Math.min(3, Math.floor(cidr / 8));
+            for (let i = 0; i < fullNetOctets; i++) {
+                ipParts[i] = netOctets[i];
+            }
+        }
+    }
+    document.querySelectorAll('.ip-octet').forEach((el, i) => { el.value = ipParts[i] || ''; });
+
+    // 3. Verkon rajat (Verkko-ID ja Broadcast) -vaatimus vaativammilla tasoilla
     const boundsSection = document.getElementById('network-bounds-section');
     const requiresBounds = currentLevelConfig && (currentLevelConfig.difficulty >= 3 || currentLevelConfig.id >= 11);
     if (boundsSection) {
@@ -1441,8 +1558,8 @@ function openIpModal(node) {
             boundsSection.classList.remove('hidden');
             const netKey = `subnetArchitect_lastInput_net_${currentLevel}_${details.network}`;
             const bcastKey = `subnetArchitect_lastInput_bcast_${currentLevel}_${details.network}`;
-            const lastNet = localStorage.getItem(netKey) ? JSON.parse(localStorage.getItem(netKey)) : ['', '', '', ''];
-            const lastBcast = localStorage.getItem(bcastKey) ? JSON.parse(localStorage.getItem(bcastKey)) : ['', '', '', ''];
+            const lastNet = localStorage.getItem(netKey) ? JSON.parse(localStorage.getItem(netKey)) : (zoneHasValidatedDevice ? details.network.split('.') : ['', '', '', '']);
+            const lastBcast = localStorage.getItem(bcastKey) ? JSON.parse(localStorage.getItem(bcastKey)) : (zoneHasValidatedDevice ? details.broadcast.split('.') : ['', '', '', '']);
             document.querySelectorAll('.net-octet').forEach((el, i) => { el.value = lastNet[i] || ''; });
             document.querySelectorAll('.bcast-octet').forEach((el, i) => { el.value = lastBcast[i] || ''; });
         } else {
@@ -1833,14 +1950,16 @@ function closeIpModal() {
 
 /**
  * Validoi ja tallentaa käyttäjän syöttämän IP-osoitteen.
+ * @param {boolean} [closeModal=true] Suljetaanko modaali onnistumisen jälkeen
+ * @returns {boolean} true jos hyväksyttiin, false jos virhe
  */
-function submitIp() {
+function submitIp(closeModal = true) {
     const ipParts = Array.from(document.querySelectorAll('.ip-octet')).map(el => el.value.trim());
     const maskParts = Array.from(document.querySelectorAll('.mask-octet')).map(el => el.value.trim());
 
     if (ipParts.some(p => p === '') || maskParts.some(p => p === '')) {
         showToast("Täytä IP-osoitteen ja peitteen kaikki neljä osaa!", "error");
-        return;
+        return false;
     }
 
     const ip = ipParts.join('.');
@@ -1849,13 +1968,13 @@ function submitIp() {
 
     if (!ipRegex.test(ip) || !ipRegex.test(mask)) {
         showToast("Virheellinen IP- tai peitemuoto!", "error");
-        return;
+        return false;
     }
 
     const numMaskParts = mask.split('.').map(Number);
     if (numMaskParts.some(p => p > 255)) {
         showToast("Oktetti ei voi olla yli 255!", "error");
-        return;
+        return false;
     }
 
     // Haetaan laitteen oikea vyöhykekohtainen aliverkko
@@ -1871,7 +1990,7 @@ function submitIp() {
 
         if (netParts.some(p => p === '') || bcastParts.some(p => p === '')) {
             showToast("Täytä myös Verkko-osoite (Network ID) ja Broadcast-osoite!", "error");
-            return;
+            return false;
         }
 
         const userNet = netParts.join('.');
@@ -1879,17 +1998,17 @@ function submitIp() {
 
         if (!ipRegex.test(userNet) || !ipRegex.test(userBcast)) {
             showToast("Virheellinen Verkko-ID- tai Broadcast-muoto!", "error");
-            return;
+            return false;
         }
 
         if (userNet !== details.network) {
             showToast(`Väärä verkko-osoite! /${cidr}-aliverkossa lohkokoko on ${details.totalIps}. Oikea verkko-osoite on ${details.network}.`, "error");
-            return;
+            return false;
         }
 
         if (userBcast !== details.broadcast) {
             showToast(`Väärä broadcast-osoite! /${cidr}-aliverkon broadcast-osoite on ${details.broadcast} (verkko + ${details.totalIps - 1}).`, "error");
-            return;
+            return false;
         }
 
         // Tallennetaan verkon rajat muistiin
@@ -1903,16 +2022,16 @@ function submitIp() {
         } else {
             showToast(`Väärä aliverkon peite! Laske /${cidr}-aliverkon peite laskimella.`, "error");
         }
-        return;
+        return false;
     }
 
     if (cidr < 31 && ip === details.network) {
         showToast(`Virhe: ${ip} on aliverkon verkko-osoite (Network ID)! Kaikki ${32 - cidr} isäntäbittiä ovat 0.`, "error");
-        return;
+        return false;
     }
     if (cidr < 31 && ip === details.broadcast) {
         showToast(`Virhe: ${ip} on aliverkon yleislähetysosoite (Broadcast)! Kaikki ${32 - cidr} isäntäbittiä ovat 1.`, "error");
-        return;
+        return false;
     }
 
     const ipL = ip2long(ip);
@@ -1928,7 +2047,7 @@ function submitIp() {
         );
         if (duplicateNode) {
             showToast(`IP ${ip} on jo käytössä toisella laitteella!`, "error");
-            return;
+            return false;
         }
 
         // Laitekohtainen IP-aluesuositus (tasot 11+ aktivoivat tämän)
@@ -1959,7 +2078,7 @@ function submitIp() {
 
             if (ipRuleError) {
                 showToast(ipRuleError, "error");
-                return;
+                return false;
             }
         }
 
@@ -1971,6 +2090,12 @@ function submitIp() {
 
         // Päivitä 3D-lappu näyttämään vihreää IP-osoitetta
         updateNodeLabel(selectedNodeForIp);
+
+        // Tallennetaan onnistunut aliverkon peite koko kyseiselle aliverkolle
+        const subnetKey = `${currentLevel}_${details.network}_${cidr}`;
+        localStorage.setItem(`subnetArchitect_validated_mask_${subnetKey}`, mask);
+        localStorage.setItem(`subnetArchitect_lastInput_net_${currentLevel}_${details.network}`, JSON.stringify(details.network.split('.')));
+        localStorage.setItem(`subnetArchitect_lastInput_bcast_${currentLevel}_${details.network}`, JSON.stringify(details.broadcast.split('.')));
 
         showToast("IP hyväksytty! Laite on verkossa. ✅", "success");
         if (typeof audio !== 'undefined') audio.playPingSuccess();
@@ -1985,9 +2110,12 @@ function submitIp() {
             spawnPacket(selectedNodeForIp, neighbor, 0x10b981, 0.5);
         }
 
-        closeIpModal();
+        if (closeModal) {
+            closeIpModal();
+        }
         checkConnections();
         updateGoalUI();
+        return true;
     } else {
         const breakdown = (typeof getBitwiseAndBreakdown === 'function') ? getBitwiseAndBreakdown(ip, cidr) : null;
         const zoneMsg = scope.zoneName ? ` osaston ${scope.zoneName} aliverkkoon` : '';
@@ -1996,7 +2124,115 @@ function submitIp() {
         } else {
             showToast(`IP ${ip} ei kuulu${zoneMsg} (${details.network}/${cidr})! Sallittu: ${details.firstHost}–${details.lastHost}`, "error");
         }
+        return false;
     }
+}
+
+/**
+ * Tallenna nykyisen laitteen IP ja siirry suoraan seuraavaan saman huoneen / verkon konfiguroimattomaan laitteeseen.
+ */
+function submitIpAndNext() {
+    const success = submitIp(false);
+    if (!success) return;
+
+    if (!selectedNodeForIp) return;
+    const currentScope = getNodeSubnetScope(selectedNodeForIp);
+
+    // Etsitään seuraava konfiguroimaton IP-vaativa laite
+    // 1. Ensisijaisesti samasta huoneesta / aliverkosta
+    let nextNode = nodes.find(n =>
+        n !== selectedNodeForIp &&
+        n.userData &&
+        n.userData.isPredefined &&
+        !n.userData.correctIp &&
+        IP_REQUIRED_TYPES.includes(n.userData.type) &&
+        (() => {
+            const s = getNodeSubnetScope(n);
+            return s && s.details && currentScope && currentScope.details && s.details.network === currentScope.details.network;
+        })()
+    );
+
+    // 2. Toissijaisesti mistä tahansa muualta kentältä
+    if (!nextNode) {
+        nextNode = nodes.find(n =>
+            n !== selectedNodeForIp &&
+            n.userData &&
+            n.userData.isPredefined &&
+            !n.userData.correctIp &&
+            IP_REQUIRED_TYPES.includes(n.userData.type)
+        );
+    }
+
+    if (nextNode) {
+        const targetIndex = nodes.indexOf(nextNode);
+        if (targetIndex >= 0) {
+            selectNodeInModal(targetIndex);
+            const name = (typeof typeNames !== 'undefined' && typeNames[nextNode.userData.type]) || nextNode.userData.type.toUpperCase();
+            showToast(`⚡ Siirryttiin seuraavaan laitteeseen: ${name}`, "info");
+        }
+    } else {
+        closeIpModal();
+        showToast("🎉 Kaikki tason laitteet on nyt konfiguroitu!", "success");
+    }
+}
+
+/**
+ * Automaattimäärittää kerralla kaikkien saman huoneen / aliverkon vapaiden laitteiden IP-osoitteet.
+ * Edellyttää että pelaaja on jo onnistuneesti määrittänyt aliverkon ensimmäisen laitteen.
+ */
+function batchAssignZoneIps() {
+    if (!selectedNodeForIp) return;
+    const scope = getNodeSubnetScope(selectedNodeForIp);
+    if (!scope || !scope.details) return;
+
+    const details = scope.details;
+
+    // Etsitään tämän vyöhykkeen konfiguroimattomat laitteet
+    const unconfigured = nodes.filter(n =>
+        n.userData &&
+        n.userData.isPredefined &&
+        !n.userData.correctIp &&
+        IP_REQUIRED_TYPES.includes(n.userData.type) &&
+        (() => {
+            const s = getNodeSubnetScope(n);
+            return s && s.details && s.details.network === details.network;
+        })()
+    );
+
+    if (unconfigured.length === 0) {
+        showToast("Kaikilla tämän osaston laitteilla on jo määritetty IP!", "info");
+        return;
+    }
+
+    let assignedCount = 0;
+    unconfigured.forEach(node => {
+        const nextIp = getRecommendedNextIp(node, scope);
+        if (nextIp) {
+            node.userData.ip = nextIp;
+            node.userData.mask = details.mask;
+            node.userData.correctIp = true;
+            updateNodeVisualState(node);
+            updateNodeLabel(node);
+            assignedCount++;
+        }
+    });
+
+    if (assignedCount > 0) {
+        if (typeof audio !== 'undefined') audio.playVictory();
+        showToast(`🪄 Määritettiin ${assignedCount} laitetta osastoon ${scope.zoneName || details.network} automaattisesti!`, "success");
+        closeIpModal();
+        checkConnections();
+        updateGoalUI();
+    } else {
+        showToast("Aliverkosta ei löytynyt tarpeeksi vapaita osoitteita!", "error");
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.submitIp = submitIp;
+    window.submitIpAndNext = submitIpAndNext;
+    window.batchAssignZoneIps = batchAssignZoneIps;
+    window.getRecommendedNextIp = getRecommendedNextIp;
 }
 
 /**

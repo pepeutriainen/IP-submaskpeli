@@ -838,11 +838,11 @@ function generateLevels() {
             difficulty: 3,
             phase: "🔵 Segmentointi ja Pk",
             scenario: "Mainostoimiston raskaat työasemat ja renderöintifarmi eristetään omaan /26-aliverkkoonsa suuren kaistanleveyden takaamiseksi.",
-            hint: "Kytke laitteet kytkimeen ja WiFiin. Laske /26-peite (255.255.255.192, 62 isäntää) ja määritä osoitteet huoneiden laitteille.",
+            hint: "Kytke huoneiden laitteet kytkimiin ja WiFiin. Laske /26-peite (255.255.255.192, 62 isäntää) ja määritä osoitteet huoneiden laitteille.",
             teachingTopic: "slash26",
             network: "10.20.0.0",
             cidr: 26,
-            allowedTools: [],
+            allowedTools: ["switch"],
             
             zones: [
           {
@@ -905,10 +905,17 @@ function generateLevels() {
                     }
           },
           {
+                    "type": "switch",
+                    "pos": {
+                              "x": -6,
+                              "z": 14
+                    }
+          },
+          {
                     "type": "wifi",
                     "pos": {
-                              "x": 4,
-                              "z": 6
+                              "x": 8,
+                              "z": 12
                     }
           },
           {
@@ -922,21 +929,21 @@ function generateLevels() {
                     "type": "pc",
                     "pos": {
                               "x": -13,
-                              "z": 16
+                              "z": 17
                     }
           },
           {
                     "type": "pc",
                     "pos": {
                               "x": -6,
-                              "z": 16
+                              "z": 17
                     }
           },
           {
                     "type": "pc",
                     "pos": {
                               "x": 1,
-                              "z": 16
+                              "z": 17
                     }
           },
           {

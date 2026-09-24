@@ -1,7 +1,7 @@
 {
   "js/cables.js": {
-    "mtime": 1789385530.4416296,
-    "ast_hash": "0d26078d0035a850b021e291a9f4aaa6",
+    "mtime": 1790271299.0618308,
+    "ast_hash": "2fc79270b46cd4c4c3f750ee8d063def",
     "semantic_hash": ""
   },
   "js/game.js": {
@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "js/levels.js": {
-    "mtime": 1789306824.341278,
-    "ast_hash": "44cb0a79bb94ef4c26ace2dab9b212ab",
+    "mtime": 1790271281.8741324,
+    "ast_hash": "5d819da5e60e33bc12a27ea5c3c962cf",
     "semantic_hash": ""
   },
   "js/network.js": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "js/ui.js": {
-    "mtime": 1790191549.2622268,
-    "ast_hash": "1d05a046b4e4d0427e790cd43d3c5edd",
+    "mtime": 1790271799.35225,
+    "ast_hash": "5d68a579f98c9f55cdb63d13b19728d7",
     "semantic_hash": ""
   },
   ".agents/rules/caveman.md": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1790191490.6610677,
-    "ast_hash": "1547c94b7f834adc4af4ff85a0f7e3e6",
+    "mtime": 1790271398.2465055,
+    "ast_hash": "38f2aac0fdbd0b3c13a0376bbf89dba4",
     "semantic_hash": ""
   },
   "peli.txt": {

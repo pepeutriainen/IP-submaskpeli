@@ -596,9 +596,17 @@
                         </div>
 
                         <!-- Painikkeet -->
-                        <div class="flex gap-2.5 mt-3.5 pt-2">
-                            <button onclick="closeIpModal()" class="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white rounded-xl font-bold transition text-sm sm:text-base shadow-md cursor-pointer">Peruuta (Esc)</button>
-                            <button onclick="submitIp()" class="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:from-cyan-700 active:to-blue-700 text-white rounded-xl font-black shadow-lg shadow-cyan-500/30 transition text-sm sm:text-base cursor-pointer">✅ Aseta IP</button>
+                        <div class="flex flex-col gap-2 mt-3.5 pt-2">
+                            <div class="flex gap-2">
+                                <button onclick="closeIpModal()" class="w-1/4 px-3 py-2.5 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white rounded-xl font-bold transition text-xs sm:text-sm shadow-md cursor-pointer" title="Sulje ikkuna (Esc)">Peruuta</button>
+                                <button onclick="submitIp()" class="flex-1 px-3 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:from-cyan-700 active:to-blue-700 text-white rounded-xl font-black shadow-md shadow-cyan-500/20 transition text-xs sm:text-sm cursor-pointer">✅ Aseta IP</button>
+                                <button onclick="submitIpAndNext()" class="flex-1 px-3 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white rounded-xl font-black shadow-md shadow-emerald-500/20 transition text-xs sm:text-sm cursor-pointer" title="Tallenna ja siirry heti seuraavaan konfiguroimattomaan laitteeseen (Ctrl+Enter)">⚡ Aseta & Seur. ➔</button>
+                            </div>
+                            <div id="batch-assign-container" class="hidden">
+                                <button onclick="batchAssignZoneIps()" class="w-full py-2 px-3 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/60 hover:border-indigo-400 text-indigo-200 hover:text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Aseta oikeat IP-osoitteet kerralla kaikille tämän aliverkon vapaana oleville laitteille">
+                                    <span>🪄 Automaattitäytä osaston kaikki laitteet</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

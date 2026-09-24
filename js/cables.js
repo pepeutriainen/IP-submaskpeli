@@ -51,6 +51,42 @@ function getCableError(nodeA, nodeB) {
         return `${rulesB.label || typeB}:n kaikki ${rulesB.maxPorts} porttia ovat täynnä!`;
     }
 
+    // 5. CCNA-aliverkkolukitus tavalliselle LAN-kytkimelle (L2 Broadcast Domain)
+    // Tavallinen LAN-kytkin kuuluu yhteen aliverkkoon/VLANiin. Jos kytkimeen on jo liitetty tietyn
+    // aliverkon päätelaitteita, toisen aliverkon päätelaitteita ei saa kytkeä suoraan samaan kytkimeen ilman reititystä!
+    if (typeof getNodeSubnetScope === 'function' && typeof currentLevelConfig !== 'undefined' && currentLevelConfig) {
+        const swNode = (typeA === nodeTypes.SWITCH) ? nodeA : (typeB === nodeTypes.SWITCH ? nodeB : null);
+        const epNode = (swNode === nodeA) ? nodeB : (swNode === nodeB ? nodeA : null);
+
+        if (swNode && epNode) {
+            const isEndpoint = [nodeTypes.PC, nodeTypes.LAPTOP, nodeTypes.OFFICE, nodeTypes.PRINTER, nodeTypes.VOIP, nodeTypes.SERVER, nodeTypes.WIFI].includes(epNode.userData.type);
+            if (isEndpoint) {
+                const epScope = getNodeSubnetScope(epNode);
+                if (epScope && epScope.details) {
+                    const epSubnetKey = `${epScope.details.network}/${epScope.cidr}`;
+
+                    // Etsi kaikki muut kyseiseen kytkimeen jo kytketyt päätelaitteet
+                    const connectedEndpoints = cables
+                        .filter(c => c.nodeA === swNode || c.nodeB === swNode)
+                        .map(c => (c.nodeA === swNode ? c.nodeB : c.nodeA))
+                        .filter(n => [nodeTypes.PC, nodeTypes.LAPTOP, nodeTypes.OFFICE, nodeTypes.PRINTER, nodeTypes.VOIP, nodeTypes.SERVER, nodeTypes.WIFI].includes(n.userData.type));
+
+                    for (const otherEp of connectedEndpoints) {
+                        const otherScope = getNodeSubnetScope(otherEp);
+                        if (otherScope && otherScope.details) {
+                            const otherSubnetKey = `${otherScope.details.network}/${otherScope.cidr}`;
+                            if (epSubnetKey !== otherSubnetKey) {
+                                const zoneA = otherScope.zoneName ? ` (${otherScope.zoneName})` : '';
+                                const zoneB = epScope.zoneName ? ` (${epScope.zoneName})` : '';
+                                return `CCNA-sääntö: LAN-kytkin on varattu aliverkolle ${otherSubnetKey}${zoneA}! Eri aliverkon ${epSubnetKey}${zoneB} laitetta ei voi kytkeä suoraan samaan L2-kytkimeen ilman reititystä. Kytke laite oman osastonsa kytkimeen ja yhdistä kytkimet Ydinlinkkiin (Core Switch) tai Reitittimeen.`;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     return null; // OK
 }
 
