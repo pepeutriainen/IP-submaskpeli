@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subnet Architect – Aloittelijasta Ammattilaiseen</title>
+    <!-- Favicon (Cyber Globe SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js CDN -->
@@ -178,10 +180,10 @@
                         <button id="btn-continue-game" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-blue-500/20 transition flex items-center gap-1.5 cursor-pointer transform hover:-translate-y-0.5">
                             ▶️ Jatka peliä
                         </button>
-                        <button id="btn-unlock-all" class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
+                        <button id="btn-unlock-all" onclick="openAdminModal('unlock')" class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
                             🔓 Avaa kaikki
                         </button>
-                        <button id="btn-reset-progress" class="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
+                        <button id="btn-reset-progress" onclick="openAdminModal('reset')" class="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
                             🔄 Nollaa
                         </button>
                     </div>
@@ -659,7 +661,7 @@
         </div>
 
         <!-- ===================== ADMIN TODENNUS MODAL ===================== -->
-        <div id="admin-modal" class="hidden absolute inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-md pointer-events-auto z-50 p-4">
+        <div id="admin-modal" class="hidden fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-md pointer-events-auto z-[100] p-4">
             <div class="bg-slate-900/95 p-6 sm:p-7 rounded-3xl border-2 border-cyan-500/50 shadow-2xl shadow-cyan-950/70 max-w-md w-full transform transition-all text-left relative" id="admin-modal-box">
                 <button onclick="closeAdminModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold border border-slate-700 transition cursor-pointer" title="Sulje (Esc)">✕</button>
                 <div class="flex items-center gap-3 mb-4">
