@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   "js/game.js": {
-    "mtime": 1789385982.0348608,
-    "ast_hash": "f672fc4d9c44c0f8bde63db5b9ef08a5",
+    "mtime": 1790277526.3404121,
+    "ast_hash": "2d2d90de60ba0423067c942bd15a79d4",
     "semantic_hash": ""
   },
   "js/levels.js": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1790271398.2465055,
-    "ast_hash": "38f2aac0fdbd0b3c13a0376bbf89dba4",
+    "mtime": 1790277504.2812433,
+    "ast_hash": "a4f9cec65af58fc23e768e08360127db",
     "semantic_hash": ""
   },
   "peli.txt": {

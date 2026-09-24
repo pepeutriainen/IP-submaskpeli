@@ -307,21 +307,126 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-back-menu')?.addEventListener('click', goToMenu);
 
     document.getElementById('btn-unlock-all')?.addEventListener('click', () => {
-        unlockedLevels = TOTAL_LEVELS;
-        localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
-        renderLevelMenu();
-        showToast("Kaikki tasot avattu testattavaksi!", "success");
+        openAdminModal('unlock');
     });
 
     document.getElementById('btn-reset-progress')?.addEventListener('click', () => {
-        if (confirm("Haluatko varmasti nollata kaiken edistymisesi?")) {
-            localStorage.clear(); // Poistaa kaiken, myös tallennetut tasot
-            unlockedLevels = 1;
-            renderLevelMenu();
-            showToast("Edistyminen nollattu.", "info");
-        }
+        openAdminModal('reset');
     });
 
     document.getElementById('btn-hint')?.addEventListener('click', toggleHint);
     document.getElementById('btn-rules')?.addEventListener('click', toggleRules);
 });
+
+// =====================================================================
+// PÄÄKÄYTTÄJÄN TODENNUS (Zero Plaintext Secrets - Salted SHA-256)
+// =====================================================================
+const ADMIN_CREDENTIALS_HASH = '9ae6fd729ddc048b9ac620b572e55ad342d9a00487d6fdd2fa186481f226aa91';
+const ADMIN_SALT = 'SubnetArchitect_SecureAdmin_Salt_2026_';
+let pendingAdminAction = null;
+
+/**
+ * Generoi suolatun SHA-256 tiivisteen annetuista tunnuksista Web Crypto API:lla.
+ */
+async function hashAdminCredentials(username, password) {
+    const combined = ADMIN_SALT + (username || '').trim().toLowerCase() + ':' + (password || '').trim();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(combined);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Avaa pääkäyttäjän todennusikkunan.
+ * @param {'unlock'|'reset'} [action='unlock']
+ */
+function openAdminModal(action = 'unlock') {
+    pendingAdminAction = action;
+    const modal = document.getElementById('admin-modal');
+    const desc = document.getElementById('admin-modal-desc');
+    const userInp = document.getElementById('admin-username-input');
+    const passInp = document.getElementById('admin-password-input');
+    const submitBtn = document.getElementById('btn-admin-submit');
+
+    if (desc) {
+        desc.innerText = (action === 'reset')
+            ? "Pääkäyttäjän vahvistus: Kaiken edistymisen nollaaminen poistaa kaikki tallennetut verkot ja palauttaa tason 1."
+            : "Pääkäyttäjän vahvistus: Kaikkien 61 tason avaaminen vaatii järjestelmänvalvojan oikeudet.";
+    }
+    if (submitBtn) {
+        submitBtn.innerHTML = (action === 'reset') ? "⚠️ Vahvista nollaus" : "🔓 Avaa kaikki tasot";
+    }
+    if (userInp) userInp.value = '';
+    if (passInp) passInp.value = '';
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => userInp?.focus(), 50);
+    }
+}
+
+/**
+ * Sulkee pääkäyttäjän todennusikkunan ja tyhjentää salasanan muistista.
+ */
+function closeAdminModal() {
+    const modal = document.getElementById('admin-modal');
+    if (modal) modal.classList.add('hidden');
+    const passInp = document.getElementById('admin-password-input');
+    if (passInp) passInp.value = '';
+    pendingAdminAction = null;
+}
+
+/**
+ * Tarkistaa syötetyt pääkäyttäjätunnukset ja suorittaa toimenpiteen.
+ */
+async function submitAdminAuth() {
+    const userInp = document.getElementById('admin-username-input');
+    const passInp = document.getElementById('admin-password-input');
+    const username = userInp ? userInp.value : '';
+    const password = passInp ? passInp.value : '';
+
+    if (!username || !password) {
+        showToast("Syötä sekä käyttäjätunnus että salasana!", "error");
+        return;
+    }
+
+    try {
+        const computedHash = await hashAdminCredentials(username, password);
+        if (computedHash === ADMIN_CREDENTIALS_HASH) {
+            // Pääkäyttäjä todennettu onnistuneesti!
+            if (pendingAdminAction === 'unlock') {
+                unlockedLevels = TOTAL_LEVELS;
+                localStorage.setItem('subnetArchitect_unlocked', unlockedLevels);
+                renderLevelMenu();
+                showToast("🔓 Pääkäyttäjä todennettu! Kaikki 61 tasoa avattu.", "success");
+            } else if (pendingAdminAction === 'reset') {
+                localStorage.clear();
+                unlockedLevels = 1;
+                renderLevelMenu();
+                showToast("Pääkäyttäjä todennettu: Kaikki edistyminen nollattu.", "info");
+            }
+            closeAdminModal();
+        } else {
+            showToast("Pääsy evätty: Virheellinen pääkäyttäjätunnus tai salasana!", "error");
+            if (passInp) {
+                passInp.value = '';
+                passInp.focus();
+            }
+            const box = document.getElementById('admin-modal-box');
+            if (box) {
+                box.classList.add('scale-105');
+                setTimeout(() => box.classList.remove('scale-105'), 200);
+            }
+        }
+    } catch (e) {
+        console.error("Todennusvirhe:", e);
+        showToast("Kryptografinen todennus epäonnistui selaimessa.", "error");
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.openAdminModal = openAdminModal;
+    window.closeAdminModal = closeAdminModal;
+    window.submitAdminAuth = submitAdminAuth;
+}
