@@ -1,0 +1,217 @@
+{
+  "assets/models/ap-ceiling.glb.js": {
+    "mtime": 1789241038.2974384,
+    "ast_hash": "6d9c6d2dde5413c09e5f88c8b3d9b22c",
+    "semantic_hash": ""
+  },
+  "assets/models/juniper-9204.glb.js": {
+    "mtime": 1788968555.6612191,
+    "ast_hash": "12f3e45d0e97d21c1a57dcfbe25eaaa2",
+    "semantic_hash": "12f3e45d0e97d21c1a57dcfbe25eaaa2"
+  },
+  "assets/models/kannettava.glb.js": {
+    "mtime": 1788987439.3753476,
+    "ast_hash": "ae34a122a4d9c0112906ea27fe4de9c2",
+    "semantic_hash": "ae34a122a4d9c0112906ea27fe4de9c2"
+  },
+  "assets/models/pc.glb.js": {
+    "mtime": 1788988834.241551,
+    "ast_hash": "18811767b87b5d5f3a2eb97bc5c518a2",
+    "semantic_hash": "18811767b87b5d5f3a2eb97bc5c518a2"
+  },
+  "assets/models/router.glb.js": {
+    "mtime": 1789056673.6335926,
+    "ast_hash": "818197d47923b4697a61647bde90d58d",
+    "semantic_hash": "818197d47923b4697a61647bde90d58d"
+  },
+  "assets/models/server-4002.glb.js": {
+    "mtime": 1788982709.9661605,
+    "ast_hash": "d93a550706abdebeccbac68f3a185c5a",
+    "semantic_hash": "d93a550706abdebeccbac68f3a185c5a"
+  },
+  "assets/models/toimisto.glb.js": {
+    "mtime": 1788986025.0263102,
+    "ast_hash": "41d2bb123b7a0bf40a283448e502d562",
+    "semantic_hash": "41d2bb123b7a0bf40a283448e502d562"
+  },
+  "assets/models/tulostin.glb.js": {
+    "mtime": 1788989639.649749,
+    "ast_hash": "e9df5333be50d48eead5ab57f1d47006",
+    "semantic_hash": "e9df5333be50d48eead5ab57f1d47006"
+  },
+  "js/cables.js": {
+    "mtime": 1789307254.2854726,
+    "ast_hash": "8f753757fa47226f75cae7649ae3242d",
+    "semantic_hash": ""
+  },
+  "js/game.js": {
+    "mtime": 1789331726.2855885,
+    "ast_hash": "a6730dbd5dec0bb1d02b7982cba3fb98",
+    "semantic_hash": ""
+  },
+  "js/levels.js": {
+    "mtime": 1789306824.341278,
+    "ast_hash": "44cb0a79bb94ef4c26ace2dab9b212ab",
+    "semantic_hash": ""
+  },
+  "js/network.js": {
+    "mtime": 1789166738.5962718,
+    "ast_hash": "471dfaa4930189940ee643bc01f3ca04",
+    "semantic_hash": ""
+  },
+  "js/nodes.js": {
+    "mtime": 1789321912.026256,
+    "ast_hash": "40f2ff4e53c065c80f55b96883c6cee8",
+    "semantic_hash": ""
+  },
+  "js/scene.js": {
+    "mtime": 1789306413.2623155,
+    "ast_hash": "1101f84e32d04d58c6c7fb65a1a81925",
+    "semantic_hash": ""
+  },
+  "js/state.js": {
+    "mtime": 1789331702.4366932,
+    "ast_hash": "f45a5cdc08831283d07bb84987b69b25",
+    "semantic_hash": ""
+  },
+  "js/teaching.js": {
+    "mtime": 1789323634.8061347,
+    "ast_hash": "6546237b0f7f73fff739a826c8f01273",
+    "semantic_hash": ""
+  },
+  "js/ui.js": {
+    "mtime": 1789331790.5188217,
+    "ast_hash": "e1e723c4f8b91101bf7e630516931a92",
+    "semantic_hash": ""
+  },
+  "assets/models/gateway-edge.glb.js": {
+    "mtime": 1789240515.9947114,
+    "ast_hash": "d665ccd82f6749902106264c3c1a4b38",
+    "semantic_hash": ""
+  },
+  ".agents/rules/caveman.md": {
+    "mtime": 1789164910.9177547,
+    "ast_hash": "d5af7bee84b6fe33bad778fd334cb6d2",
+    "semantic_hash": ""
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1789164008.210607,
+    "ast_hash": "a0e4d192b9e2e17256124dbfc8e24e6a",
+    "semantic_hash": ""
+  },
+  ".agents/rules/studio_standards.md": {
+    "mtime": 1789166050.42928,
+    "ast_hash": "68367fdf757db7f46d664bd6d46f6ff3",
+    "semantic_hash": ""
+  },
+  ".agents/skills/caveman/SKILL.md": {
+    "mtime": 1775880777.921553,
+    "ast_hash": "5318b76c83431b6a57179c7d28e1c5da",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1789164008.210607,
+    "ast_hash": "a831cf3669f1e6ab85d8a80ebe655f99",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1789166036.141739,
+    "ast_hash": "80ea5a743d04a50129d1cba85dbb8134",
+    "semantic_hash": ""
+  },
+  "GEMINI.md": {
+    "mtime": 1789166036.141739,
+    "ast_hash": "80ea5a743d04a50129d1cba85dbb8134",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1789331782.697939,
+    "ast_hash": "131476911d88d22066098907630ee020",
+    "semantic_hash": ""
+  },
+  "peli.txt": {
+    "mtime": 1788883417.9580412,
+    "ast_hash": "7147ca43fa6df6dec4e623c2a924837e",
+    "semantic_hash": ""
+  },
+  "assets/icons/juniper-9204.png": {
+    "mtime": 1788968548.0875697,
+    "ast_hash": "d7b1223834966feaf80667ac12da7ca4",
+    "semantic_hash": ""
+  },
+  "assets/icons/server-4002.png": {
+    "mtime": 1788982643.615752,
+    "ast_hash": "d7d849b041af57a61b2c1963dca91dda",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material82.png": {
+    "mtime": 1788967358.51844,
+    "ast_hash": "9e0b54c691afa5ed75f30009c65d40cc",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material84.png": {
+    "mtime": 1788967358.51844,
+    "ast_hash": "1abfe9e59f9e3b1b6960d194ac6294ae",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material86.png": {
+    "mtime": 1788967358.5236108,
+    "ast_hash": "44d4cb03bfad9574de62432bfc9cc780",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material88.png": {
+    "mtime": 1788967358.529611,
+    "ast_hash": "7a0f9c7a18bc77cfdc5bc6396da5eebe",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material90.png": {
+    "mtime": 1788967358.5164394,
+    "ast_hash": "16b8170211f669fb4d9110fda5cf29d7",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material92.png": {
+    "mtime": 1788967358.5216112,
+    "ast_hash": "4a21d267faac7daddc4a6443d3b0af66",
+    "semantic_hash": ""
+  },
+  "assets/sources/juniper-9204/material94.png": {
+    "mtime": 1788967358.5266106,
+    "ast_hash": "4a21d267faac7daddc4a6443d3b0af66",
+    "semantic_hash": ""
+  },
+  "assets/sources/server-4002/1_mat(4002422).png": {
+    "mtime": 1788968938.9254067,
+    "ast_hash": "78bcccc28eb9d66ee07a20a549763218",
+    "semantic_hash": ""
+  },
+  "assets/sources/server-4002/normalMap1.png": {
+    "mtime": 1788968938.9422045,
+    "ast_hash": "d8e1c383aaff30ce2781f87edbc5b042",
+    "semantic_hash": ""
+  },
+  "assets/models/gateway_texture.png": {
+    "mtime": 1789240464.5694275,
+    "ast_hash": "dcfde543908ba272b8bbcc66a145b85b",
+    "semantic_hash": ""
+  },
+  "assets/models/ap_texture.png": {
+    "mtime": 1789240898.280162,
+    "ast_hash": "79140274ea7b1d27dd0f7b33b8dab8cb",
+    "semantic_hash": ""
+  },
+  "assets/models/firewall.glb.js": {
+    "mtime": 1789241550.966258,
+    "ast_hash": "6caa4001e0d577b51b859d4360d4d146",
+    "semantic_hash": ""
+  },
+  "assets/models/firewall_texture.png": {
+    "mtime": 1789241522.5624993,
+    "ast_hash": "4563d3eb40a76223d841e724b4a93739",
+    "semantic_hash": ""
+  },
+  "assets/models/voip.glb.js": {
+    "mtime": 1789321767.6398182,
+    "ast_hash": "b61810e895ae82badb3582658b5ad02b",
+    "semantic_hash": ""
+  }
+}
