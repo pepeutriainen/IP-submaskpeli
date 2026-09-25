@@ -554,5 +554,91 @@ body {
     box-shadow: 0 0 14px rgba(6, 182, 212, 0.8);
 }
 
+/* =========================================================================
+   Linux Server TTY & Dual-Mode Terminal
+   ========================================================================= */
+
+#terminal-modal.docked {
+    inset: auto 0 0 0 !important;
+    height: 44vh !important;
+    width: 100vw !important;
+    padding: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    align-items: flex-end !important;
+}
+
+#terminal-modal.docked > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border-top: 2px solid rgba(16, 185, 129, 0.6) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.8) !important;
+}
+
+#terminal-modal.fullscreen {
+    inset: 0 !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    padding: 0 !important;
+}
+
+#terminal-modal.fullscreen > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+}
+
+.linux-terminal-font {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+}
+
+.terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 15px;
+    background-color: #10b981;
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: terminalBlink 1s step-end infinite;
+}
+
+@keyframes terminalBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.terminal-line {
+    word-break: break-word;
+    white-space: pre-wrap;
+    line-height: 1.45;
+}
+
+.terminal-log-alert {
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 3px solid #ef4444;
+    padding: 2px 6px;
+    margin: 2px 0;
+}
+
+.terminal-log-warn {
+    background: rgba(245, 158, 11, 0.12);
+    border-left: 3px solid #f59e0b;
+    padding: 2px 6px;
+    margin: 2px 0;
+}
+
+.terminal-log-info {
+    border-left: 3px solid #06b6d4;
+    padding: 2px 6px;
+    margin: 2px 0;
+}
+
 
 

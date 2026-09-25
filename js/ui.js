@@ -244,21 +244,29 @@ function setupTools() {
 }
 
 /**
- * Näyttää kelluvan toast-ilmoituksen.
+ * Näyttää kelluvan toast-ilmoituksen ja tallentaa sen samalla pysyvästi Linux-terminaalin syslog/dmesg -puskuriin.
  */
 function showToast(msg, type = "info") {
     if (type === "error" && typeof audio !== 'undefined') {
         audio.playError();
     }
+
+    // Tallennetaan jokainen alertti, virhe ja ilmoitus pysyvästi terminaalin lokiin
+    if (typeof terminal !== 'undefined' && typeof terminal.logSyslog === 'function') {
+        terminal.logSyslog(type, msg);
+    }
+
     const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerText = msg;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    if (container) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerText = msg;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 }
 
 let currentMenuPhase = null; // Asetetaan dynaamisesti pelaajan tason mukaan

@@ -1,6 +1,8 @@
-// --- Cyber Terminal (CLI Mode) ---
-// Cisco IOS / Linux -tyylinen interaktiivinen verkkopääte suoralla 3D-visualisoinnilla.
-// Tukee kaikkia 61 tasoa: laitteiden valinta, suora IP-konfigurointi, Cisco show-komennot ja diagnostiikka.
+// =========================================================================
+// Cyber Terminal - Linux Server TTY & Network Engineer Console v4.0
+// Tukee 100% komentorivipelaamista, Linux syslogeja, Cisco IOS & Linux CLI -syntakseja
+// sekä reaaliaikaista synkronointia 3D-verkkomaailman kanssa.
+// =========================================================================
 
 class CyberTerminal {
     constructor() {
@@ -8,6 +10,9 @@ class CyberTerminal {
         this.historyIndex = -1;
         this.isOpen = false;
         this.targetNode = null; // Aktiivisesti valittu laite CLI-istunnossa
+        this.bootTime = Date.now();
+        this.syslogBuffer = []; // Pysyvä tapahtuma- ja virheloki
+        this.viewMode = (typeof localStorage !== 'undefined' && localStorage.getItem('terminal_view_mode')) || 'docked';
     }
 
     init() {
@@ -58,28 +63,158 @@ class CyberTerminal {
             }
         });
 
-        // Synkronoi aloituslaite tarvittaessa
+        // Aseta alustettu näyttötila
+        this.applyViewMode();
         this.syncPrompt();
     }
 
-    autoComplete(inputEl) {
-        const current = inputEl.value.trim().toLowerCase();
-        if (!current) return;
+    // =========================================================================
+    // NÄKYMÄN HALLINTA (Telakointi, Kokoruutu, Ikkuna)
+    // =========================================================================
 
-        const commands = [
-            'help', 'clear', 'cls', 'ping', 'traceroute', 'tracert',
-            'ipconfig', 'ifconfig', 'arp', 'subnetcalc', 'status',
-            'devices', 'nodes', 'connect', 'session', 'select', 'exit',
-            'ip address', 'show ip interface brief', 'show ip route',
-            'show cdp neighbors', 'show lldp neighbors', 'reload',
-            'hostname', 'whoami'
-        ];
+    setViewMode(mode) {
+        this.viewMode = mode;
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('terminal_view_mode', mode);
+        }
+        this.applyViewMode();
+        this.focusInput();
+    }
 
-        const match = commands.find(c => c.startsWith(current));
-        if (match) {
-            inputEl.value = match + ' ';
+    applyViewMode() {
+        const modal = document.getElementById('terminal-modal');
+        if (!modal) return;
+
+        modal.classList.remove('docked', 'fullscreen', 'floating');
+
+        const btnDock = document.getElementById('term-btn-dock');
+        const btnFloat = document.getElementById('term-btn-float');
+        const btnFull = document.getElementById('term-btn-full');
+
+        [btnDock, btnFloat, btnFull].forEach(b => {
+            if (b) b.classList.remove('bg-slate-800', 'text-emerald-400', 'font-bold');
+        });
+
+        if (this.viewMode === 'docked') {
+            modal.classList.add('docked');
+            if (btnDock) btnDock.classList.add('bg-slate-800', 'text-emerald-400', 'font-bold');
+        } else if (this.viewMode === 'fullscreen') {
+            modal.classList.add('fullscreen');
+            if (btnFull) btnFull.classList.add('bg-slate-800', 'text-emerald-400', 'font-bold');
+        } else {
+            modal.classList.add('floating');
+            if (btnFloat) btnFloat.classList.add('bg-slate-800', 'text-emerald-400', 'font-bold');
         }
     }
+
+    toggle() {
+        const modal = document.getElementById('terminal-modal');
+        if (!modal) return;
+        this.isOpen = !this.isOpen;
+        if (this.isOpen) {
+            modal.classList.remove('hidden');
+            this.applyViewMode();
+            if (!this.targetNode && typeof selectedNodeForIp !== 'undefined' && selectedNodeForIp) {
+                this.targetNode = selectedNodeForIp;
+            }
+            this.syncPrompt();
+            this.focusInput();
+            if (typeof audio !== 'undefined') audio.playUiClick();
+        } else {
+            modal.classList.add('hidden');
+            if (typeof audio !== 'undefined') audio.playUiClick();
+        }
+    }
+
+    focusInput() {
+        const inputEl = document.getElementById('terminal-input');
+        if (inputEl) {
+            setTimeout(() => inputEl.focus(), 50);
+        }
+    }
+
+    // =========================================================================
+    // SYSLOG & PYSYVÄ VIRHEIDEN / TAPAHTUMIEN LOKITUS
+    // =========================================================================
+
+    /**
+     * Kirjaa järjestelmätapahtuman tai hälytyksen pysyvään lokipuskuriin ja tulostaa konsoliin.
+     */
+    logSyslog(type, msg, facility = 'net_kernel') {
+        const uptimeSec = ((Date.now() - this.bootTime) / 1000).toFixed(4);
+        const entry = {
+            uptime: uptimeSec,
+            type: type, // 'error' | 'warning' | 'info' | 'success'
+            facility: facility,
+            message: msg,
+            timestamp: new Date().toLocaleTimeString()
+        };
+
+        this.syslogBuffer.push(entry);
+
+        // Tulostetaan terminaaliin jos se on olemassa
+        const bodyEl = document.getElementById('terminal-body');
+        if (!bodyEl) return;
+
+        const line = document.createElement('div');
+        line.className = 'terminal-line text-xs font-mono';
+
+        let tagClass = 'text-cyan-400';
+        let prefix = '[  INFO  ]';
+        let lineStyle = 'terminal-log-info';
+
+        if (type === 'error' || type === 'alert') {
+            tagClass = 'text-rose-400 font-bold';
+            prefix = '[  ALERT ]';
+            lineStyle = 'terminal-log-alert';
+        } else if (type === 'warning' || type === 'warn') {
+            tagClass = 'text-amber-400 font-bold';
+            prefix = '[  WARN  ]';
+            lineStyle = 'terminal-log-warn';
+        } else if (type === 'success') {
+            tagClass = 'text-emerald-400 font-bold';
+            prefix = '[   OK   ]';
+            lineStyle = '';
+        }
+
+        line.className += ` ${lineStyle}`;
+        line.innerHTML = `<span class="text-slate-500">[${uptimeSec.padStart(9, ' ')}]</span> <span class="text-slate-400">${facility}:</span> <span class="${tagClass}">${prefix}</span> <span class="text-slate-200">${msg}</span>`;
+
+        bodyEl.appendChild(line);
+        bodyEl.scrollTop = bodyEl.scrollHeight;
+    }
+
+    /**
+     * Kutsutaan kun uusi taso ladataan (game.js). Tulostaa Linux Server MOTD -viestin.
+     */
+    onLevelLoaded(lvl) {
+        if (!lvl) return;
+        const bodyEl = document.getElementById('terminal-body');
+        if (!bodyEl) return;
+
+        const uptimeSec = ((Date.now() - this.bootTime) / 1000).toFixed(4);
+        const gwIp = lvl.network ? lvl.network.replace(/\.\d+$/, '.1') : '192.168.1.1';
+
+        this.print(`\n================================================================================`, 'dim');
+        this.print(`Linux subnet-server 6.8.0-enterprise #42-SMP PREEMPT x86_64 GNU/Linux`, 'accent');
+        this.print(`* System Mode        : Enterprise Dual Stack (Cisco IOS & Linux CLI Active)`, 'dim');
+        this.print(`* Mission ID         : Level ${lvl.id} - ${lvl.name}`, 'accent');
+        this.print(`* Primary Network    : ${lvl.network}/${lvl.cidr} (Default GW: ${gwIp})`, 'success');
+        this.print(`* Mission Scenario   : ${lvl.scenario || 'Yhdistä ja konfiguroi verkkolaitteet.'}`, 'normal');
+        if (lvl.hint) {
+            this.print(`* Engineer Hint      : ${lvl.hint}`, 'warning');
+        }
+        this.print(`\nKaikki verkon sääntövirheet ja alertit tallentuvat tähän komentopäätteeseen.`);
+        this.print(`Peliä voi pelata myös 100% komentoriviltä: 'help', 'objectives', 'cable', 'ip', 'verify', 'dmesg'.`, 'dim');
+        this.print(`================================================================================\n`, 'dim');
+
+        this.logSyslog('info', `Tason ${lvl.id} alustus suoritettu. Reititystaulut ja linkkityypit ladattu.`, 'systemd');
+        this.syncPrompt();
+    }
+
+    // =========================================================================
+    // LAITTEEN TUNNISTUS JA PROMPT
+    // =========================================================================
 
     setTargetNode(node) {
         this.targetNode = node;
@@ -96,18 +231,50 @@ class CyberTerminal {
             ? (nodes.indexOf(node) + 1) 
             : (indexHint || 1);
         
-        // Luodaan käyttäjäystävällinen CLI-nimi (esim. PC-1, Switch-2, Core-Switch-1, Server-1)
         const cleanType = type.replace(/_/g, '-').toUpperCase();
         return `${cleanType}-${idx}`;
+    }
+
+    resolveNode(query) {
+        if (!query || typeof nodes === 'undefined' || !Array.isArray(nodes)) return null;
+        const q = query.trim().toLowerCase();
+
+        // 1. Numeron mukaan (1-perustainen)
+        const num = parseInt(q, 10);
+        if (!isNaN(num) && num >= 1 && num <= nodes.length) {
+            return nodes[num - 1];
+        }
+
+        // 2. CLI-nimen tai tyypin mukaan
+        let found = nodes.find((n, i) => {
+            const cliName = this.getNodeDisplayName(n, i + 1).toLowerCase();
+            const typeName = (n.userData.type || '').toLowerCase();
+            return cliName === q || cliName.replace('-', '') === q.replace('-', '') || typeName === q;
+        });
+
+        // 3. IP-osoitteen mukaan
+        if (!found) {
+            found = nodes.find(n => n.userData.ip && n.userData.ip.toLowerCase() === q);
+        }
+
+        // 4. Erikoisnimet
+        if (!found) {
+            if (q === 'gateway' || q === 'gw') found = nodes.find(n => n.userData.type === nodeTypes.GATEWAY);
+            else if (q === 'cloud' || q === 'internet') found = nodes.find(n => n.userData.type === nodeTypes.CLOUD);
+            else if (q === 'firewall' || q === 'fw') found = nodes.find(n => n.userData.type === nodeTypes.FIREWALL);
+            else if (q === 'core') found = nodes.find(n => n.userData.type === nodeTypes.CORE_SWITCH);
+        }
+
+        return found;
     }
 
     getPromptText() {
         if (this.targetNode) {
             const isInfra = [nodeTypes.SWITCH, nodeTypes.CORE_SWITCH, nodeTypes.ROUTER, nodeTypes.FIREWALL, nodeTypes.GATEWAY].includes(this.targetNode.userData.type);
             const promptSymbol = isInfra ? '#' : '>';
-            return `${this.getNodeDisplayName(this.targetNode)}${promptSymbol}`;
+            return `root@${this.getNodeDisplayName(this.targetNode)}${promptSymbol}`;
         }
-        return "architect@submask:~$";
+        return "sysadmin@subnet-server:~$";
     }
 
     syncPrompt() {
@@ -116,31 +283,11 @@ class CyberTerminal {
             promptEl.innerText = this.getPromptText();
         }
         const badgeEl = document.getElementById('terminal-header-title');
-        if (badgeEl) {
-            const lvlName = currentLevelConfig ? `Taso ${currentLevelConfig.id}: ${currentLevelConfig.name}` : "CLI Mode";
+        const headerConnEl = document.getElementById('terminal-header-conn');
+        if (badgeEl && headerConnEl) {
+            const lvlName = currentLevelConfig ? `Lvl ${currentLevelConfig.id}: ${currentLevelConfig.name}` : "CLI Mode";
             const devName = this.targetNode ? ` // ${this.getNodeDisplayName(this.targetNode)}` : "";
-            badgeEl.innerText = `TERMINAL // ${lvlName}${devName}`;
-        }
-    }
-
-    toggle() {
-        const modal = document.getElementById('terminal-modal');
-        if (!modal) return;
-        this.isOpen = !this.isOpen;
-        if (this.isOpen) {
-            modal.classList.remove('hidden');
-            if (!this.targetNode && typeof selectedNodeForIp !== 'undefined' && selectedNodeForIp) {
-                this.targetNode = selectedNodeForIp;
-            }
-            this.syncPrompt();
-            const inputEl = document.getElementById('terminal-input');
-            if (inputEl) {
-                setTimeout(() => inputEl.focus(), 50);
-            }
-            if (typeof audio !== 'undefined') audio.playUiClick();
-        } else {
-            modal.classList.add('hidden');
-            if (typeof audio !== 'undefined') audio.playUiClick();
+            headerConnEl.innerText = `sysadmin@subnet-server:~$ [${lvlName}${devName}]`;
         }
     }
 
@@ -149,17 +296,19 @@ class CyberTerminal {
         if (!bodyEl) return;
 
         const line = document.createElement('div');
-        line.className = 'terminal-line leading-relaxed';
+        line.className = 'terminal-line leading-relaxed font-mono';
 
         if (type === 'command') {
             const prompt = this.getPromptText();
             line.innerHTML = `<span class="text-emerald-400 font-bold">${prompt}</span> <span class="text-white font-bold">${text}</span>`;
         } else if (type === 'error') {
             line.innerHTML = `<span class="text-rose-400 font-semibold">${text}</span>`;
+        } else if (type === 'warning') {
+            line.innerHTML = `<span class="text-amber-300 font-semibold">${text}</span>`;
         } else if (type === 'success') {
             line.innerHTML = `<span class="text-emerald-300 font-semibold">${text}</span>`;
         } else if (type === 'accent') {
-            line.innerHTML = `<span class="text-cyan-300">${text}</span>`;
+            line.innerHTML = `<span class="text-cyan-300 font-semibold">${text}</span>`;
         } else if (type === 'dim') {
             line.innerHTML = `<span class="text-slate-500">${text}</span>`;
         } else {
@@ -174,10 +323,38 @@ class CyberTerminal {
         const bodyEl = document.getElementById('terminal-body');
         if (bodyEl) {
             bodyEl.innerHTML = '';
-            this.print("Subnet Architect OS v3.2 [CLI Mode]", 'accent');
-            this.print("Kirjoita 'help' nähdäksesi tuetut Cisco IOS / Linux -verkkokomennot.", 'dim');
+            this.print("Subnet Architect OS v4.0 [Enterprise Linux Server Console]", 'accent');
+            this.print("Komennot: 'help', 'objectives', 'cable', 'devices', 'ip', 'verify', 'dmesg'.", 'dim');
         }
     }
+
+    autoComplete(inputEl) {
+        const current = inputEl.value.trim().toLowerCase();
+        if (!current) return;
+
+        const commands = [
+            'help', 'clear', 'cls', 'ping', 'traceroute', 'tracert',
+            'ipconfig', 'ifconfig', 'arp', 'subnetcalc', 'status',
+            'devices', 'nodes', 'connect', 'session', 'select', 'exit',
+            'cable connect', 'cable disconnect', 'cables', 'links',
+            'add', 'spawn', 'rm', 'delete',
+            'verify', 'submit', 'solve', 'next', 'level',
+            'objectives', 'motd', 'task', 'rules', 'hint',
+            'dmesg', 'journalctl', 'alerts', 'logs',
+            'ip address', 'ip addr add', 'show ip interface brief', 'show ip route',
+            'show cdp neighbors', 'show lldp neighbors', 'reload',
+            'hostname', 'whoami', 'history'
+        ];
+
+        const match = commands.find(c => c.startsWith(current));
+        if (match) {
+            inputEl.value = match + ' ';
+        }
+    }
+
+    // =========================================================================
+    // KOMENTOJEN SUORITUS (Täysi CLI-tulkki)
+    // =========================================================================
 
     execute(cmdLine) {
         this.print(cmdLine, 'command');
@@ -190,14 +367,35 @@ class CyberTerminal {
 
         if (typeof audio !== 'undefined') audio.playUiClick();
 
-        // 1. Cisco monisanaiset komennot: 'show ...' ja 'ip address ...'
+        // 1. Monisanaiset Linux / Cisco -komennot
         if (cmd === 'show') {
             this.cmdShow(args);
             return;
         }
 
-        if (cmd === 'ip' && args[0] && args[0].toLowerCase() === 'address') {
-            this.cmdIpAddress(args.slice(1));
+        if (cmd === 'ip') {
+            if (args[0] && args[0].toLowerCase() === 'address') {
+                this.cmdIpAddress(args.slice(1));
+                return;
+            }
+            if (args[0] && args[0].toLowerCase() === 'addr') {
+                this.cmdIpRouteAdd(args.slice(1));
+                return;
+            }
+            if (args[0] && args[0].toLowerCase() === 'set') {
+                this.cmdIpSet(args.slice(1));
+                return;
+            }
+            if (args[0] && (args[0].toLowerCase() === 'link' || args[0].toLowerCase() === 'a')) {
+                this.cmdDevices();
+                return;
+            }
+            this.cmdIpConfig([]);
+            return;
+        }
+
+        if (cmd === 'cable' || cmd === 'link') {
+            this.cmdCableRouter(cmd, args);
             return;
         }
 
@@ -205,20 +403,55 @@ class CyberTerminal {
         switch (cmd) {
             case 'help':
             case '?':
+            case 'man':
                 this.cmdHelp();
                 break;
             case 'clear':
             case 'cls':
                 this.clear();
                 break;
+            case 'objectives':
+            case 'motd':
+            case 'task':
+            case 'scenario':
+                this.cmdObjectives();
+                break;
+            case 'rules':
+            case 'policy':
+                this.cmdRules();
+                break;
+            case 'hint':
+                this.cmdHint();
+                break;
+            case 'dmesg':
+            case 'journalctl':
+            case 'alerts':
+            case 'logs':
+                this.cmdDmesg(args);
+                break;
+            case 'cables':
+            case 'links':
+                this.cmdCables();
+                break;
             case 'devices':
             case 'nodes':
+            case 'ls':
             case 'list':
                 this.cmdDevices();
+                break;
+            case 'add':
+            case 'spawn':
+                this.cmdSpawn(args);
+                break;
+            case 'rm':
+            case 'del':
+            case 'delete':
+                this.cmdDelete(args);
                 break;
             case 'connect':
             case 'session':
             case 'select':
+            case 'ssh':
                 this.cmdConnect(args);
                 break;
             case 'exit':
@@ -246,7 +479,19 @@ class CyberTerminal {
                 this.cmdSubnetCalc(args);
                 break;
             case 'status':
-                this.cmdStatus();
+            case 'verify':
+            case 'check':
+                this.cmdVerify();
+                break;
+            case 'submit':
+            case 'solve':
+                this.cmdSubmit();
+                break;
+            case 'next':
+                this.cmdNextLevel();
+                break;
+            case 'level':
+                this.cmdLoadLevel(args);
                 break;
             case 'reload':
             case 'reboot':
@@ -256,147 +501,465 @@ class CyberTerminal {
                 this.cmdHostname(args);
                 break;
             case 'whoami':
-                this.print(`architect (Network Administrator) - Node: ${this.targetNode ? this.getNodeDisplayName(this.targetNode) : 'Console Root'}`, 'accent');
+                this.print(`sysadmin (Enterprise Network Engineer) - Target: ${this.targetNode ? this.getNodeDisplayName(this.targetNode) : 'Console Root'}`, 'accent');
+                break;
+            case 'history':
+                this.cmdHistory();
                 break;
             default:
-                this.print(`Komentoa '${cmd}' ei tunnistettu. Kirjoita 'help' nähdäksesi kaikki komennot.`, 'error');
+                this.print(`bash: ${cmd}: komentoa ei löydy. Kirjoita 'help' nähdäksesi kaikki tuetut verkkokomennot.`, 'error');
                 if (typeof audio !== 'undefined') audio.playError();
                 break;
         }
     }
 
+    // =========================================================================
+    // OHJEET, SÄÄNNÖT JA DMESG
+    // =========================================================================
+
     cmdHelp() {
-        this.print("--- TUETUT CISCO IOS & LINUX -KOMENNOT (TASOT 1-61) ---", 'accent');
-        this.print("  LAITEHALLINTA & ISTUNNOT:", 'dim');
-        this.print("    devices / nodes            - Listaa tason kaikki laitteet, ID:t ja CLI-nimet.");
-        this.print("    connect <nimi | numero>    - Avaa CLI-yhteys tiettyyn laitteeseen (esim. connect PC-1 tai connect 2).");
-        this.print("    exit                       - Sulje laiteistunto ja palaa pääkonsoliin.");
-        this.print("    hostname                   - Tulostaa aktiivisen laitteen isäntänimen.");
-        this.print("\n  IP-KONFIGUROINTI (CLI-TILA):", 'dim');
-        this.print("    ip address <ip> <mask>     - Cisco IOS: Aseta valitulle laitteelle IP ja aliverkon peite.");
-        this.print("    ifconfig eth0 <ip> netmask <mask> - Linux: Aseta laitteen verkkosovittimen osoite.");
-        this.print("\n  CISCO SHOW -DIAGNOSTIIKKA:", 'dim');
-        this.print("    show ip interface brief    - Tulostaa kaikkien liittymien IP-osoitteet ja tilat (Up/Down).");
-        this.print("    show ip route              - Näyttää aktiiviset reitit ja oletusyhdyskäytävän.");
-        this.print("    show cdp neighbors         - Näyttää kytketyt Cisco/verkkonaapurit ja kaapelityypit.");
-        this.print("\n  VERKKO- & DIAGNOSTIIKKATYÖKALUT:", 'dim');
-        this.print("    ping <ip | laite>          - Lähettää 4 kpl ICMP Echo -paketteja 3D-pulssina kohteeseen.");
-        this.print("    traceroute <ip | internet> - Jäljittää reitin hyppy kerrallaan 3D-animaatiolla.");
-        this.print("    arp -a                     - Tulostaa laitteiden ja kytkimen ARP-välimuistin.");
-        this.print("    subnetcalc <ip>/<cidr>     - Aliverkkolaskuri (verkko-ID, broadcast, isännät, lohkokoko).");
-        this.print("    status                     - Tarkistaa nykyisen tason verkkotopologian kokonaistilan.");
-        this.print("    reload                     - Käynnistää aktiivisen tason uudelleen.");
-        this.print("    clear                      - Tyhjentää terminaalinäytön.");
+        this.print("--- ENTERPRISE LINUX & CISCO VERKKOKOMENNOT (100% CLI-TUKI) ---", 'accent');
+        this.print("  TEHTÄVÄNANTO & OHJEET:", 'dim');
+        this.print("    objectives / motd          - Tulostaa tason tehtävänannon ja verkkomääritykset.");
+        this.print("    rules                      - Näyttää kaapelointi-, hierarkia- ja CCNA-säännöt.");
+        this.print("    hint                       - Tulostaa tason arkkitehtuurivihjeen.");
+        this.print("    dmesg / alerts             - Tulostaa pysyvän tapahtuma- ja virhelokin (syslog).");
+        this.print("\n  VERKON KAAPELOINTI (CLI-OHJAUS):", 'dim');
+        this.print("    cable connect <A> <B> [copper|fiber] - Yhdistää kaksi laitetta kaapelilla (tarkistaa säännöt).");
+        this.print("    cable disconnect <A> <B>   - Poistaa kaapelin laitteiden väliltä.");
+        this.print("    cables / links             - Listaa kaikki aktiiviset kaapelit ja niiden tilat.");
+        this.print("\n  LAITTEIDEN HALLINTA & SPAWN:", 'dim');
+        this.print("    devices / ls               - Listaa kaikki laitteet, ID:t, tilat ja IP-osoitteet.");
+        this.print("    add <switch|server|wifi|firewall|pc> [x] [z] - Luo uuden laitteen verkkomaailmaan.");
+        this.print("    rm <laite>                 - Poistaa laitteen ja siihen kytketyt kaapelit.");
+        this.print("    connect <laite> / ssh <laite> - Avaa laitteen suoran konsoli-istunnon.");
+        this.print("    exit                       - Palaa laiteistunnosta pääkonsoliin.");
+        this.print("\n  IP-OSOITTEIDEN KONFIGUROINTI:", 'dim');
+        this.print("    ip addr add <ip>/<cidr> dev eth0 - Linux iproute2: Aseta valitulle laitteelle IP ja CIDR.");
+        this.print("    ip address <ip> <mask>     - Cisco IOS: Aseta valitulle laitteelle IP ja peite.");
+        this.print("    ip set <laite> <ip> <peite|cidr> - Aseta IP suoraan mille tahansa laitteelle.");
+        this.print("\n  TARKISTUS, DIAGNOSTIIKKA & EDISTYMINEN:", 'dim');
+        this.print("    verify / status            - Analysoi koko verkon tilan ja raportoi puutteet.");
+        this.print("    submit                     - Suorittaa ja läpäisee tason, jos verkko on 100% kunnossa.");
+        this.print("    next                       - Siirtyy seuraavaan tasoon.");
+        this.print("    ping <ip | laite>          - Lähettää 4 ICMP-pakettia 3D-animaationa kohteeseen.");
+        this.print("    traceroute <ip | internet> - Jäljittää reitin 3D-pulssina hyppy kerrallaan.");
+        this.print("    show ip interface brief    - Cisco IOS: Liittymien yhteenvedot.");
+        this.print("    subnetcalc <ip>/<cidr>     - Aliverkkolaskuri (verkko, broadcast, isännät).");
+        this.print("    clear                      - Tyhjentää terminaalin ruudun.");
     }
 
-    cmdDevices() {
-        if (!nodes || nodes.length === 0) {
-            this.print("Ei aktiivisia laitteita maailmassa.", 'dim');
+    cmdObjectives() {
+        if (!currentLevelConfig) {
+            this.print("Ei aktiivista tasokonfiguraatiota.", 'dim');
             return;
         }
+        const lvl = currentLevelConfig;
+        const gwIp = lvl.network ? lvl.network.replace(/\.\d+$/, '.1') : '192.168.1.1';
 
-        this.print(`--- TASON LAITTEET (${nodes.length} kpl) ---`, 'accent');
-        this.print("  CLI-NIMI       TYYPPI         IP-OSOITE         PEITE             STATUS", 'dim');
-
-        nodes.forEach((n, idx) => {
-            const cliName = this.getNodeDisplayName(n, idx + 1).padEnd(14, ' ');
-            const typeStr = (n.userData.type || '').toUpperCase().padEnd(14, ' ');
-            const ipStr = (n.userData.ip || 'MÄÄRITTÄMÄTÖN').padEnd(17, ' ');
-            const maskStr = (n.userData.mask || 'MÄÄRITTÄMÄTÖN').padEnd(17, ' ');
-            const status = n.userData.isConnected ? "🟢 Up" : "🔴 Down";
-            const isSelected = (n === this.targetNode) ? " [AKTIIVINEN]" : "";
-
-            const line = `  ${cliName} ${typeStr} ${ipStr} ${maskStr} ${status}${isSelected}`;
-            if (n === this.targetNode) {
-                this.print(line, 'success');
-            } else {
-                this.print(line, 'normal');
-            }
-        });
-
-        this.print("\nVinkki: Valitse laite komennolla 'connect <laite>' (esim. connect PC-1 tai connect 1).", 'dim');
-    }
-
-    cmdConnect(args) {
-        if (args.length === 0) {
-            this.print("Käyttö: connect <laitteen-nimi tai numero> (esim. connect PC-1 tai connect 2)", 'error');
-            return;
-        }
-
-        const query = args[0].trim().toLowerCase();
-        let foundNode = null;
-
-        // 1. Numeron mukaan (1-perustainen indeksi)
-        const numIdx = parseInt(query, 10);
-        if (!isNaN(numIdx) && numIdx >= 1 && numIdx <= nodes.length) {
-            foundNode = nodes[numIdx - 1];
-        }
-
-        // 2. CLI-nimen tai tyypin mukaan
-        if (!foundNode) {
-            foundNode = nodes.find((n, i) => {
-                const cliName = this.getNodeDisplayName(n, i + 1).toLowerCase();
-                const typeName = (n.userData.type || '').toLowerCase();
-                return cliName === query || cliName.replace('-', '') === query.replace('-', '') || typeName === query;
+        this.print(`\n--- TEHTÄVÄNANTO: TASO ${lvl.id} - ${lvl.name.toUpperCase()} ---`, 'accent');
+        this.print(`  Kuvaus       : ${lvl.scenario || 'Yhdistä verkon laitteet ja määritä IP-osoitteet.'}`);
+        this.print(`  Pääverkko    : ${lvl.network}/${lvl.cidr}`);
+        this.print(`  Oletusyhdyskäytävä: ${gwIp}`);
+        if (lvl.zones && lvl.zones.length > 0) {
+            this.print(`  Aliverkkoluokat / Vyöhykkeet:`, 'dim');
+            lvl.zones.forEach(z => {
+                this.print(`    - [${z.name || 'Segment'}] Subnet: ${z.subnet || 'Tason aliverkko'}`);
             });
         }
+        if (lvl.hint) {
+            this.print(`  Vihje        : ${lvl.hint}`, 'warning');
+        }
+        this.print(`\nTarkista tila komennolla 'verify'. Kun kaikki valmista, aja 'submit'.`, 'dim');
+    }
 
-        // 3. IP-osoitteen mukaan
-        if (!foundNode) {
-            foundNode = nodes.find(n => n.userData.ip && n.userData.ip.toLowerCase() === query);
+    cmdRules() {
+        this.print("\n--- VERKKOHIERARKIA & KAAPELOINTISÄÄNNÖT (CCNA POLICY) ---", 'accent');
+        this.print("  1. Päätelaitteet (PC, Läppäri, Tulostin, Server):", 'dim');
+        this.print("     - Kytketään AINA huoneen LAN-kytkimeen 1G Kuparikaapelilla.");
+        this.print("     - KIELLETTY: Päätelaitetta ei saa kytkeä suoraan Ydinlinkkiin (Core Switch)! [REJECT]");
+        this.print("  2. Kytkimet ja Runko (Core Switch):", 'dim');
+        this.print("     - Runkoyhteydet kytkimeltä Ydinlinkkiin kytketään 10G Kuitukaapelilla.");
+        this.print("     - Suurissa verkoissa LAN-kytkinten ketjutus (Switch <-> Switch) on kielletty; käytä tähtitopologiaa.");
+        this.print("  3. Palomuuri ja Gateway:", 'dim');
+        this.print("     - DMZ-järjestys: Gateway -> Palomuuri -> Ydinlinkki/Kytkin -> Palvelin.");
+        this.print("  4. Aliverkon Peite & Osoitteet:", 'dim');
+        this.print("     - Verkko-osoitetta (Network ID) ja yleislähetysosoitetta (Broadcast) EI saa antaa laitteelle.");
+        this.print("     - Tasolla 11+: Palvelimet kuuluvat staattiselle alkuosalle, käyttäjät keskelle, tulostimet loppuun.");
+    }
+
+    cmdHint() {
+        if (currentLevelConfig && currentLevelConfig.hint) {
+            this.print(`\n💡 Vihje: ${currentLevelConfig.hint}`, 'warning');
+        } else {
+            this.print("Ei erillistä vihjettä tälle tasolle. Varmista kaapelointi ja tarkista 'verify'.", 'dim');
+        }
+    }
+
+    cmdDmesg(args) {
+        this.print(`\n--- KERNEL RING BUFFER & SYSLOG (${this.syslogBuffer.length} tapahtumaa) ---`, 'accent');
+        if (this.syslogBuffer.length === 0) {
+            this.print("Syslog-puskuri on tyhjä.", 'dim');
+            return;
         }
 
-        if (!foundNode) {
-            this.print(`Laitetta '${args[0]}' ei löydy. Kirjoita 'devices' nähdäksesi saatavilla olevat laitteet.`, 'error');
+        const filterErr = args && args[0] && (args[0] === '-e' || args[0] === 'err' || args[0] === 'alert');
+        const list = filterErr 
+            ? this.syslogBuffer.filter(e => e.type === 'error' || e.type === 'alert' || e.type === 'warning')
+            : this.syslogBuffer;
+
+        list.slice(-30).forEach(e => {
+            let color = 'normal';
+            if (e.type === 'error' || e.type === 'alert') color = 'error';
+            else if (e.type === 'warning' || e.type === 'warn') color = 'warning';
+            else if (e.type === 'success') color = 'success';
+
+            this.print(`[${e.uptime.padStart(9, ' ')}] ${e.facility}: ${e.message}`, color);
+        });
+
+        this.print(`\nNäytettiin ${Math.min(30, list.length)} viimeisintä tapahtumaa. Vihje: 'dmesg -e' suodattaa vain alertit.`, 'dim');
+    }
+
+    cmdHistory() {
+        this.print("--- KOMENTOHISTORIA ---", 'accent');
+        this.history.forEach((h, i) => {
+            this.print(`  ${(i + 1).toString().padStart(3, ' ')}  ${h}`);
+        });
+    }
+
+    // =========================================================================
+    // KAAPELOINTI KOMENTORIVILTÄ (cable connect / disconnect)
+    // =========================================================================
+
+    cmdCableRouter(cmd, args) {
+        const sub = (args[0] || '').toLowerCase();
+
+        if (sub === 'connect' || sub === 'add' || sub === 'link') {
+            this.cmdCableConnect(args.slice(1));
+            return;
+        }
+        if (sub === 'disconnect' || sub === 'rm' || sub === 'unlink' || sub === 'del') {
+            this.cmdCableDisconnect(args.slice(1));
+            return;
+        }
+        if (sub === 'list' || sub === 'show' || args.length === 0) {
+            this.cmdCables();
+            return;
+        }
+
+        // cable PC-1 Switch-1
+        if (args.length >= 2) {
+            this.cmdCableConnect(args);
+            return;
+        }
+
+        this.print("Käyttö:", 'dim');
+        this.print("  cable connect <laiteA> <laiteB> [copper | fiber]");
+        this.print("  cable disconnect <laiteA> <laiteB>");
+        this.print("  cables");
+    }
+
+    cmdCables() {
+        if (!cables || cables.length === 0) {
+            this.print("Verkossa ei ole vielä kaapeleita. Kytke laitteita: 'cable connect <laiteA> <laiteB>'.", 'dim');
+            return;
+        }
+
+        this.print(`\n--- AKTIIVISET KAAPELILINKIT (${cables.length} kpl) ---`, 'accent');
+        this.print("  ID   LÄHTÖLAITE         KOHDELAITE         LINKKITYYPPI   STATUS     PITUUS", 'dim');
+
+        cables.forEach((c, i) => {
+            const devA = this.getNodeDisplayName(c.nodeA).padEnd(18, ' ');
+            const devB = this.getNodeDisplayName(c.nodeB).padEnd(18, ' ');
+            const typeStr = (c.linkType === LINK_TYPES.FIBER_10G ? '10G Fiber' : '1G Copper').padEnd(14, ' ');
+            const dist = c.nodeA.mesh.position.distanceTo(c.nodeB.mesh.position).toFixed(1);
+            const status = (c.nodeA.userData.isConnected && c.nodeB.userData.isConnected) ? "🟢 Up  " : "🟡 Link";
+
+            this.print(`  #${(i + 1).toString().padEnd(3, ' ')} ${devA} ${devB} ${typeStr} ${status}    ${dist} yks.`);
+        });
+    }
+
+    cmdCableConnect(args) {
+        if (args.length < 2) {
+            this.print("Käyttö: cable connect <laiteA> <laiteB> [copper | fiber] (esim. cable connect PC-1 Switch-1)", 'error');
+            return;
+        }
+
+        const nodeA = this.resolveNode(args[0]);
+        const nodeB = this.resolveNode(args[1]);
+
+        if (!nodeA) {
+            this.print(`Virhe: Laitetta '${args[0]}' ei löydy. Listaa laitteet komennolla 'devices'.`, 'error');
+            return;
+        }
+        if (!nodeB) {
+            this.print(`Virhe: Laitetta '${args[1]}' ei löydy. Listaa laitteet komennolla 'devices'.`, 'error');
+            return;
+        }
+        if (nodeA === nodeB) {
+            this.print("Virhe: Laitetta ei voi kytkeä itseensä!", 'error');
+            return;
+        }
+
+        const nameA = this.getNodeDisplayName(nodeA);
+        const nameB = this.getNodeDisplayName(nodeB);
+
+        // Tarkista onko kaapeli jo olemassa
+        const exists = cables.find(c => 
+            (c.nodeA === nodeA && c.nodeB === nodeB) || 
+            (c.nodeB === nodeA && c.nodeA === nodeB)
+        );
+        if (exists) {
+            this.print(`Huomautus: Kaapeli välillä ${nameA} <-> ${nameB} on jo olemassa!`, 'warning');
+            return;
+        }
+
+        // Tarkista etäisyys
+        const dist = nodeA.mesh.position.distanceTo(nodeB.mesh.position);
+        const linkType = (args[2] && args[2].toLowerCase() === 'fiber') 
+            ? LINK_TYPES.FIBER_10G 
+            : getLinkType(nodeA.userData.type, nodeB.userData.type);
+
+        const maxDist = (linkType === LINK_TYPES.FIBER_10G) ? 80 : 30;
+        if (dist > maxDist) {
+            const err = `Kaapelin kantama ylittyi (${dist.toFixed(1)} > max ${maxDist} yksikköä)!`;
+            this.logSyslog('error', `Link ${nameA} <-> ${nameB}: ${err}`, 'net_phy');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
 
-        this.setTargetNode(foundNode);
-
-        // Siirretään 3D-kamera kohdelaitteelle
-        if (foundNode.mesh && typeof cameraTarget !== 'undefined' && cameraTarget) {
-            cameraTarget.x = foundNode.mesh.position.x;
-            cameraTarget.z = foundNode.mesh.position.z;
-        }
-        if (foundNode.userData) {
-            foundNode.userData.animating = true;
-            foundNode.userData.animStart = Date.now();
-        }
-
-        const devName = this.getNodeDisplayName(foundNode);
-        this.print(`Yhdistetty laitteeseen ${devName} [${foundNode.userData.type.toUpperCase()}]. Konsoli avattu.`, 'success');
-        if (IP_REQUIRED_TYPES.includes(foundNode.userData.type)) {
-            this.print(`Konfiguroi IP komennolla: ip address <ip> <mask> tai ifconfig eth0 <ip> netmask <mask>`, 'accent');
-        } else {
-            this.print(`Tämä laite toimii infrastruktuurisolmuna (ei vaadi päätelaite-IP:tä).`, 'dim');
-        }
-    }
-
-    cmdExit() {
-        if (!this.targetNode) {
-            this.toggle(); // Sulkee terminaali-ikkunan
+        // Tarkista CCNA / DEVICE_RULES -säännöt
+        const ruleErr = getCableError(nodeA, nodeB);
+        if (ruleErr) {
+            this.logSyslog('error', `REJECT ${nameA} <-> ${nameB}: ${ruleErr}`, 'ccna_policy');
+            if (typeof audio !== 'undefined') audio.playError();
             return;
         }
 
-        const prev = this.getNodeDisplayName(this.targetNode);
-        this.setTargetNode(null);
-        this.print(`Suljettiin CLI-yhteys laitteeseen ${prev}. Palattiin pääkonsoliin.`, 'dim');
+        // Kaikki kunnossa: Luodaan kaapeli
+        const visual = createCableVisual(nodeA, nodeB, linkType, null);
+        cables.push({
+            nodeA,
+            nodeB,
+            line: visual.line,
+            linkType: linkType
+        });
+
+        if (typeof audio !== 'undefined') audio.playCableSnap();
+        if (typeof checkConnections === 'function') checkConnections();
+        if (typeof updateGoalUI === 'function') updateGoalUI();
+
+        const typeName = linkType === LINK_TYPES.FIBER_10G ? "10G Kuitu (Trunk)" : "1G Kupari (Access)";
+        this.logSyslog('success', `Kaapeli kytketty onnistuneesti: ${nameA} <====> ${nameB} [${typeName}]`, 'net_core');
+        this.print(`[OK] Linkki aktivoitu: ${nameA} <---> ${nameB} (${typeName})`, 'success');
     }
 
-    cmdHostname(args) {
-        if (!this.targetNode) {
-            this.print("Console Root: subnet-core-gw", 'normal');
+    cmdCableDisconnect(args) {
+        if (args.length < 2) {
+            this.print("Käyttö: cable disconnect <laiteA> <laiteB> (tai 'unlink <A> <B>')", 'error');
             return;
         }
-        if (args.length > 0) {
-            const newName = args[0].trim();
-            this.targetNode.userData.name = newName;
-            this.syncPrompt();
-            this.print(`Isäntänimi asetettu: ${newName}`, 'success');
-        } else {
-            this.print(`Hostname: ${this.getNodeDisplayName(this.targetNode)}`, 'normal');
+
+        const nodeA = this.resolveNode(args[0]);
+        const nodeB = this.resolveNode(args[1]);
+
+        if (!nodeA || !nodeB) {
+            this.print("Virhe: Määritettyjä laitteita ei löydy.", 'error');
+            return;
         }
+
+        const cableIdx = cables.findIndex(c => 
+            (c.nodeA === nodeA && c.nodeB === nodeB) || 
+            (c.nodeB === nodeA && c.nodeA === nodeB)
+        );
+
+        if (cableIdx === -1) {
+            this.print(`Virhe: Laitteiden ${this.getNodeDisplayName(nodeA)} ja ${this.getNodeDisplayName(nodeB)} välillä ei ole kaapelia.`, 'error');
+            return;
+        }
+
+        const targetCable = cables[cableIdx];
+        if (typeof deleteCable === 'function') {
+            deleteCable(targetCable);
+        } else {
+            if (targetCable.line) scene.remove(targetCable.line);
+            cables.splice(cableIdx, 1);
+            if (typeof checkConnections === 'function') checkConnections();
+        }
+
+        if (typeof audio !== 'undefined') audio.playCableCut();
+        if (typeof updateGoalUI === 'function') updateGoalUI();
+
+        const nameA = this.getNodeDisplayName(nodeA);
+        const nameB = this.getNodeDisplayName(nodeB);
+        this.logSyslog('warning', `Kaapeli poistettu: ${nameA} <-X-> ${nameB}`, 'net_core');
+        this.print(`[OK] Kaapeli poistettu väliltä ${nameA} ja ${nameB}.`, 'dim');
+    }
+
+    // =========================================================================
+    // LAITTEIDEN LUONTI JA POISTO (add / rm)
+    // =========================================================================
+
+    cmdSpawn(args) {
+        if (args.length === 0) {
+            this.print("Käyttö: add <laitetyyppi> [x] [z]", 'error');
+            this.print("Tuetut tyypit: switch, core_switch, server, pc, laptop, wifi, firewall", 'dim');
+            return;
+        }
+
+        const rawType = args[0].toLowerCase().replace('-', '_');
+        const allowedTypes = {
+            'switch': nodeTypes.SWITCH,
+            'lan_switch': nodeTypes.SWITCH,
+            'core_switch': nodeTypes.CORE_SWITCH,
+            'core': nodeTypes.CORE_SWITCH,
+            'server': nodeTypes.SERVER,
+            'pc': nodeTypes.PC,
+            'workstation': nodeTypes.PC,
+            'laptop': nodeTypes.LAPTOP,
+            'wifi': nodeTypes.WIFI,
+            'ap': nodeTypes.WIFI,
+            'firewall': nodeTypes.FIREWALL,
+            'printer': nodeTypes.PRINTER,
+            'voip': nodeTypes.VOIP
+        };
+
+        const targetType = allowedTypes[rawType];
+        if (!targetType) {
+            this.print(`Virheellinen laitetyyppi '${args[0]}'. Tuetut: switch, core_switch, server, pc, laptop, wifi, firewall`, 'error');
+            return;
+        }
+
+        // Paikka: joko annettu tai vapaa paikka
+        let posX = (args[1] !== undefined) ? parseFloat(args[1]) : 0;
+        let posZ = (args[2] !== undefined) ? parseFloat(args[2]) : 0;
+
+        if (isNaN(posX) || isNaN(posZ)) {
+            posX = 0;
+            posZ = 0;
+        }
+
+        // Jos paikkaa ei annettu, lasketaan pieni siirtymä olemassa olevista
+        if (args[1] === undefined && typeof nodes !== 'undefined') {
+            const count = nodes.length;
+            posX = ((count % 5) - 2) * 4;
+            posZ = (Math.floor(count / 5) - 1) * 4;
+        }
+
+        if (typeof createNode === 'function') {
+            const newNode = createNode(targetType, posX, posZ, false);
+            const devName = this.getNodeDisplayName(newNode);
+            this.logSyslog('info', `Uusi laite lisätty verkkomaailmaan: ${devName} [${targetType.toUpperCase()}] paikkaan (${posX}, ${posZ})`, 'provisioning');
+            this.print(`[OK] Laite luotu: ${devName} (${targetType.toUpperCase()}) sijaintiin (${posX.toFixed(1)}, ${posZ.toFixed(1)}).`, 'success');
+            if (typeof updateGoalUI === 'function') updateGoalUI();
+        } else {
+            this.print("Virhe: createNode-funktio ei ole saatavilla.", 'error');
+        }
+    }
+
+    cmdDelete(args) {
+        if (args.length === 0) {
+            this.print("Käyttö: rm <laite> (esim. rm Switch-2 tai rm 3)", 'error');
+            return;
+        }
+
+        const node = this.resolveNode(args[0]);
+        if (!node) {
+            this.print(`Virhe: Laitetta '${args[0]}' ei löydy. Listaa laitteet: 'devices'.`, 'error');
+            return;
+        }
+
+        const devName = this.getNodeDisplayName(node);
+        if (node.userData.isPredefined && (node.userData.type === nodeTypes.GATEWAY || node.userData.type === nodeTypes.CLOUD)) {
+            this.print(`Virhe: Yhdyskäytävää tai Internet-pilveä ei voi poistaa tason arkkitehtuurista!`, 'error');
+            return;
+        }
+
+        if (this.targetNode === node) {
+            this.setTargetNode(null);
+        }
+
+        if (typeof deleteNode === 'function') {
+            deleteNode(node);
+            this.logSyslog('warning', `Laite ${devName} ja sen kaapelilinkit poistettu.`, 'provisioning');
+            this.print(`[OK] Laite ${devName} poistettu verkosta.`, 'dim');
+            if (typeof checkConnections === 'function') checkConnections();
+            if (typeof updateGoalUI === 'function') updateGoalUI();
+        } else {
+            this.print("Virhe: deleteNode-funktiota ei löydy.", 'error');
+        }
+    }
+
+    // =========================================================================
+    // IP-OSOITTEIDEN KONFIGUROINTI (ip addr add / ip address / ip set)
+    // =========================================================================
+
+    /**
+     * Moderni Linux iproute2 -syntaksi:
+     * ip addr add 192.168.1.15/24 dev eth0
+     */
+    cmdIpRouteAdd(args) {
+        if (args.length === 0 || args[0].toLowerCase() !== 'add') {
+            this.print("Käyttö: ip addr add <ip>/<cidr> dev eth0 (esim. ip addr add 192.168.1.10/24 dev eth0)", 'error');
+            return;
+        }
+
+        const cidrSpec = args[1];
+        if (!cidrSpec || !cidrSpec.includes('/')) {
+            this.print("Virhe: Ilmoita IP ja CIDR muodossa <ip>/<cidr> (esim. 192.168.1.10/24)", 'error');
+            return;
+        }
+
+        const [ip, cidrStr] = cidrSpec.split('/');
+        const cidr = parseInt(cidrStr, 10);
+        if (isNaN(cidr) || cidr < 1 || cidr > 32) {
+            this.print("Virhe: Virheellinen CIDR-peite (sallittu /1 - /32)!", 'error');
+            return;
+        }
+
+        if (typeof calculateSubnetDetails !== 'function') {
+            this.print("Virhe: Aliverkkolaskuri ei ole käytettävissä.", 'error');
+            return;
+        }
+
+        const det = calculateSubnetDetails(ip, cidr);
+        const mask = det.mask;
+
+        if (!this.targetNode) {
+            this.print("Virhe: Ei valittua laitetta! Valitse ensin laite komennolla 'connect <laite>'.", 'error');
+            return;
+        }
+
+        this.applyIpConfiguration(this.targetNode, ip, mask);
+    }
+
+    /**
+     * Nopea suora IP-määritys ilman connect-vaihetta:
+     * ip set <laite> <ip> <mask|cidr>
+     */
+    cmdIpSet(args) {
+        if (args.length < 3) {
+            this.print("Käyttö: ip set <laite> <ip> <mask | cidr> (esim. ip set PC-1 192.168.1.10 255.255.255.0 tai ip set PC-1 192.168.1.10 /24)", 'error');
+            return;
+        }
+
+        const node = this.resolveNode(args[0]);
+        if (!node) {
+            this.print(`Virhe: Laitetta '${args[0]}' ei löydy.`, 'error');
+            return;
+        }
+
+        const ip = args[1].trim();
+        let mask = args[2].trim();
+
+        if (mask.startsWith('/')) {
+            const cidr = parseInt(mask.replace('/', ''), 10);
+            if (!isNaN(cidr) && typeof calculateSubnetDetails === 'function') {
+                mask = calculateSubnetDetails(ip, cidr).mask;
+            }
+        }
+
+        this.applyIpConfiguration(node, ip, mask);
     }
 
     cmdIpAddress(args) {
@@ -411,7 +974,14 @@ class CyberTerminal {
         }
 
         const ip = args[0].trim();
-        const mask = args[1].trim();
+        let mask = args[1].trim();
+
+        if (mask.startsWith('/')) {
+            const cidr = parseInt(mask.replace('/', ''), 10);
+            if (!isNaN(cidr) && typeof calculateSubnetDetails === 'function') {
+                mask = calculateSubnetDetails(ip, cidr).mask;
+            }
+        }
 
         this.applyIpConfiguration(this.targetNode, ip, mask);
     }
@@ -435,7 +1005,6 @@ class CyberTerminal {
         }
 
         if (args.length >= 4 && args[2].toLowerCase() === 'netmask') {
-            // eth0 ip netmask mask
             const ip = args[1].trim();
             const mask = args[3].trim();
             if (!this.targetNode) {
@@ -446,21 +1015,24 @@ class CyberTerminal {
             return;
         }
 
-        // Muussa tapauksessa listataan annetun laitteen tila
         this.cmdIpConfig(args);
     }
 
     applyIpConfiguration(targetNode, ip, mask) {
         const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
         if (!ipRegex.test(ip) || !ipRegex.test(mask)) {
-            this.print("Virhe: Virheellinen IP-osoitteen tai peitteen muoto!", 'error');
+            const err = "Virheellinen IP-osoitteen tai peitteen muoto!";
+            this.logSyslog('error', err, 'ip_stack');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
 
         const numMaskParts = mask.split('.').map(Number);
         if (numMaskParts.some(p => p > 255) || ip.split('.').map(Number).some(p => p > 255)) {
-            this.print("Virhe: Oktetti ei voi olla yli 255!", 'error');
+            const err = "Oktetti ei voi olla yli 255!";
+            this.logSyslog('error', err, 'ip_stack');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
@@ -469,7 +1041,7 @@ class CyberTerminal {
             this.print(`Huomautus: Laitetyyppi ${targetNode.userData.type.toUpperCase()} on infrastruktuurisolmu, mutta IP asetettu.`, 'dim');
         }
 
-        // Haetaan laitteen oikea vyöhykekohtainen aliverkko
+        // Haetaan laitteen oikea aliverkkoskooppi
         const scope = (typeof getNodeSubnetScope === 'function') ? getNodeSubnetScope(targetNode) : null;
         if (!scope || !scope.details) {
             this.print("Virhe: Tason aliverkkotietoja ei voida lukea.", 'error');
@@ -480,18 +1052,24 @@ class CyberTerminal {
         const cidr = scope.cidr;
 
         if (mask !== details.mask) {
-            this.print(`Virhe: Väärä aliverkon peite! /${cidr}-aliverkossa oikea peite on ${details.mask}.`, 'error');
+            const err = `Väärä aliverkon peite! /${cidr}-aliverkossa oikea peite on ${details.mask}.`;
+            this.logSyslog('error', `IP-määritys hylätty laitteelle ${this.getNodeDisplayName(targetNode)}: ${err}`, 'net_filter');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
 
         if (cidr < 31 && ip === details.network) {
-            this.print(`Virhe: ${ip} on aliverkon verkko-osoite (Network ID)! Kaikki isäntäbitit ovat 0.`, 'error');
+            const err = `${ip} on aliverkon verkko-osoite (Network ID)! Kaikki isäntäbitit ovat 0.`;
+            this.logSyslog('error', err, 'net_filter');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
         if (cidr < 31 && ip === details.broadcast) {
-            this.print(`Virhe: ${ip} on yleislähetysosoite (Broadcast)! Kaikki isäntäbitit ovat 1.`, 'error');
+            const err = `${ip} on yleislähetysosoite (Broadcast)! Kaikki isäntäbitit ovat 1.`;
+            this.logSyslog('error', err, 'net_filter');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
@@ -501,24 +1079,29 @@ class CyberTerminal {
         const lastL = ip2long(details.lastHost);
 
         if (ipL < firstL || ipL > lastL) {
-            this.print(`Virhe: IP ${ip} ei kuulu aliverkon sallitulle isäntäalueelle (${details.firstHost} – ${details.lastHost})!`, 'error');
+            const err = `IP ${ip} ei kuulu aliverkon sallitulle isäntäalueelle (${details.firstHost} – ${details.lastHost})!`;
+            this.logSyslog('error', err, 'net_filter');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
 
-        // Tarkista ettei sama IP ole jo käytössä
+        // Tarkista päällekkäisyys
         const duplicateNode = nodes.find(n =>
             n !== targetNode &&
             n.userData.ip === ip &&
             n.userData.correctIp
         );
         if (duplicateNode) {
-            this.print(`Virhe: IP ${ip} on jo käytössä toisella laitteella (${this.getNodeDisplayName(duplicateNode)})!`, 'error');
+            const dupName = this.getNodeDisplayName(duplicateNode);
+            const err = `IP ${ip} on jo käytössä toisella laitteella (${dupName})!`;
+            this.logSyslog('error', `IP conflict: ${err}`, 'arp_detect');
+            this.print(`Virhe: ${err}`, 'error');
             if (typeof audio !== 'undefined') audio.playError();
             return;
         }
 
-        // Palvelin / Tulostin / Työasema aluejako (tasot 11+)
+        // Palvelin / Tulostin / Työasema säännöt (tasot 11+)
         if (currentLevelConfig && currentLevelConfig.id >= 11) {
             const nodeType = targetNode.userData.type;
             const totalHosts = lastL - firstL + 1;
@@ -544,6 +1127,7 @@ class CyberTerminal {
             }
 
             if (ipRuleError) {
+                this.logSyslog('error', `Käytäntövirhe: ${ipRuleError}`, 'ccna_policy');
                 this.print(`Käytäntövirhe: ${ipRuleError}`, 'error');
                 if (typeof audio !== 'undefined') audio.playError();
                 return;
@@ -574,10 +1158,223 @@ class CyberTerminal {
         if (typeof checkConnections === 'function') checkConnections();
         if (typeof updateGoalUI === 'function') updateGoalUI();
 
-        this.print(`% LINK-5-CHANGED: Interface GigabitEthernet0/1, changed state to up`, 'dim');
-        this.print(`% LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up`, 'dim');
-        this.print(`[OK] IP ${ip}/${cidr} asetettu onnistuneesti laitteelle ${this.getNodeDisplayName(targetNode)}!`, 'success');
+        const devName = this.getNodeDisplayName(targetNode);
+        this.logSyslog('success', `Interface eth0 on ${devName} up, IP ${ip}/${cidr} assigned`, 'net_core');
+        this.print(`[OK] IP-osoite ${ip}/${cidr} asetettu onnistuneesti laitteelle ${devName}!`, 'success');
         if (typeof audio !== 'undefined') audio.playPingSuccess();
+    }
+
+    // =========================================================================
+    // VERKON TARKISTUS JA LÄPÄISY (verify & submit)
+    // =========================================================================
+
+    cmdVerify() {
+        if (!currentLevelConfig) {
+            this.print("Ei aktiivista tasoa.", 'dim');
+            return;
+        }
+
+        if (typeof checkConnections === 'function') checkConnections();
+
+        this.print(`\n--- VERKON DIAGNOSTIIKKA: TASO ${currentLevelConfig.id} (${currentLevelConfig.name}) ---`, 'accent');
+
+        const totalNodes = nodes.length;
+        const totalCables = cables.length;
+        const requiredNodes = nodes.filter(n => n.userData.isPredefined && IP_REQUIRED_TYPES.includes(n.userData.type));
+        const readyNodes = requiredNodes.filter(n => n.userData.isConnected && n.userData.correctIp);
+        const unlinkedNodes = nodes.filter(n => !n.userData.isConnected && n.userData.type !== nodeTypes.CLOUD);
+
+        this.print(`  Fyysiset laitteet   : ${totalNodes} kpl`);
+        this.print(`  Kaapelilinkit       : ${totalCables} kpl`);
+        this.print(`  Päätelaitteiden IP  : ${readyNodes.length} / ${requiredNodes.length} valmiina`);
+
+        let hasIssues = false;
+
+        // Tarkista irtonaiset laitteet
+        if (unlinkedNodes.length > 0) {
+            hasIssues = true;
+            this.print(`\n  ⚠️  Kytkemättömät laitteet (ei yhteyttä ytimeen):`, 'warning');
+            unlinkedNodes.forEach(n => {
+                this.print(`     - ${this.getNodeDisplayName(n)} [${n.userData.type.toUpperCase()}]`);
+            });
+            this.print(`     -> Kytke laite komennolla 'cable connect <laite> <kytkin>'.`, 'dim');
+        }
+
+        // Tarkista puuttuvat tai virheelliset IP:t
+        const missingIps = requiredNodes.filter(n => !n.userData.correctIp);
+        if (missingIps.length > 0) {
+            hasIssues = true;
+            this.print(`\n  ⚠️  Puuttuvat tai virheelliset IP-osoitteet:`, 'warning');
+            missingIps.forEach(n => {
+                const curIp = n.userData.ip || 'MÄÄRITTÄMÄTÖN';
+                this.print(`     - ${this.getNodeDisplayName(n)}: nykyinen IP [${curIp}]`);
+            });
+            this.print(`     -> Aseta IP komennolla 'ip set <laite> <ip> <peite>'.`, 'dim');
+        }
+
+        if (!hasIssues && readyNodes.length === requiredNodes.length && requiredNodes.length > 0) {
+            this.print(`\n  ✅ 100% VALMIS! Kaikki kaapelit, hierarkiat ja IP-osoitteet ovat kunnossa.`, 'success');
+            this.print(`  Kirjoita 'submit' suorittaaksesi tason ja siirtyäksesi eteenpäin!`, 'accent');
+        } else {
+            this.print(`\n  Status: KESKENERÄINEN. Korjaa yllä luetellut puutteet.`, 'error');
+        }
+    }
+
+    cmdSubmit() {
+        if (typeof updateGoalUI === 'function') {
+            updateGoalUI();
+        }
+
+        const requiredNodes = nodes.filter(n => n.userData.isPredefined && IP_REQUIRED_TYPES.includes(n.userData.type));
+        const readyNodes = requiredNodes.filter(n => n.userData.isConnected && n.userData.correctIp);
+        const unlinkedNodes = nodes.filter(n => !n.userData.isConnected && n.userData.type !== nodeTypes.CLOUD);
+
+        if (unlinkedNodes.length === 0 && readyNodes.length === requiredNodes.length && requiredNodes.length > 0) {
+            this.logSyslog('success', `TASO ${currentLevelConfig ? currentLevelConfig.id : ''} LÄPÄISTY! Verkon topologia validoitu.`, 'evaluator');
+            this.print(`\n🎉 ONNITTELUT! Taso suoritettu onnistuneesti komentoriviltä!`, 'success');
+            this.print(`Siirry seuraavaan tasoon komennolla 'next'.`, 'accent');
+
+            const winModal = document.getElementById('win-modal');
+            if (winModal) {
+                winModal.classList.remove('hidden');
+                if (typeof audio !== 'undefined') audio.playVictory();
+            }
+        } else {
+            this.print("\n❌ Tasoa ei voida suorittaa: verkossa on vielä puutteita!", 'error');
+            this.cmdVerify();
+        }
+    }
+
+    cmdNextLevel() {
+        if (typeof nextLevel === 'function') {
+            this.print("Ladataan seuraavaa tasoa...", 'accent');
+            nextLevel();
+        } else {
+            this.print("Virhe: nextLevel-funktiota ei löydy.", 'error');
+        }
+    }
+
+    cmdLoadLevel(args) {
+        if (args.length === 0) {
+            this.print(`Nykyinen taso: ${currentLevel}. Vaihda ajamalla 'level <nro>'.`, 'dim');
+            return;
+        }
+        const lvlNum = parseInt(args[0], 10);
+        if (isNaN(lvlNum) || lvlNum < 1 || (typeof TOTAL_LEVELS !== 'undefined' && lvlNum > TOTAL_LEVELS)) {
+            this.print(`Virheellinen tason numero. Valitse 1 - ${typeof TOTAL_LEVELS !== 'undefined' ? TOTAL_LEVELS : 61}.`, 'error');
+            return;
+        }
+
+        if (typeof loadLevel === 'function') {
+            this.print(`Ladataan taso ${lvlNum}...`, 'accent');
+            loadLevel(lvlNum);
+        }
+    }
+
+    cmdReload() {
+        this.print("Ladataan ja alustetaan aktiivinen taso uudelleen...", 'accent');
+        if (typeof loadLevel === 'function' && typeof currentLevel !== 'undefined') {
+            setTimeout(() => {
+                loadLevel(currentLevel);
+                this.setTargetNode(null);
+                this.print(`Taso ${currentLevel} alustettu onnistuneesti.`, 'success');
+            }, 300);
+        } else {
+            this.print("Tason uudelleenlataus epäonnistui.", 'error');
+        }
+    }
+
+    // =========================================================================
+    // DIAGNOSTIIKKA, PING & SHOW-KOMENNOT
+    // =========================================================================
+
+    cmdDevices() {
+        if (!nodes || nodes.length === 0) {
+            this.print("Ei aktiivisia laitteita maailmassa.", 'dim');
+            return;
+        }
+
+        this.print(`--- TASON LAITTEET (${nodes.length} kpl) ---`, 'accent');
+        this.print("  CLI-NIMI       TYYPPI         IP-OSOITE         PEITE             STATUS", 'dim');
+
+        nodes.forEach((n, idx) => {
+            const cliName = this.getNodeDisplayName(n, idx + 1).padEnd(14, ' ');
+            const typeStr = (n.userData.type || '').toUpperCase().padEnd(14, ' ');
+            const ipStr = (n.userData.ip || 'MÄÄRITTÄMÄTÖN').padEnd(17, ' ');
+            const maskStr = (n.userData.mask || 'MÄÄRITTÄMÄTÖN').padEnd(17, ' ');
+            const status = n.userData.isConnected ? "🟢 Up" : "🔴 Down";
+            const isSelected = (n === this.targetNode) ? " [AKTIIVINEN]" : "";
+
+            const line = `  ${cliName} ${typeStr} ${ipStr} ${maskStr} ${status}${isSelected}`;
+            if (n === this.targetNode) {
+                this.print(line, 'success');
+            } else {
+                this.print(line, 'normal');
+            }
+        });
+
+        this.print("\nVinkki: Valitse laite komennolla 'connect <laite>' tai aseta IP: 'ip set <laite> <ip> <peite>'.", 'dim');
+    }
+
+    cmdConnect(args) {
+        if (args.length === 0) {
+            this.print("Käyttö: connect <laitteen-nimi tai numero> (esim. connect PC-1 tai connect 2)", 'error');
+            return;
+        }
+
+        const foundNode = this.resolveNode(args[0]);
+
+        if (!foundNode) {
+            this.print(`Laitetta '${args[0]}' ei löydy. Kirjoita 'devices' nähdäksesi saatavilla olevat laitteet.`, 'error');
+            if (typeof audio !== 'undefined') audio.playError();
+            return;
+        }
+
+        this.setTargetNode(foundNode);
+
+        // Siirretään 3D-kamera kohdelaitteelle
+        if (foundNode.mesh && typeof cameraTarget !== 'undefined' && cameraTarget) {
+            cameraTarget.x = foundNode.mesh.position.x;
+            cameraTarget.z = foundNode.mesh.position.z;
+        }
+        if (foundNode.userData) {
+            foundNode.userData.animating = true;
+            foundNode.userData.animStart = Date.now();
+        }
+
+        const devName = this.getNodeDisplayName(foundNode);
+        this.print(`Yhdistetty laitteeseen ${devName} [${foundNode.userData.type.toUpperCase()}]. Konsoli avattu.`, 'success');
+        if (IP_REQUIRED_TYPES.includes(foundNode.userData.type)) {
+            this.print(`Konfiguroi IP komennolla: 'ip addr add <ip>/<cidr> dev eth0' tai 'ip address <ip> <mask>'`, 'accent');
+        } else {
+            this.print(`Tämä laite toimii infrastruktuurisolmuna (ei vaadi päätelaite-IP:tä).`, 'dim');
+        }
+    }
+
+    cmdExit() {
+        if (!this.targetNode) {
+            this.toggle(); // Sulkee terminaalin
+            return;
+        }
+
+        const prev = this.getNodeDisplayName(this.targetNode);
+        this.setTargetNode(null);
+        this.print(`Suljettiin CLI-yhteys laitteeseen ${prev}. Palattiin pääkonsoliin.`, 'dim');
+    }
+
+    cmdHostname(args) {
+        if (!this.targetNode) {
+            this.print("Console Root: subnet-server-gw", 'normal');
+            return;
+        }
+        if (args.length > 0) {
+            const newName = args[0].trim();
+            this.targetNode.userData.name = newName;
+            this.syncPrompt();
+            this.print(`Isäntänimi asetettu: ${newName}`, 'success');
+        } else {
+            this.print(`Hostname: ${this.getNodeDisplayName(this.targetNode)}`, 'normal');
+        }
     }
 
     cmdShow(args) {
@@ -594,9 +1391,11 @@ class CyberTerminal {
             this.showIpRoute();
         } else if (sub.includes('cdp') || sub.includes('lldp') || sub.includes('neighbor')) {
             this.showCdpNeighbors();
+        } else if (sub.includes('cable') || sub.includes('link')) {
+            this.cmdCables();
         } else {
             this.print(`Tuntematon show-komento: 'show ${args.join(' ')}'`, 'error');
-            this.print("Tuetut: show ip interface brief, show ip route, show cdp neighbors", 'dim');
+            this.print("Tuetut: show ip interface brief, show ip route, show cdp neighbors, show cables", 'dim');
         }
     }
 
@@ -654,7 +1453,7 @@ class CyberTerminal {
         relevantCables.forEach((c, idx) => {
             const devA = this.getNodeDisplayName(c.nodeA);
             const devB = this.getNodeDisplayName(c.nodeB);
-            const linkType = c.linkType === 'fiber_10g' ? '10G Fiber' : '1G Copper';
+            const linkType = c.linkType === LINK_TYPES.FIBER_10G ? '10G Fiber' : '1G Copper';
             const cap = [nodeTypes.SWITCH, nodeTypes.CORE_SWITCH].includes(c.nodeB.userData.type) ? 'S I' : 'H';
             this.print(`${devB.padEnd(16, ' ')} Gi0/${idx + 1}           148        ${cap.padEnd(11, ' ')} SubnetOS  Eth0/1 (${linkType})`);
         });
@@ -666,25 +1465,15 @@ class CyberTerminal {
             return;
         }
 
-        const targetQuery = args[0].toLowerCase();
-        const targetNode = nodes.find((n, i) => 
-            (n.userData.ip && n.userData.ip === targetQuery) ||
-            this.getNodeDisplayName(n, i + 1).toLowerCase() === targetQuery ||
-            n.userData.type.toLowerCase() === targetQuery ||
-            (targetQuery === 'gateway' && n.userData.type === nodeTypes.GATEWAY) ||
-            (targetQuery === 'router' && n.userData.type === nodeTypes.ROUTER) ||
-            (targetQuery === 'cloud' && n.userData.type === nodeTypes.CLOUD) ||
-            (targetQuery === 'internet' && n.userData.type === nodeTypes.CLOUD)
-        );
-
-        const sourceNode = this.targetNode || selectedNodeForIp || nodes.find(n => [nodeTypes.PC, nodeTypes.LAPTOP, nodeTypes.OFFICE, nodeTypes.SERVER].includes(n.userData.type)) || nodes[0];
+        const targetNode = this.resolveNode(args[0]);
+        const sourceNode = this.targetNode || (typeof selectedNodeForIp !== 'undefined' ? selectedNodeForIp : null) || nodes.find(n => [nodeTypes.PC, nodeTypes.LAPTOP, nodeTypes.OFFICE, nodeTypes.SERVER].includes(n.userData.type)) || nodes[0];
 
         if (!sourceNode) {
             this.print("Virhe: Lähtölaitetta ei löydy.", 'error');
             return;
         }
 
-        const targetIp = targetNode ? (targetNode.userData.ip || (targetNode.userData.type === nodeTypes.CLOUD ? "8.8.8.8" : "192.168.1.1")) : targetQuery;
+        const targetIp = targetNode ? (targetNode.userData.ip || (targetNode.userData.type === nodeTypes.CLOUD ? "8.8.8.8" : "192.168.1.1")) : args[0];
         this.print(`PING ${targetIp} (${targetNode ? this.getNodeDisplayName(targetNode) : 'Kohde'}) 56(84) data-tavua.`, 'accent');
 
         if (!targetNode) {
@@ -732,7 +1521,7 @@ class CyberTerminal {
             return;
         }
 
-        const sourceNode = this.targetNode || selectedNodeForIp || nodes.find(n => [nodeTypes.PC, nodeTypes.LAPTOP, nodeTypes.OFFICE].includes(n.userData.type)) || nodes[0];
+        const sourceNode = this.targetNode || (typeof selectedNodeForIp !== 'undefined' ? selectedNodeForIp : null) || nodes.find(n => [nodeTypes.PC, nodeTypes.LAPTOP, nodeTypes.OFFICE].includes(n.userData.type)) || nodes[0];
         const cloudNode = nodes.find(n => n.userData.type === nodeTypes.CLOUD);
         const gatewayNode = nodes.find(n => n.userData.type === nodeTypes.GATEWAY || n.userData.type === nodeTypes.ROUTER);
 
@@ -837,41 +1626,6 @@ class CyberTerminal {
             this.print(`  Binääripeite           : ${det.binaryMask || ''}`);
         } else {
             this.print("Laskentamoottori ei ole ladattu.", 'error');
-        }
-    }
-
-    cmdStatus() {
-        if (!currentLevelConfig) {
-            this.print("Ei aktiivista tasoa.", 'dim');
-            return;
-        }
-
-        this.print(`\n--- TASON ${currentLevelConfig.id} STATUS: ${currentLevelConfig.name} ---`, 'accent');
-        this.print(`  Pääverkko    : ${currentLevelConfig.network}/${currentLevelConfig.cidr}`);
-        this.print(`  Laitteita    : ${nodes.length} kpl`);
-        this.print(`  Kaapeleita   : ${cables.length} kpl`);
-
-        const readyCount = nodes.filter(n => n.userData.isConnected && n.userData.correctIp).length;
-        const totalReq = nodes.filter(n => n.userData.isPredefined && IP_REQUIRED_TYPES.includes(n.userData.type)).length;
-
-        this.print(`  Valmiit IP:t : ${readyCount}/${totalReq}`);
-        if (readyCount === totalReq && totalReq > 0) {
-            this.print("  Topologia    : ✅ 100% KUNNOSSA JA VALMIS", 'success');
-        } else {
-            this.print("  Topologia    : ⏳ Keskeneräinen (kytke puuttuvat laitteet ja aseta IP:t)", 'error');
-        }
-    }
-
-    cmdReload() {
-        this.print("Ladataan ja alustetaan aktiivinen taso uudelleen...", 'accent');
-        if (typeof loadLevel === 'function' && typeof currentLevel !== 'undefined') {
-            setTimeout(() => {
-                loadLevel(currentLevel);
-                this.setTargetNode(null);
-                this.print(`Taso ${currentLevel} alustettu onnistuneesti.`, 'success');
-            }, 300);
-        } else {
-            this.print("Tason uudelleenlataus epäonnistui.", 'error');
         }
     }
 }
