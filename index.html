@@ -16,7 +16,7 @@
     <script src="js/three/fflate.min.js"></script>
     <script src="js/three/FBXLoader.js"></script>
     <!-- Pelin tyylit -->
-    <link rel="stylesheet" href="css/style.css?v=20260925_v35">
+    <link rel="stylesheet" href="css/style.css?v=20260925_v36">
 </head>
 <body>
 
@@ -507,9 +507,9 @@
                             <h3 class="text-lg font-black text-white flex items-center gap-2">
                                 <span class="text-xl">💻</span> Määritä IP-osoite
                             </h3>
-                            <button type="button" id="btn-toggle-autofill" onclick="toggleIpModalAutoFill()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-cyan-950/80 text-cyan-300 border-cyan-500/50 hover:bg-cyan-900/80 shadow-sm" title="Kytke automaattinen suositusten ja aliverkon peitteen esitäyttö päälle tai pois">
-                                <span id="autofill-toggle-icon">⚡</span>
-                                <span id="autofill-toggle-text">Esitäyttö: PÄÄLLÄ</span>
+                            <button type="button" id="btn-toggle-autofill" onclick="cycleAutoFillMode()" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-cyan-950/80 text-cyan-300 border-cyan-500/50 hover:bg-cyan-900/80 shadow-sm" title="Vaihda esitäytön pedagogista tilaa (Ohjattu / Tentti / Pika)">
+                                <span id="autofill-toggle-icon">🎓</span>
+                                <span id="autofill-toggle-text">Tila: Ohjattu</span>
                             </button>
                         </div>
                         <p id="ip-modal-node-info" class="text-sm text-blue-300 font-bold mb-1.5"></p>
@@ -590,8 +590,13 @@
                             </div>
                         </div>
 
+                        <!-- Reaaliaikainen Pedagoginen Mikropalaute (Taikanumero, Rajat & Validi Isäntä) -->
+                        <div id="ip-input-live-hint" class="mt-3.5 p-3 rounded-2xl bg-slate-950/90 border border-slate-700/80 text-xs font-mono transition-all hidden">
+                            <!-- Päivitetään dynaamisesti JS:llä -->
+                        </div>
+
                         <!-- Ping- ja vianmääritystesti -->
-                        <div class="mt-3.5 pt-3 border-t border-slate-700/80">
+                        <div class="mt-3 pt-3 border-t border-slate-700/80">
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span class="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                                     <span>📡</span> Diagnostiikka & Ping
@@ -878,17 +883,17 @@
     </div>
 
     <!-- ===================== SKRIPTIT (oikeassa järjestyksessä) ===================== -->
-    <script src="js/state.js?v=20260925_v35"></script>
-    <script src="js/audio.js?v=20260925_v35"></script>
-    <script src="js/network.js?v=20260925_v35"></script>
-    <script src="js/levels.js?v=20260925_v35"></script>
-    <script src="js/scene.js?v=20260925_v35"></script>
-    <script src="js/nodes.js?v=20260925_v35"></script>
-    <script src="js/cables.js?v=20260925_v35"></script>
-    <script src="js/teaching.js?v=20260925_v35"></script>
-    <script src="js/achievements.js?v=20260925_v35"></script>
-    <script src="js/terminal.js?v=20260925_v35"></script>
-    <script src="js/ui.js?v=20260925_v35"></script>
-    <script src="js/game.js?v=20260925_v35"></script>
+    <script src="js/state.js?v=20260925_v36"></script>
+    <script src="js/audio.js?v=20260925_v36"></script>
+    <script src="js/network.js?v=20260925_v36"></script>
+    <script src="js/levels.js?v=20260925_v36"></script>
+    <script src="js/scene.js?v=20260925_v36"></script>
+    <script src="js/nodes.js?v=20260925_v36"></script>
+    <script src="js/cables.js?v=20260925_v36"></script>
+    <script src="js/teaching.js?v=20260925_v36"></script>
+    <script src="js/achievements.js?v=20260925_v36"></script>
+    <script src="js/terminal.js?v=20260925_v36"></script>
+    <script src="js/ui.js?v=20260925_v36"></script>
+    <script src="js/game.js?v=20260925_v36"></script>
 </body>
 </html>

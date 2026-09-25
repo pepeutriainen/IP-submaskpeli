@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "js/ui.js": {
-    "mtime": 1790350356.234416,
-    "seen": 1790350839.1179616,
-    "ast_hash": "ec3c6e46f2a136760b31df1041db341c",
+    "mtime": 1790357838.540836,
+    "seen": 1790357884.768055,
+    "ast_hash": "16016f12c8c47f6bb5d8afe129a505c1",
     "semantic_hash": ""
   },
   ".agents/rules/caveman.md": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1790350441.718782,
-    "seen": 1790350839.1179616,
-    "ast_hash": "416bf6139e117cb6dd5eef43a20cfd4a",
+    "mtime": 1790357863.3959749,
+    "seen": 1790357884.768055,
+    "ast_hash": "e645c613b4f90376441b96ce6c3b6083",
     "semantic_hash": ""
   },
   "peli.txt": {

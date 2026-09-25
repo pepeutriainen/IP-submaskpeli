@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "js/scene.js": {
-    "mtime": 1789384766.5166419,
-    "seen": 1790282133.0526679,
-    "ast_hash": "67f8f214c6d7a18dd9764e49dfd10f66",
+    "mtime": 1790351358.2483976,
+    "seen": 1790351452.5079782,
+    "ast_hash": "aaac55a2ac4a2a0eceebbe5164fe3123",
     "semantic_hash": ""
   },
   "js/state.js": {
@@ -204,9 +204,9 @@
     "semantic_hash": ""
   },
   "js/terminal.js": {
-    "mtime": 1790350419.6399817,
-    "seen": 1790350839.1179616,
-    "ast_hash": "5878e88dcc4f941e1363a266d817e4a0",
+    "mtime": 1790351374.0429168,
+    "seen": 1790351452.5079782,
+    "ast_hash": "54022138d714ab54d665ca23aeb57f08",
     "semantic_hash": ""
   },
   "js/three/FBXLoader.js": {

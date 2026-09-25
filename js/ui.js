@@ -188,6 +188,7 @@ function setupOctetInputs() {
             if (next && next.tagName === 'INPUT') next.focus();
         }
         if (typeof saveIpInputsToMemory === 'function') saveIpInputsToMemory();
+        if (typeof updateInlinePedagogicalHint === 'function') updateInlinePedagogicalHint();
         if (typeof currentHelpTab !== 'undefined' && currentHelpTab === 'binary' && typeof renderBinaryVisualizer === 'function') {
             renderBinaryVisualizer();
         }
@@ -1476,34 +1477,161 @@ function selectNodeInModal(index) {
     openIpModal(targetNode);
 }
 
-function isAutoFillEnabled() {
-    return localStorage.getItem('subnetArchitect_autofill_enabled') !== 'false';
+/**
+ * =========================================================================
+ * Pedagoginen Scaffolding & Älykäs Esitäyttöjärjestelmä (v2.0)
+ * =========================================================================
+ */
+
+function getAutoFillMode() {
+    const saved = localStorage.getItem('subnetArchitect_autofill_mode');
+    if (saved === 'guided' || saved === 'exam' || saved === 'sandbox') {
+        return saved;
+    }
+    // Taaksepäin yhteensopivuus vanhalle boolean-avaimelle
+    const oldBool = localStorage.getItem('subnetArchitect_autofill_enabled');
+    if (oldBool === 'false') return 'exam';
+    return 'guided'; // Oletus: 🎓 Ohjattu oppimistila
 }
 
-function toggleIpModalAutoFill() {
-    const nextState = !isAutoFillEnabled();
-    localStorage.setItem('subnetArchitect_autofill_enabled', nextState ? 'true' : 'false');
-    updateAutoFillToggleUI(nextState);
+function cycleAutoFillMode() {
+    const current = getAutoFillMode();
+    let next = 'guided';
+    if (current === 'guided') next = 'exam';
+    else if (current === 'exam') next = 'sandbox';
+    else if (current === 'sandbox') next = 'guided';
+
+    localStorage.setItem('subnetArchitect_autofill_mode', next);
+    updateAutoFillToggleUI(next);
+
     if (selectedNodeForIp) {
         openIpModal(selectedNodeForIp);
     }
-    console.log('[DEBUG-INPUT] Esitäytön tila vaihdettu:', nextState ? 'PÄÄLLÄ' : 'POIS');
-    showToast(nextState ? "⚡ Esitäyttö: PÄÄLLÄ (Suositukset & peite täytetään)" : "✍️ Esitäyttö: POIS (Syötä kaikki arvot itse)", "info");
+
+    if (next === 'guided') {
+        showToast("🎓 Tila: Ohjattu (Uusi aliverkko tyhjä, toistossa verkko-osa + haamu-placeholder)", "info");
+    } else if (next === 'exam') {
+        showToast("🏆 Tila: Tentti (Kaikki kentät aina tyhjiä ilman apuja)", "warning");
+    } else {
+        showToast("⚡ Tila: Pika (Täysautomaatti nopeaan testaukseen)", "info");
+    }
 }
 
-function updateAutoFillToggleUI(enabled = isAutoFillEnabled()) {
+function updateAutoFillToggleUI(mode = getAutoFillMode()) {
     const btn = document.getElementById('btn-toggle-autofill');
     const icon = document.getElementById('autofill-toggle-icon');
     const text = document.getElementById('autofill-toggle-text');
     if (!btn) return;
-    if (enabled) {
-        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-cyan-950/80 text-cyan-300 border-cyan-500/50 hover:bg-cyan-900/80 shadow-sm";
-        if (icon) icon.innerText = "⚡";
-        if (text) text.innerText = "Esitäyttö: PÄÄLLÄ";
+
+    if (mode === 'guided') {
+        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-emerald-950/80 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900/80 shadow-sm";
+        if (icon) icon.innerText = "🎓";
+        if (text) text.innerText = "Tila: Ohjattu";
+        btn.title = "Ohjattu oppimistila: Uusi aliverkko vaatii laskennan, toistossa haamu-placeholder. Klikkaa vaihtaaksesi.";
+    } else if (mode === 'exam') {
+        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-amber-950/80 text-amber-300 border-amber-500/50 hover:bg-amber-900/80 shadow-sm";
+        if (icon) icon.innerText = "🏆";
+        if (text) text.innerText = "Tila: Tentti";
+        btn.title = "CCNA Tenttitila: Kaikki kentät aina tyhjinä ilman apuja. Klikkaa vaihtaaksesi.";
     } else {
-        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-slate-800/90 text-slate-400 border-slate-700 hover:bg-slate-700/80";
-        if (icon) icon.innerText = "✍️";
-        if (text) text.innerText = "Esitäyttö: POIS";
+        btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 cursor-pointer bg-slate-800/90 text-slate-300 border-slate-600 hover:bg-slate-700/80";
+        if (icon) icon.innerText = "⚡";
+        if (text) text.innerText = "Tila: Pika";
+        btn.title = "Pikatila: Täyttää kaiken automaattisesti testaukseen. Klikkaa vaihtaaksesi.";
+    }
+}
+
+/**
+ * Päivittää reaaliaikaisen pedagogisen mikropalautteen syöttökenttien alle.
+ */
+function updateInlinePedagogicalHint() {
+    const hintBox = document.getElementById('ip-input-live-hint');
+    if (!hintBox || !selectedNodeForIp) return;
+
+    const ipInputs = Array.from(document.querySelectorAll('.ip-octet')).map(el => el.value.trim());
+    const maskInputs = Array.from(document.querySelectorAll('.mask-octet')).map(el => el.value.trim());
+    const scope = getNodeSubnetScope(selectedNodeForIp);
+
+    if (!scope || !scope.details) {
+        hintBox.classList.add('hidden');
+        return;
+    }
+
+    const details = scope.details;
+    const cidr = scope.cidr;
+
+    // 1. Tarkistetaan peite
+    const lastMaskStr = maskInputs[3];
+    const validMaskOctets = [0, 128, 192, 224, 240, 248, 252, 254, 255];
+    let maskMessage = null;
+    let maskStyle = 'live-hint-magic';
+
+    if (lastMaskStr !== '') {
+        const lastMaskVal = parseInt(lastMaskStr, 10);
+        if (validMaskOctets.includes(lastMaskVal)) {
+            const magic = 256 - lastMaskVal;
+            const usable = (magic >= 2) ? magic - 2 : magic;
+            maskMessage = `✨ <strong>Taikanumero:</strong> 256 − ${lastMaskVal} = <strong>${magic}</strong>. Aliverkon lohkokoko on ${magic} osoitetta (${usable} käytettävää isäntää). Verkkolohkot hyppivät ${magic}:n välein (.0, .${magic}, .${magic * 2}...).`;
+            maskStyle = 'live-hint-magic';
+        } else {
+            maskMessage = `❌ <strong>Virheellinen peite:</strong> Luku ${lastMaskVal} ei muodosta yhtenäistä bittijonoa. Sallitut viimeisen oktetin luvut: 0, 128, 192, 224, 240, 248, 252, 255.`;
+            maskStyle = 'live-hint-alert';
+        }
+    }
+
+    // 2. Tarkistetaan IP-osoite jos kaikki 4 oktettia on kirjoitettu
+    let ipMessage = null;
+    let ipStyle = 'live-hint-valid';
+
+    if (ipInputs.every(p => p !== '')) {
+        const ip = ipInputs.join('.');
+        if (ip === details.network && cidr < 31) {
+            ipMessage = `⚠️ <strong>${ip} on Verkko-ID (Network ID):</strong> Kaikki isäntäbitit ovat nollia. Sitä ei voida antaa laitteelle! Ensimmäinen sallittu IP on <strong>${details.firstHost}</strong>.`;
+            ipStyle = 'live-hint-alert';
+        } else if (ip === details.broadcast && cidr < 31) {
+            ipMessage = `⚠️ <strong>${ip} on Yleislähetys (Broadcast):</strong> Kaikki isäntäbitit ovat ykkösiä. Sitä ei voida antaa laitteelle! Viimeinen sallittu IP on <strong>${details.lastHost}</strong>.`;
+            ipStyle = 'live-hint-warn';
+        } else if (typeof ip2long === 'function') {
+            const ipL = ip2long(ip);
+            const firstL = ip2long(details.firstHost);
+            const lastL = ip2long(details.lastHost);
+
+            if (ipL < firstL || ipL > lastL) {
+                ipMessage = `❌ <strong>Osoitealueen ylitys:</strong> ${ip} ei kuulu aliverkon ${details.network}/${cidr} sallitulle alueelle (<strong>${details.firstHost} – ${details.lastHost}</strong>)!`;
+                ipStyle = 'live-hint-alert';
+            } else {
+                // Tarkista duplikaatti
+                const dupNode = nodes.find(n => n !== selectedNodeForIp && n.userData && n.userData.ip === ip && n.userData.correctIp);
+                if (dupNode) {
+                    const dupName = dupNode.userData.type.toUpperCase();
+                    ipMessage = `⛔ <strong>IP-konflikti:</strong> Osoite ${ip} on jo käytössä toisella laitteella (${dupName})!`;
+                    ipStyle = 'live-hint-alert';
+                } else {
+                    ipMessage = `✅ <strong>Sallittu isäntäosoite:</strong> ${ip} kuuluu aliverkon vapaalle alueelle (${details.firstHost} – ${details.lastHost}).`;
+                    ipStyle = 'live-hint-valid';
+                }
+            }
+        }
+    }
+
+    // Näytetään sopivin viesti
+    if (ipMessage) {
+        hintBox.className = `mt-3.5 p-3 rounded-2xl border text-xs font-mono transition-all ${ipStyle}`;
+        hintBox.innerHTML = ipMessage;
+        hintBox.classList.remove('hidden');
+    } else if (maskMessage) {
+        hintBox.className = `mt-3.5 p-3 rounded-2xl border text-xs font-mono transition-all ${maskStyle}`;
+        hintBox.innerHTML = maskMessage;
+        hintBox.classList.remove('hidden');
+    } else {
+        const mode = getAutoFillMode();
+        if (mode === 'guided') {
+            hintBox.className = `mt-3.5 p-3 rounded-2xl border border-slate-700/80 bg-slate-950/80 text-slate-300 text-xs font-mono transition-all`;
+            hintBox.innerHTML = `💡 <strong>Ohjattu oppiminen:</strong> Tason aliverkko on <strong>${details.network}/${cidr}</strong>. Laske aliverkon peite ja valitse laitteelle uniikki IP sallitulta väliltä (${details.firstHost} – ${details.lastHost}).`;
+            hintBox.classList.remove('hidden');
+        } else {
+            hintBox.classList.add('hidden');
+        }
     }
 }
 
@@ -1511,11 +1639,14 @@ if (typeof window !== 'undefined') {
     window.selectNodeInModal = selectNodeInModal;
     window.updateModalDeviceList = updateModalDeviceList;
     window.switchHelpTab = switchHelpTab;
-    window.toggleIpModalAutoFill = toggleIpModalAutoFill;
+    window.getAutoFillMode = getAutoFillMode;
+    window.cycleAutoFillMode = cycleAutoFillMode;
+    window.updateAutoFillToggleUI = updateAutoFillToggleUI;
+    window.updateInlinePedagogicalHint = updateInlinePedagogicalHint;
 }
 
 /**
- * Avaa IP-määritysikkunan ja näyttää tasokohtaisen opetusmateriaalin.
+ * Avaa IP-määritysikkunan ja soveltaa mukautuvaa pedagogista esitäyttöä (Adaptive Scaffolding).
  */
 function openIpModal(node) {
     selectedNodeForIp = node;
@@ -1537,95 +1668,130 @@ function openIpModal(node) {
     }, 10);
 
     // Päivitetään esitäyttö-kytkimen tila UI:ssa
-    const autoFill = isAutoFillEnabled();
-    updateAutoFillToggleUI(autoFill);
+    const mode = getAutoFillMode();
+    updateAutoFillToggleUI(mode);
 
     // Päivitetään vasemman sarakkeen laitelista reaaliaikaisesti
     updateModalDeviceList(node);
 
-    // Haetaan laitteen oikea aliverkko (huomioi laitteen sijaintivyöhyke!)
+    // Haetaan laitteen oikea aliverkko
     const scope = getNodeSubnetScope(node);
     const details = scope.details;
     const cidr = scope.cidr;
     const subnetKey = `${currentLevel}_${details.network}_${cidr}`;
 
-    // Tarkistetaan onko kyseisessä aliverkossa jo vähintään yksi onnistuneesti validoitu laite
+    // Tarkistetaan onko kyseisessä aliverkossa jo validoituja laitteita
     const zoneNodes = nodes.filter(n => {
         const s = getNodeSubnetScope(n);
         return s && s.details && s.details.network === details.network && s.cidr === cidr;
     });
-    const zoneHasValidatedDevice = zoneNodes.some(n => n.userData && n.userData.correctIp);
+    const validatedCountInZone = zoneNodes.filter(n => n.userData && n.userData.correctIp).length;
+    const zoneHasValidatedDevice = validatedCountInZone > 0;
 
-    // Näytetään tai piilotetaan huonekohtainen pikamäärityspainike
+    // DHCP-eräajopainike avautuu ansaitusti vasta kun vähintään 2 laitetta on validoitu käsin!
     const batchContainer = document.getElementById('batch-assign-container');
     if (batchContainer) {
         const unconfiguredInZone = zoneNodes.filter(n => (!n.userData || !n.userData.correctIp) && IP_REQUIRED_TYPES.includes(n.userData.type));
-        if (zoneHasValidatedDevice && unconfiguredInZone.length > 0 && autoFill) {
+        if (zoneHasValidatedDevice && validatedCountInZone >= 2 && unconfiguredInZone.length > 0 && mode !== 'exam') {
             batchContainer.classList.remove('hidden');
         } else {
             batchContainer.classList.add('hidden');
         }
     }
 
-    // 1. Aliverkon peite: Laitteen oma -> Aliverkon validoitu peite -> Muisti
+    // 1. Aliverkon peite (Mask)
     const savedMaskStr = localStorage.getItem(`subnetArchitect_validated_mask_${subnetKey}`) ||
                          localStorage.getItem(`subnetArchitect_lastInput_mask_${currentLevel}_${details.network}`);
     let maskParts = ['', '', '', ''];
+
     if (node.userData && node.userData.mask) {
         maskParts = node.userData.mask.split('.');
-    } else if (autoFill) {
-        if (savedMaskStr) {
-            try {
-                maskParts = savedMaskStr.startsWith('[') ? JSON.parse(savedMaskStr) : savedMaskStr.split('.');
-            } catch (e) {
-                maskParts = savedMaskStr.split('.');
-            }
-        } else {
-            const key = `subnetArchitect_lastInput_level_${currentLevel}_${node.userData.type}`;
-            const lastInput = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : null;
-            if (lastInput && lastInput.mask && lastInput.mask.some(p => p !== '')) {
-                maskParts = lastInput.mask;
-            }
+    } else if (mode === 'sandbox') {
+        maskParts = details.mask.split('.');
+    } else if (mode === 'guided' && zoneHasValidatedDevice && savedMaskStr) {
+        // Aliverkko on jo todistettu kerran -> peite voidaan esitäyttää toiston vähentämiseksi
+        try {
+            maskParts = savedMaskStr.startsWith('[') ? JSON.parse(savedMaskStr) : savedMaskStr.split('.');
+        } catch (e) {
+            maskParts = savedMaskStr.split('.');
         }
     }
-    document.querySelectorAll('.mask-octet').forEach((el, i) => { el.value = maskParts[i] || ''; });
+    // Exam-tilassa ja uuden aliverkon 1. laitteella maskParts pysyy ['','','','']
+    document.querySelectorAll('.mask-octet').forEach((el, i) => { 
+        el.value = maskParts[i] || ''; 
+        el.placeholder = (mode === 'guided' && !zoneHasValidatedDevice) ? details.mask.split('.')[i] : '';
+    });
 
-    // 2. IP-osoite: Laitteen oma -> Suositeltu seuraava vapaa IP -> Verkko-osan esitäyttö
+    // 2. IP-osoite (IPv4)
     let ipParts = ['', '', '', ''];
+    let hostPlaceholder = '';
+
     if (node.userData && node.userData.ip) {
         ipParts = node.userData.ip.split('.');
-    } else if (autoFill) {
-        const nextIp = getRecommendedNextIp(node, scope);
-        if (nextIp && (zoneHasValidatedDevice || savedMaskStr)) {
-            // Jos huoneessa on jo validoitu peite tai laite, tarjotaan suoraan seuraavaa vapaata IP:tä!
-            ipParts = nextIp.split('.');
-        } else if (nextIp) {
-            // Esitäytetään verkko-osa (esim. 10.20.0.), jotta käyttäjä syöttää vain isäntäosan
-            const netOctets = details.network.split('.');
-            const fullNetOctets = Math.min(3, Math.floor(cidr / 8));
-            for (let i = 0; i < fullNetOctets; i++) {
-                ipParts[i] = netOctets[i];
-            }
+    } else if (mode === 'sandbox') {
+        const nextIp = getRecommendedNextIp(node, scope) || details.firstHost;
+        ipParts = nextIp.split('.');
+    } else if (mode === 'guided') {
+        const nextIp = getRecommendedNextIp(node, scope) || details.firstHost;
+        const netOctets = details.network.split('.');
+        const nextHostPart = nextIp.split('.')[3];
+
+        if (zoneHasValidatedDevice) {
+            // Verkko-osa esitäytetään, mutta VIIMEINEN ISÄNTÄOKTETTI JÄTETÄÄN TYHJÄKSI!
+            ipParts[0] = netOctets[0];
+            ipParts[1] = netOctets[1];
+            ipParts[2] = netOctets[2];
+            ipParts[3] = ''; // Tyhjä! Pelaajan on kirjoitettava itse!
+            hostPlaceholder = nextHostPart;
+        } else {
+            // Uusi aliverkko: kaikki kentät tyhjiksi, haamuvihje ensimmäisestä isännästä
+            hostPlaceholder = details.firstHost.split('.')[3];
         }
     }
-    document.querySelectorAll('.ip-octet').forEach((el, i) => { el.value = ipParts[i] || ''; });
+    // Exam-tilassa kaikki pysyy tyhjänä ilman placeholdereita
 
-    // 3. Verkon rajat (Verkko-ID ja Broadcast) -vaatimus vaativammilla tasoilla
+    document.querySelectorAll('.ip-octet').forEach((el, i) => { 
+        el.value = ipParts[i] || ''; 
+        if (i === 3 && hostPlaceholder) {
+            el.placeholder = hostPlaceholder;
+        } else if (i < 3 && mode === 'guided' && !zoneHasValidatedDevice) {
+            el.placeholder = details.network.split('.')[i];
+        } else {
+            el.placeholder = '';
+        }
+    });
+
+    // 3. Verkon rajat (Verkko-ID ja Broadcast)
     const boundsSection = document.getElementById('network-bounds-section');
     const requiresBounds = currentLevelConfig && (currentLevelConfig.difficulty >= 3 || currentLevelConfig.id >= 11);
     if (boundsSection) {
         if (requiresBounds) {
             boundsSection.classList.remove('hidden');
-            const netKey = `subnetArchitect_lastInput_net_${currentLevel}_${details.network}`;
-            const bcastKey = `subnetArchitect_lastInput_bcast_${currentLevel}_${details.network}`;
-            const lastNet = localStorage.getItem(netKey) ? JSON.parse(localStorage.getItem(netKey)) : (zoneHasValidatedDevice ? details.network.split('.') : ['', '', '', '']);
-            const lastBcast = localStorage.getItem(bcastKey) ? JSON.parse(localStorage.getItem(bcastKey)) : (zoneHasValidatedDevice ? details.broadcast.split('.') : ['', '', '', '']);
-            document.querySelectorAll('.net-octet').forEach((el, i) => { el.value = lastNet[i] || ''; });
-            document.querySelectorAll('.bcast-octet').forEach((el, i) => { el.value = lastBcast[i] || ''; });
+            let lastNet = ['', '', '', ''];
+            let lastBcast = ['', '', '', ''];
+
+            if (mode === 'sandbox' || (mode === 'guided' && zoneHasValidatedDevice)) {
+                const netKey = `subnetArchitect_lastInput_net_${currentLevel}_${details.network}`;
+                const bcastKey = `subnetArchitect_lastInput_bcast_${currentLevel}_${details.network}`;
+                lastNet = localStorage.getItem(netKey) ? JSON.parse(localStorage.getItem(netKey)) : details.network.split('.');
+                lastBcast = localStorage.getItem(bcastKey) ? JSON.parse(localStorage.getItem(bcastKey)) : details.broadcast.split('.');
+            }
+
+            document.querySelectorAll('.net-octet').forEach((el, i) => { 
+                el.value = lastNet[i] || ''; 
+                el.placeholder = (mode === 'guided' && !zoneHasValidatedDevice) ? details.network.split('.')[i] : '';
+            });
+            document.querySelectorAll('.bcast-octet').forEach((el, i) => { 
+                el.value = lastBcast[i] || ''; 
+                el.placeholder = (mode === 'guided' && !zoneHasValidatedDevice) ? details.broadcast.split('.')[i] : '';
+            });
         } else {
             boundsSection.classList.add('hidden');
         }
     }
+
+    // Päivitetään heti pedagoginen mikropalaute
+    updateInlinePedagogicalHint();
 
     // Näytä laitteen tila, tyyppi ja osasto
     const typeLabel = node.userData.type.toUpperCase();

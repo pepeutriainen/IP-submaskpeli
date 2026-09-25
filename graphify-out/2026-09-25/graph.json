@@ -10115,7 +10115,7 @@
       "file_type": "code",
       "norm_label": ".applyipconfiguration()",
       "source_file": "js/terminal.js",
-      "source_location": "L1021"
+      "source_location": "L1032"
     },
     {
       "id": "js_terminal_cyberterminal_applyviewmode",
@@ -10139,7 +10139,7 @@
       "file_type": "code",
       "norm_label": ".autocomplete()",
       "source_file": "js/terminal.js",
-      "source_location": "L331"
+      "source_location": "L342"
     },
     {
       "id": "js_terminal_cyberterminal_clear",
@@ -10151,7 +10151,7 @@
       "file_type": "code",
       "norm_label": ".clear()",
       "source_file": "js/terminal.js",
-      "source_location": "L322"
+      "source_location": "L333"
     },
     {
       "id": "js_terminal_cyberterminal_cmdarp",
@@ -10163,7 +10163,7 @@
       "file_type": "code",
       "norm_label": ".cmdarp()",
       "source_file": "js/terminal.js",
-      "source_location": "L1590"
+      "source_location": "L1601"
     },
     {
       "id": "js_terminal_cyberterminal_cmdcableconnect",
@@ -10175,7 +10175,7 @@
       "file_type": "code",
       "norm_label": ".cmdcableconnect()",
       "source_file": "js/terminal.js",
-      "source_location": "L682"
+      "source_location": "L693"
     },
     {
       "id": "js_terminal_cyberterminal_cmdcabledisconnect",
@@ -10187,7 +10187,7 @@
       "file_type": "code",
       "norm_label": ".cmdcabledisconnect()",
       "source_file": "js/terminal.js",
-      "source_location": "L757"
+      "source_location": "L768"
     },
     {
       "id": "js_terminal_cyberterminal_cmdcablerouter",
@@ -10199,7 +10199,7 @@
       "file_type": "code",
       "norm_label": ".cmdcablerouter()",
       "source_file": "js/terminal.js",
-      "source_location": "L634"
+      "source_location": "L645"
     },
     {
       "id": "js_terminal_cyberterminal_cmdcables",
@@ -10211,7 +10211,7 @@
       "file_type": "code",
       "norm_label": ".cmdcables()",
       "source_file": "js/terminal.js",
-      "source_location": "L662"
+      "source_location": "L673"
     },
     {
       "id": "js_terminal_cyberterminal_cmdconnect",
@@ -10223,7 +10223,7 @@
       "file_type": "code",
       "norm_label": ".cmdconnect()",
       "source_file": "js/terminal.js",
-      "source_location": "L1319"
+      "source_location": "L1330"
     },
     {
       "id": "js_terminal_cyberterminal_cmddelete",
@@ -10235,7 +10235,7 @@
       "file_type": "code",
       "norm_label": ".cmddelete()",
       "source_file": "js/terminal.js",
-      "source_location": "L860"
+      "source_location": "L871"
     },
     {
       "id": "js_terminal_cyberterminal_cmddevices",
@@ -10247,7 +10247,7 @@
       "file_type": "code",
       "norm_label": ".cmddevices()",
       "source_file": "js/terminal.js",
-      "source_location": "L1291"
+      "source_location": "L1302"
     },
     {
       "id": "js_terminal_cyberterminal_cmddmesg",
@@ -10259,7 +10259,7 @@
       "file_type": "code",
       "norm_label": ".cmddmesg()",
       "source_file": "js/terminal.js",
-      "source_location": "L599"
+      "source_location": "L610"
     },
     {
       "id": "js_terminal_cyberterminal_cmdexit",
@@ -10271,7 +10271,7 @@
       "file_type": "code",
       "norm_label": ".cmdexit()",
       "source_file": "js/terminal.js",
-      "source_location": "L1354"
+      "source_location": "L1365"
     },
     {
       "id": "js_terminal_cyberterminal_cmdhelp",
@@ -10283,7 +10283,7 @@
       "file_type": "code",
       "norm_label": ".cmdhelp()",
       "source_file": "js/terminal.js",
-      "source_location": "L520"
+      "source_location": "L531"
     },
     {
       "id": "js_terminal_cyberterminal_cmdhint",
@@ -10295,7 +10295,7 @@
       "file_type": "code",
       "norm_label": ".cmdhint()",
       "source_file": "js/terminal.js",
-      "source_location": "L591"
+      "source_location": "L602"
     },
     {
       "id": "js_terminal_cyberterminal_cmdhistory",
@@ -10307,7 +10307,7 @@
       "file_type": "code",
       "norm_label": ".cmdhistory()",
       "source_file": "js/terminal.js",
-      "source_location": "L623"
+      "source_location": "L634"
     },
     {
       "id": "js_terminal_cyberterminal_cmdhostname",
@@ -10319,7 +10319,7 @@
       "file_type": "code",
       "norm_label": ".cmdhostname()",
       "source_file": "js/terminal.js",
-      "source_location": "L1365"
+      "source_location": "L1376"
     },
     {
       "id": "js_terminal_cyberterminal_cmdifconfig",
@@ -10331,7 +10331,7 @@
       "file_type": "code",
       "norm_label": ".cmdifconfig()",
       "source_file": "js/terminal.js",
-      "source_location": "L989"
+      "source_location": "L1000"
     },
     {
       "id": "js_terminal_cyberterminal_cmdipaddress",
@@ -10343,7 +10343,7 @@
       "file_type": "code",
       "norm_label": ".cmdipaddress()",
       "source_file": "js/terminal.js",
-      "source_location": "L965"
+      "source_location": "L976"
     },
     {
       "id": "js_terminal_cyberterminal_cmdipconfig",
@@ -10355,7 +10355,7 @@
       "file_type": "code",
       "norm_label": ".cmdipconfig()",
       "source_file": "js/terminal.js",
-      "source_location": "L1557"
+      "source_location": "L1568"
     },
     {
       "id": "js_terminal_cyberterminal_cmdiprouteadd",
@@ -10367,7 +10367,7 @@
       "file_type": "code",
       "norm_label": ".cmdiprouteadd()",
       "source_file": "js/terminal.js",
-      "source_location": "L901"
+      "source_location": "L912"
     },
     {
       "id": "js_terminal_cyberterminal_cmdipset",
@@ -10379,7 +10379,7 @@
       "file_type": "code",
       "norm_label": ".cmdipset()",
       "source_file": "js/terminal.js",
-      "source_location": "L940"
+      "source_location": "L951"
     },
     {
       "id": "js_terminal_cyberterminal_cmdloadlevel",
@@ -10391,7 +10391,7 @@
       "file_type": "code",
       "norm_label": ".cmdloadlevel()",
       "source_file": "js/terminal.js",
-      "source_location": "L1257"
+      "source_location": "L1268"
     },
     {
       "id": "js_terminal_cyberterminal_cmdnextlevel",
@@ -10403,7 +10403,7 @@
       "file_type": "code",
       "norm_label": ".cmdnextlevel()",
       "source_file": "js/terminal.js",
-      "source_location": "L1248"
+      "source_location": "L1259"
     },
     {
       "id": "js_terminal_cyberterminal_cmdobjectives",
@@ -10415,7 +10415,7 @@
       "file_type": "code",
       "norm_label": ".cmdobjectives()",
       "source_file": "js/terminal.js",
-      "source_location": "L552"
+      "source_location": "L563"
     },
     {
       "id": "js_terminal_cyberterminal_cmdping",
@@ -10427,7 +10427,7 @@
       "file_type": "code",
       "norm_label": ".cmdping()",
       "source_file": "js/terminal.js",
-      "source_location": "L1462"
+      "source_location": "L1473"
     },
     {
       "id": "js_terminal_cyberterminal_cmdreload",
@@ -10439,7 +10439,7 @@
       "file_type": "code",
       "norm_label": ".cmdreload()",
       "source_file": "js/terminal.js",
-      "source_location": "L1274"
+      "source_location": "L1285"
     },
     {
       "id": "js_terminal_cyberterminal_cmdrules",
@@ -10451,7 +10451,7 @@
       "file_type": "code",
       "norm_label": ".cmdrules()",
       "source_file": "js/terminal.js",
-      "source_location": "L576"
+      "source_location": "L587"
     },
     {
       "id": "js_terminal_cyberterminal_cmdshow",
@@ -10463,7 +10463,7 @@
       "file_type": "code",
       "norm_label": ".cmdshow()",
       "source_file": "js/terminal.js",
-      "source_location": "L1380"
+      "source_location": "L1391"
     },
     {
       "id": "js_terminal_cyberterminal_cmdspawn",
@@ -10475,7 +10475,7 @@
       "file_type": "code",
       "norm_label": ".cmdspawn()",
       "source_file": "js/terminal.js",
-      "source_location": "L803"
+      "source_location": "L814"
     },
     {
       "id": "js_terminal_cyberterminal_cmdsubmit",
@@ -10487,7 +10487,7 @@
       "file_type": "code",
       "norm_label": ".cmdsubmit()",
       "source_file": "js/terminal.js",
-      "source_location": "L1223"
+      "source_location": "L1234"
     },
     {
       "id": "js_terminal_cyberterminal_cmdsubnetcalc",
@@ -10499,7 +10499,7 @@
       "file_type": "code",
       "norm_label": ".cmdsubnetcalc()",
       "source_file": "js/terminal.js",
-      "source_location": "L1601"
+      "source_location": "L1612"
     },
     {
       "id": "js_terminal_cyberterminal_cmdtraceroute",
@@ -10511,7 +10511,7 @@
       "file_type": "code",
       "norm_label": ".cmdtraceroute()",
       "source_file": "js/terminal.js",
-      "source_location": "L1518"
+      "source_location": "L1529"
     },
     {
       "id": "js_terminal_cyberterminal_cmdverify",
@@ -10523,7 +10523,7 @@
       "file_type": "code",
       "norm_label": ".cmdverify()",
       "source_file": "js/terminal.js",
-      "source_location": "L1171"
+      "source_location": "L1182"
     },
     {
       "id": "js_terminal_cyberterminal_constructor",
@@ -10547,7 +10547,7 @@
       "file_type": "code",
       "norm_label": ".execute()",
       "source_file": "js/terminal.js",
-      "source_location": "L359"
+      "source_location": "L370"
     },
     {
       "id": "js_terminal_cyberterminal_focusinput",
@@ -10559,7 +10559,7 @@
       "file_type": "code",
       "norm_label": ".focusinput()",
       "source_file": "js/terminal.js",
-      "source_location": "L129"
+      "source_location": "L136"
     },
     {
       "id": "js_terminal_cyberterminal_getnodedisplayname",
@@ -10571,7 +10571,7 @@
       "file_type": "code",
       "norm_label": ".getnodedisplayname()",
       "source_file": "js/terminal.js",
-      "source_location": "L227"
+      "source_location": "L238"
     },
     {
       "id": "js_terminal_cyberterminal_getprompttext",
@@ -10583,7 +10583,7 @@
       "file_type": "code",
       "norm_label": ".getprompttext()",
       "source_file": "js/terminal.js",
-      "source_location": "L271"
+      "source_location": "L282"
     },
     {
       "id": "js_terminal_cyberterminal_init",
@@ -10607,7 +10607,7 @@
       "file_type": "code",
       "norm_label": ".logsyslog()",
       "source_file": "js/terminal.js",
-      "source_location": "L143"
+      "source_location": "L154"
     },
     {
       "id": "js_terminal_cyberterminal_onlevelloaded",
@@ -10619,7 +10619,7 @@
       "file_type": "code",
       "norm_label": ".onlevelloaded()",
       "source_file": "js/terminal.js",
-      "source_location": "L190"
+      "source_location": "L201"
     },
     {
       "id": "js_terminal_cyberterminal_print",
@@ -10631,7 +10631,7 @@
       "file_type": "code",
       "norm_label": ".print()",
       "source_file": "js/terminal.js",
-      "source_location": "L294"
+      "source_location": "L305"
     },
     {
       "id": "js_terminal_cyberterminal_resolvenode",
@@ -10643,7 +10643,7 @@
       "file_type": "code",
       "norm_label": ".resolvenode()",
       "source_file": "js/terminal.js",
-      "source_location": "L238"
+      "source_location": "L249"
     },
     {
       "id": "js_terminal_cyberterminal_settargetnode",
@@ -10655,7 +10655,7 @@
       "file_type": "code",
       "norm_label": ".settargetnode()",
       "source_file": "js/terminal.js",
-      "source_location": "L219"
+      "source_location": "L230"
     },
     {
       "id": "js_terminal_cyberterminal_setviewmode",
@@ -10679,7 +10679,7 @@
       "file_type": "code",
       "norm_label": ".showcdpneighbors()",
       "source_file": "js/terminal.js",
-      "source_location": "L1439"
+      "source_location": "L1450"
     },
     {
       "id": "js_terminal_cyberterminal_showipinterfacebrief",
@@ -10691,7 +10691,7 @@
       "file_type": "code",
       "norm_label": ".showipinterfacebrief()",
       "source_file": "js/terminal.js",
-      "source_location": "L1402"
+      "source_location": "L1413"
     },
     {
       "id": "js_terminal_cyberterminal_showiproute",
@@ -10703,7 +10703,7 @@
       "file_type": "code",
       "norm_label": ".showiproute()",
       "source_file": "js/terminal.js",
-      "source_location": "L1414"
+      "source_location": "L1425"
     },
     {
       "id": "js_terminal_cyberterminal_syncprompt",
@@ -10715,7 +10715,7 @@
       "file_type": "code",
       "norm_label": ".syncprompt()",
       "source_file": "js/terminal.js",
-      "source_location": "L280"
+      "source_location": "L291"
     },
     {
       "id": "js_terminal_cyberterminal_toggle",
@@ -13931,7 +13931,7 @@
       "file_type": "code",
       "norm_label": "animate()",
       "source_file": "js/scene.js",
-      "source_location": "L310"
+      "source_location": "L336"
     },
     {
       "id": "js_scene_createdataconfetti",
@@ -13943,7 +13943,7 @@
       "file_type": "code",
       "norm_label": "createdataconfetti()",
       "source_file": "js/scene.js",
-      "source_location": "L291"
+      "source_location": "L317"
     },
     {
       "id": "js_scene_createsparks",
@@ -13955,7 +13955,7 @@
       "file_type": "code",
       "norm_label": "createsparks()",
       "source_file": "js/scene.js",
-      "source_location": "L273"
+      "source_location": "L299"
     },
     {
       "id": "js_scene_getconfettiresources",
@@ -13967,7 +13967,7 @@
       "file_type": "code",
       "norm_label": "getconfettiresources()",
       "source_file": "js/scene.js",
-      "source_location": "L250"
+      "source_location": "L276"
     },
     {
       "id": "js_scene_getdomrefs",
@@ -13979,7 +13979,7 @@
       "file_type": "code",
       "norm_label": "getdomrefs()",
       "source_file": "js/scene.js",
-      "source_location": "L258"
+      "source_location": "L284"
     },
     {
       "id": "js_scene_getsparkresources",
@@ -13991,7 +13991,7 @@
       "file_type": "code",
       "norm_label": "getsparkresources()",
       "source_file": "js/scene.js",
-      "source_location": "L244"
+      "source_location": "L270"
     },
     {
       "id": "js_scene_initthreejs",
@@ -14015,7 +14015,7 @@
       "file_type": "code",
       "norm_label": "onpointerdown()",
       "source_file": "js/scene.js",
-      "source_location": "L153"
+      "source_location": "L179"
     },
     {
       "id": "js_scene_onpointermove",
@@ -14027,7 +14027,7 @@
       "file_type": "code",
       "norm_label": "onpointermove()",
       "source_file": "js/scene.js",
-      "source_location": "L121"
+      "source_location": "L147"
     },
     {
       "id": "js_scene_onwindowresize",
@@ -14039,7 +14039,7 @@
       "file_type": "code",
       "norm_label": "onwindowresize()",
       "source_file": "js/scene.js",
-      "source_location": "L110"
+      "source_location": "L136"
     },
     {
       "id": "js_three_three_min_at_setfromaxisangle",
@@ -25319,7 +25319,7 @@
       "file_type": "code",
       "norm_label": "terminal",
       "source_file": "js/terminal.js",
-      "source_location": "L1634"
+      "source_location": "L1645"
     },
     {
       "id": "js_game",
@@ -25917,6 +25917,7 @@
     {
       "id": "json",
       "label": "json",
+      "_origin": "semantic",
       "community": 145,
       "community_name": "re",
       "external": true,
@@ -25928,6 +25929,7 @@
     {
       "id": "re",
       "label": "re",
+      "_origin": "semantic",
       "community": 145,
       "community_name": "re",
       "external": true,
@@ -25939,6 +25941,7 @@
     {
       "id": "ref_fs",
       "label": "ref_fs",
+      "_origin": "semantic",
       "community": 51,
       "community_name": ".applyMatrix4",
       "external": true,
@@ -26774,7 +26777,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/scene.js",
-      "source_location": "L314",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -26786,7 +26789,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/scene.js",
-      "source_location": "L292",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
@@ -26798,7 +26801,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/scene.js",
-      "source_location": "L274",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -26810,7 +26813,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/scene.js",
-      "source_location": "L107",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -26834,7 +26837,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1637",
+      "source_location": "L1648",
       "weight": 1.0
     },
     {
@@ -26846,7 +26849,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1025",
+      "source_location": "L1036",
       "weight": 1.0
     },
     {
@@ -26858,7 +26861,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1056",
+      "source_location": "L1067",
       "weight": 1.0
     },
     {
@@ -26870,7 +26873,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L688",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -26882,7 +26885,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L704",
+      "source_location": "L715",
       "weight": 1.0
     },
     {
@@ -26894,7 +26897,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L726",
+      "source_location": "L737",
       "weight": 1.0
     },
     {
@@ -26906,7 +26909,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L763",
+      "source_location": "L774",
       "weight": 1.0
     },
     {
@@ -26918,7 +26921,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L777",
+      "source_location": "L788",
       "weight": 1.0
     },
     {
@@ -26930,7 +26933,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L795",
+      "source_location": "L806",
       "weight": 1.0
     },
     {
@@ -26942,7 +26945,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L638",
+      "source_location": "L649",
       "weight": 1.0
     },
     {
@@ -26954,7 +26957,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L642",
+      "source_location": "L653",
       "weight": 1.0
     },
     {
@@ -26966,7 +26969,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L646",
+      "source_location": "L657",
       "weight": 1.0
     },
     {
@@ -26978,7 +26981,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L672",
+      "source_location": "L683",
       "weight": 1.0
     },
     {
@@ -26990,7 +26993,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1325",
+      "source_location": "L1336",
       "weight": 1.0
     },
     {
@@ -27002,7 +27005,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1333",
+      "source_location": "L1344",
       "weight": 1.0
     },
     {
@@ -27014,7 +27017,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1345",
+      "source_location": "L1356",
       "weight": 1.0
     },
     {
@@ -27026,7 +27029,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L866",
+      "source_location": "L877",
       "weight": 1.0
     },
     {
@@ -27038,7 +27041,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L872",
+      "source_location": "L883",
       "weight": 1.0
     },
     {
@@ -27050,7 +27053,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L879",
+      "source_location": "L890",
       "weight": 1.0
     },
     {
@@ -27062,7 +27065,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L884",
+      "source_location": "L895",
       "weight": 1.0
     },
     {
@@ -27074,7 +27077,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1301",
+      "source_location": "L1312",
       "weight": 1.0
     },
     {
@@ -27086,7 +27089,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1356",
+      "source_location": "L1367",
       "weight": 1.0
     },
     {
@@ -27098,7 +27101,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1360",
+      "source_location": "L1371",
       "weight": 1.0
     },
     {
@@ -27110,7 +27113,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1361",
+      "source_location": "L1372",
       "weight": 1.0
     },
     {
@@ -27122,7 +27125,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1373",
+      "source_location": "L1384",
       "weight": 1.0
     },
     {
@@ -27134,19 +27137,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1376",
-      "weight": 1.0
-    },
-    {
-      "source": "js_terminal_cyberterminal_cmdifconfig",
-      "target": "js_terminal_cyberterminal_applyipconfiguration",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "js/terminal.js",
-      "source_location": "L1003",
+      "source_location": "L1387",
       "weight": 1.0
     },
     {
@@ -27158,7 +27149,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L991",
+      "source_location": "L1002",
+      "weight": 1.0
+    },
+    {
+      "source": "js_terminal_cyberterminal_cmdifconfig",
+      "target": "js_terminal_cyberterminal_applyipconfiguration",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "js/terminal.js",
+      "source_location": "L1014",
       "weight": 1.0
     },
     {
@@ -27170,7 +27173,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L986",
+      "source_location": "L997",
       "weight": 1.0
     },
     {
@@ -27182,7 +27185,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1571",
+      "source_location": "L1582",
       "weight": 1.0
     },
     {
@@ -27194,7 +27197,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L933",
+      "source_location": "L944",
       "weight": 1.0
     },
     {
@@ -27206,7 +27209,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L946",
+      "source_location": "L957",
       "weight": 1.0
     },
     {
@@ -27218,7 +27221,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L962",
+      "source_location": "L973",
       "weight": 1.0
     },
     {
@@ -27230,7 +27233,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1468",
+      "source_location": "L1479",
       "weight": 1.0
     },
     {
@@ -27242,7 +27245,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1477",
+      "source_location": "L1488",
       "weight": 1.0
     },
     {
@@ -27254,7 +27257,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1279",
+      "source_location": "L1290",
       "weight": 1.0
     },
     {
@@ -27266,7 +27269,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1389",
+      "source_location": "L1400",
       "weight": 1.0
     },
     {
@@ -27278,7 +27281,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1391",
+      "source_location": "L1402",
       "weight": 1.0
     },
     {
@@ -27290,7 +27293,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1393",
+      "source_location": "L1404",
       "weight": 1.0
     },
     {
@@ -27302,7 +27305,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1395",
+      "source_location": "L1406",
       "weight": 1.0
     },
     {
@@ -27314,7 +27317,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L851",
+      "source_location": "L862",
       "weight": 1.0
     },
     {
@@ -27326,7 +27329,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L852",
+      "source_location": "L863",
       "weight": 1.0
     },
     {
@@ -27338,7 +27341,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1233",
+      "source_location": "L1244",
       "weight": 1.0
     },
     {
@@ -27350,7 +27353,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1244",
+      "source_location": "L1255",
       "weight": 1.0
     },
     {
@@ -27362,7 +27365,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1198",
+      "source_location": "L1209",
       "weight": 1.0
     },
     {
@@ -27374,7 +27377,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L372",
+      "source_location": "L383",
       "weight": 1.0
     },
     {
@@ -27386,7 +27389,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L378",
+      "source_location": "L389",
       "weight": 1.0
     },
     {
@@ -27398,7 +27401,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L382",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -27410,7 +27413,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L386",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -27422,7 +27425,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L390",
+      "source_location": "L401",
       "weight": 1.0
     },
     {
@@ -27434,7 +27437,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L393",
+      "source_location": "L404",
       "weight": 1.0
     },
     {
@@ -27446,7 +27449,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L398",
+      "source_location": "L409",
       "weight": 1.0
     },
     {
@@ -27458,7 +27461,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L407",
+      "source_location": "L418",
       "weight": 1.0
     },
     {
@@ -27470,7 +27473,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L411",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -27482,7 +27485,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L417",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -27494,7 +27497,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L421",
+      "source_location": "L432",
       "weight": 1.0
     },
     {
@@ -27506,7 +27509,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L424",
+      "source_location": "L435",
       "weight": 1.0
     },
     {
@@ -27518,7 +27521,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L430",
+      "source_location": "L441",
       "weight": 1.0
     },
     {
@@ -27530,7 +27533,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L434",
+      "source_location": "L445",
       "weight": 1.0
     },
     {
@@ -27542,7 +27545,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L444",
+      "source_location": "L455",
       "weight": 1.0
     },
     {
@@ -27554,7 +27557,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L449",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -27566,7 +27569,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L455",
+      "source_location": "L466",
       "weight": 1.0
     },
     {
@@ -27578,7 +27581,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L459",
+      "source_location": "L470",
       "weight": 1.0
     },
     {
@@ -27590,7 +27593,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L462",
+      "source_location": "L473",
       "weight": 1.0
     },
     {
@@ -27602,7 +27605,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L466",
+      "source_location": "L477",
       "weight": 1.0
     },
     {
@@ -27614,7 +27617,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L472",
+      "source_location": "L483",
       "weight": 1.0
     },
     {
@@ -27626,7 +27629,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L475",
+      "source_location": "L486",
       "weight": 1.0
     },
     {
@@ -27638,7 +27641,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L479",
+      "source_location": "L490",
       "weight": 1.0
     },
     {
@@ -27650,7 +27653,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L484",
+      "source_location": "L495",
       "weight": 1.0
     },
     {
@@ -27662,7 +27665,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L488",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -27674,7 +27677,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L491",
+      "source_location": "L502",
       "weight": 1.0
     },
     {
@@ -27686,7 +27689,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L494",
+      "source_location": "L505",
       "weight": 1.0
     },
     {
@@ -27698,7 +27701,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L498",
+      "source_location": "L509",
       "weight": 1.0
     },
     {
@@ -27710,7 +27713,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L501",
+      "source_location": "L512",
       "weight": 1.0
     },
     {
@@ -27722,7 +27725,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L504",
+      "source_location": "L515",
       "weight": 1.0
     },
     {
@@ -27734,7 +27737,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L507",
+      "source_location": "L518",
       "weight": 1.0
     },
     {
@@ -27746,7 +27749,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L275",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -27818,7 +27821,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L211",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -27830,7 +27833,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L212",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -27842,7 +27845,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L302",
+      "source_location": "L313",
       "weight": 1.0
     },
     {
@@ -27854,7 +27857,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L250",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
@@ -27866,7 +27869,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L224",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -27902,7 +27905,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1454",
+      "source_location": "L1465",
       "weight": 1.0
     },
     {
@@ -27914,7 +27917,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L1405",
+      "source_location": "L1416",
       "weight": 1.0
     },
     {
@@ -27926,7 +27929,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L283",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -27938,7 +27941,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L289",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -27950,7 +27953,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L116",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -27962,7 +27965,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L120",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -27974,7 +27977,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "js/terminal.js",
-      "source_location": "L121",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -58392,7 +58395,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L110",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -58403,7 +58406,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L121",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -58414,7 +58417,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L153",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -58425,7 +58428,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L244",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -58436,7 +58439,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L250",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -58447,7 +58450,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L258",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -58458,7 +58461,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L273",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -58469,7 +58472,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L291",
+      "source_location": "L317",
       "weight": 1.0
     },
     {
@@ -58480,7 +58483,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/scene.js",
-      "source_location": "L310",
+      "source_location": "L336",
       "weight": 1.0
     },
     {
@@ -58755,7 +58758,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1634",
+      "source_location": "L1645",
       "weight": 1.0
     },
     {
@@ -64447,13 +64450,24 @@
     },
     {
       "source": "js_terminal_cyberterminal",
+      "target": "js_terminal_cyberterminal_cmdifconfig",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "js/terminal.js",
+      "source_location": "L1000",
+      "weight": 1.0
+    },
+    {
+      "source": "js_terminal_cyberterminal",
       "target": "js_terminal_cyberterminal_applyipconfiguration",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1021",
+      "source_location": "L1032",
       "weight": 1.0
     },
     {
@@ -64475,7 +64489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1171",
+      "source_location": "L1182",
       "weight": 1.0
     },
     {
@@ -64486,7 +64500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1223",
+      "source_location": "L1234",
       "weight": 1.0
     },
     {
@@ -64497,7 +64511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1248",
+      "source_location": "L1259",
       "weight": 1.0
     },
     {
@@ -64508,7 +64522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1257",
+      "source_location": "L1268",
       "weight": 1.0
     },
     {
@@ -64519,18 +64533,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1274",
-      "weight": 1.0
-    },
-    {
-      "source": "js_terminal_cyberterminal",
-      "target": "js_terminal_cyberterminal_focusinput",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "js/terminal.js",
-      "source_location": "L129",
+      "source_location": "L1285",
       "weight": 1.0
     },
     {
@@ -64541,7 +64544,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1291",
+      "source_location": "L1302",
       "weight": 1.0
     },
     {
@@ -64552,7 +64555,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1319",
+      "source_location": "L1330",
+      "weight": 1.0
+    },
+    {
+      "source": "js_terminal_cyberterminal",
+      "target": "js_terminal_cyberterminal_focusinput",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "js/terminal.js",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -64563,7 +64577,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1354",
+      "source_location": "L1365",
       "weight": 1.0
     },
     {
@@ -64574,7 +64588,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1365",
+      "source_location": "L1376",
       "weight": 1.0
     },
     {
@@ -64585,7 +64599,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1380",
+      "source_location": "L1391",
       "weight": 1.0
     },
     {
@@ -64596,7 +64610,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1402",
+      "source_location": "L1413",
       "weight": 1.0
     },
     {
@@ -64607,18 +64621,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1414",
-      "weight": 1.0
-    },
-    {
-      "source": "js_terminal_cyberterminal",
-      "target": "js_terminal_cyberterminal_logsyslog",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "js/terminal.js",
-      "source_location": "L143",
+      "source_location": "L1425",
       "weight": 1.0
     },
     {
@@ -64629,7 +64632,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1439",
+      "source_location": "L1450",
       "weight": 1.0
     },
     {
@@ -64640,7 +64643,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1462",
+      "source_location": "L1473",
       "weight": 1.0
     },
     {
@@ -64651,7 +64654,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1518",
+      "source_location": "L1529",
+      "weight": 1.0
+    },
+    {
+      "source": "js_terminal_cyberterminal",
+      "target": "js_terminal_cyberterminal_logsyslog",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "js/terminal.js",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -64662,7 +64676,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1557",
+      "source_location": "L1568",
       "weight": 1.0
     },
     {
@@ -64673,7 +64687,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1590",
+      "source_location": "L1601",
       "weight": 1.0
     },
     {
@@ -64684,7 +64698,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L1601",
+      "source_location": "L1612",
       "weight": 1.0
     },
     {
@@ -64706,7 +64720,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L190",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -64717,7 +64731,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L219",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -64728,7 +64742,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L227",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -64739,7 +64753,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L238",
+      "source_location": "L249",
       "weight": 1.0
     },
     {
@@ -64750,7 +64764,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L271",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -64761,7 +64775,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L280",
+      "source_location": "L291",
       "weight": 1.0
     },
     {
@@ -64772,7 +64786,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L294",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -64783,7 +64797,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L322",
+      "source_location": "L333",
       "weight": 1.0
     },
     {
@@ -64794,7 +64808,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L331",
+      "source_location": "L342",
       "weight": 1.0
     },
     {
@@ -64805,7 +64819,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L359",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -64816,7 +64830,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L520",
+      "source_location": "L531",
       "weight": 1.0
     },
     {
@@ -64827,7 +64841,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L552",
+      "source_location": "L563",
       "weight": 1.0
     },
     {
@@ -64838,7 +64852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L576",
+      "source_location": "L587",
       "weight": 1.0
     },
     {
@@ -64849,7 +64863,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L591",
+      "source_location": "L602",
       "weight": 1.0
     },
     {
@@ -64860,7 +64874,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L599",
+      "source_location": "L610",
       "weight": 1.0
     },
     {
@@ -64871,7 +64885,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L623",
+      "source_location": "L634",
       "weight": 1.0
     },
     {
@@ -64882,7 +64896,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L634",
+      "source_location": "L645",
       "weight": 1.0
     },
     {
@@ -64893,7 +64907,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L662",
+      "source_location": "L673",
       "weight": 1.0
     },
     {
@@ -64904,7 +64918,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L682",
+      "source_location": "L693",
       "weight": 1.0
     },
     {
@@ -64926,7 +64940,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L757",
+      "source_location": "L768",
       "weight": 1.0
     },
     {
@@ -64948,7 +64962,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L803",
+      "source_location": "L814",
       "weight": 1.0
     },
     {
@@ -64970,7 +64984,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L860",
+      "source_location": "L871",
       "weight": 1.0
     },
     {
@@ -64981,7 +64995,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L901",
+      "source_location": "L912",
       "weight": 1.0
     },
     {
@@ -64992,7 +65006,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L940",
+      "source_location": "L951",
       "weight": 1.0
     },
     {
@@ -65003,18 +65017,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "js/terminal.js",
-      "source_location": "L965",
-      "weight": 1.0
-    },
-    {
-      "source": "js_terminal_cyberterminal",
-      "target": "js_terminal_cyberterminal_cmdifconfig",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "js/terminal.js",
-      "source_location": "L989",
+      "source_location": "L976",
       "weight": 1.0
     },
     {
@@ -83742,5 +83745,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e4a6aaf9a2ce571ef4a2b07630daaa997e7984e6"
+  "built_at_commit": "35b3e073bb5a9e3acb65d025558757300a511a0c"
 }

@@ -640,5 +640,49 @@ body {
     margin: 2px 0;
 }
 
+/* =========================================================================
+   Pedagoginen Scaffolding & Haamu-placeholderit (Ghost Hints)
+   ========================================================================= */
+
+.ip-octet::placeholder,
+.mask-octet::placeholder,
+.net-octet::placeholder,
+.bcast-octet::placeholder {
+    color: rgba(148, 163, 184, 0.38) !important;
+    font-weight: 700;
+}
+
+.pedagogical-ghost-hint {
+    color: rgba(56, 189, 248, 0.45) !important;
+}
+
+#ip-input-live-hint {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.live-hint-valid {
+    border-color: rgba(16, 185, 129, 0.6) !important;
+    background: rgba(6, 78, 59, 0.4) !important;
+    color: #6ee7b7 !important;
+}
+
+.live-hint-warn {
+    border-color: rgba(245, 158, 11, 0.6) !important;
+    background: rgba(120, 53, 15, 0.4) !important;
+    color: #fde68a !important;
+}
+
+.live-hint-alert {
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    background: rgba(127, 29, 29, 0.4) !important;
+    color: #fca5a5 !important;
+}
+
+.live-hint-magic {
+    border-color: rgba(6, 182, 212, 0.6) !important;
+    background: rgba(8, 51, 68, 0.4) !important;
+    color: #67e8f9 !important;
+}
+
 
 
