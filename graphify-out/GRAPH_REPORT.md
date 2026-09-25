@@ -1,7 +1,7 @@
 # Graph Report - IP-submaskpeli  (2026-09-25)
 
 ## Corpus Check
-- 32 files · ~499,386 words
+- 32 files · ~499,646 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 27 file(s) not represented in the graph (top: .glb 11, .obj 5, .mtl 4)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e4a6aaf9`
+- Built from commit: `35b3e073`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

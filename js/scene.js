@@ -63,6 +63,10 @@ function initThreeJS() {
 
     // Näppäimistö navigointi
     window.addEventListener('keydown', (e) => {
+        const termModal = document.getElementById('terminal-modal');
+        const isTerminalOpen = (typeof terminal !== 'undefined' && terminal.isOpen) || (termModal && !termModal.classList.contains('hidden'));
+        const isInputField = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
+
         if (e.key === 'Escape') {
             if (cableActionState.active && cableActionState.lineTemp) {
                 scene.remove(cableActionState.lineTemp);
@@ -72,6 +76,16 @@ function initThreeJS() {
             if (!document.getElementById('ip-modal').classList.contains('hidden')) {
                 closeIpModal();
             }
+        }
+
+        // Jos kirjoitetaan terminaaliin, syöttökenttään tai terminaali on auki, estetään kameran liike ja numeronäppäimet
+        if (isTerminalOpen || isInputField) {
+            // Nollataan liikenäppäimet jotta kamera ei jää liukumaan
+            if (typeof keys !== 'undefined') {
+                keys.w = false; keys.a = false; keys.s = false; keys.d = false;
+                keys.up = false; keys.down = false; keys.left = false; keys.right = false;
+            }
+            return;
         }
 
         // Pikanäppäimet työkaluille (näkyvät työkalut järjestyksessä 1, 2, 3...)
@@ -96,6 +110,18 @@ function initThreeJS() {
     });
 
     window.addEventListener('keyup', (e) => {
+        const termModal = document.getElementById('terminal-modal');
+        const isTerminalOpen = (typeof terminal !== 'undefined' && terminal.isOpen) || (termModal && !termModal.classList.contains('hidden'));
+        const isInputField = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
+
+        if (isTerminalOpen || isInputField) {
+            if (typeof keys !== 'undefined') {
+                keys.w = false; keys.a = false; keys.s = false; keys.d = false;
+                keys.up = false; keys.down = false; keys.left = false; keys.right = false;
+            }
+            return;
+        }
+
         const key = e.key.toLowerCase();
         if (keys.hasOwnProperty(key)) keys[key] = false;
         if (e.key === 'ArrowUp') keys.up = false;
@@ -318,8 +344,13 @@ function animate() {
     const mainMenu = refs.mainMenu;
 
     // Kameran ohjaus näppäimistöllä
+    const termModal = document.getElementById('terminal-modal');
+    const isTerminalOpen = (typeof terminal !== 'undefined' && terminal.isOpen) || (termModal && !termModal.classList.contains('hidden'));
+    const isInputActive = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable);
     const isModalOpen = (ipModal && !ipModal.classList.contains('hidden')) || 
-                        (winModal && !winModal.classList.contains('hidden'));
+                        (winModal && !winModal.classList.contains('hidden')) ||
+                        isTerminalOpen ||
+                        isInputActive;
 
     if (gameUi && !gameUi.classList.contains('hidden') && !isModalOpen) {
         const speed = 0.5;

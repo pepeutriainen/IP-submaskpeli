@@ -111,6 +111,13 @@ class CyberTerminal {
         const modal = document.getElementById('terminal-modal');
         if (!modal) return;
         this.isOpen = !this.isOpen;
+
+        // Nollataan liikenäppäimet
+        if (typeof keys !== 'undefined') {
+            keys.w = false; keys.a = false; keys.s = false; keys.d = false;
+            keys.up = false; keys.down = false; keys.left = false; keys.right = false;
+        }
+
         if (this.isOpen) {
             modal.classList.remove('hidden');
             this.applyViewMode();
@@ -129,6 +136,10 @@ class CyberTerminal {
     focusInput() {
         const inputEl = document.getElementById('terminal-input');
         if (inputEl) {
+            if (typeof keys !== 'undefined') {
+                keys.w = false; keys.a = false; keys.s = false; keys.d = false;
+                keys.up = false; keys.down = false; keys.left = false; keys.right = false;
+            }
             setTimeout(() => inputEl.focus(), 50);
         }
     }
